@@ -2,7 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { BadRequestException, ValidationPipe } from '@nestjs/common';
-import * as cookieParser from 'cookie-parser';
+// import * as cookieParser from 'cookie-parser';
 // import { ExpressPeerServer } from 'peer';
 
 async function bootstrap() {
@@ -11,7 +11,7 @@ async function bootstrap() {
     const PORT = process.env.PORT || 4200;
     app.enableCors();
     app.setGlobalPrefix('api');
-    app.use(cookieParser()); 
+    // app.use(cookieParser()); 
 
     const server = app.getHttpServer(); // Get the underlying HTTP server
     // const peerServer = ExpressPeerServer(server, { path: '/peerjs' }); // Create the PeerJS server with a custom path
