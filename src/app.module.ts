@@ -98,6 +98,7 @@ import { VideoChatModule } from './video_chat/video_chat.module';
     }),
     ServeStaticModule.forRoot({
       rootPath: resolve(__dirname, '..', 'static'),
+      serveRoot: '/static',
     }),
     JwtModule.register({ global: true }),
     MailModule,
