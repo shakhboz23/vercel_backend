@@ -32,9 +32,9 @@ import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 import { UserService } from './user/user.service';
 import { Subscription_activityModule } from './subscription_activity/subscription_activity.module';
 import { VideoChatModule } from './video_chat/video_chat.module';
-import { BotModule } from './bot/bot.module';
-import { TelegrafModule } from 'nestjs-telegraf';
-import { BOT_NAME } from './app.constants';
+// import { BotModule } from './bot/bot.module';
+// import { TelegrafModule } from 'nestjs-telegraf';
+// import { BOT_NAME } from './app.constants';
 
 @Module({
   imports: [
@@ -52,33 +52,33 @@ import { BOT_NAME } from './app.constants';
     //     }
     //   }),
     // }),
-    // ConfigModule.forRoot({
-    //   envFilePath: '.env',
-    //   isGlobal: true,
-    // }),
-    // SequelizeModule.forRoot({
-    //   dialect: 'postgres',
-    //   host: process.env.PG_HOST,
-    //   port: Number(process.env.PG_PORT),
-    //   username: process.env.PG_USER,
-    //   password: String(process.env.PG_PASS),
-    //   database: process.env.PG_DB,
-    //   // models: [ Category ],
-    //   autoLoadModels: true,
-    //   logging: true,
-    //   dialectOptions:
-    //     process.env.NODE_ENV === 'production'
-    //       ? {
-    //         ssl: {
-    //           require: true,
-    //           rejectUnauthorized: false,
-    //         },
-    //       }
-    //       : {},
-    // }),
-    // ServeStaticModule.forRoot({
-    //   rootPath: resolve(__dirname, '..', 'static'),
-    // }),
+    ConfigModule.forRoot({
+      envFilePath: '.env',
+      isGlobal: true,
+    }),
+    SequelizeModule.forRoot({
+      dialect: 'postgres',
+      host: process.env.PG_HOST,
+      port: Number(process.env.PG_PORT),
+      username: process.env.PG_USER,
+      password: String(process.env.PG_PASS),
+      database: process.env.PG_DB,
+      // models: [ Category ],
+      autoLoadModels: true,
+      logging: true,
+      dialectOptions:
+        process.env.NODE_ENV === 'production'
+          ? {
+            ssl: {
+              require: true,
+              rejectUnauthorized: false,
+            },
+          }
+          : {},
+    }),
+    ServeStaticModule.forRoot({
+      rootPath: resolve(__dirname, '..', 'static'),
+    }),
     JwtModule.register({ global: true }),
     MailModule,
     FilesModule,
@@ -106,7 +106,7 @@ import { BOT_NAME } from './app.constants';
     SubscriptionsModule,
     Subscription_activityModule,
     VideoChatModule,
-    BotModule,
+    // BotModule,
   ],
   controllers: [AppController],
   providers: [AppService],
