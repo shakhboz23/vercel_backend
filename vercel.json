@@ -4,10 +4,18 @@
       "maxDuration": 10
     }
   },
-  "rewrites": [
+  "routes": [
     {
-      "source": "/(.*)",
-      "destination": "/api"
+      "src": "/api/(.*)",
+      "dest": "/api"
+    },
+    {
+      "src": "/swagger-ui/(.*)",
+      "dest": "/api/swagger-ui/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/static/$1"
     }
   ]
 }
