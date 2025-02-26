@@ -52,10 +52,10 @@ import { BOT_NAME } from './app.constants';
     //     }
     //   }),
     // }),
-    ConfigModule.forRoot({
-      envFilePath: '.env',
-      isGlobal: true,
-    }),
+    // ConfigModule.forRoot({
+    //   envFilePath: '.env',
+    //   isGlobal: true,
+    // }),
     // SequelizeModule.forRoot({
     //   dialect: 'postgres',
     //   host: process.env.PG_HOST,
@@ -76,9 +76,9 @@ import { BOT_NAME } from './app.constants';
     //       }
     //       : {},
     // }),
-    ServeStaticModule.forRoot({
-      rootPath: resolve(__dirname, '..', 'static'),
-    }),
+    // ServeStaticModule.forRoot({
+    //   rootPath: resolve(__dirname, '..', 'static'),
+    // }),
     JwtModule.register({ global: true }),
     MailModule,
     FilesModule,
