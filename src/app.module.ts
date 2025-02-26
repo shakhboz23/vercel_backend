@@ -56,26 +56,26 @@ import { BOT_NAME } from './app.constants';
       envFilePath: '.env',
       isGlobal: true,
     }),
-    SequelizeModule.forRoot({
-      dialect: 'postgres',
-      host: process.env.PG_HOST,
-      port: Number(process.env.PG_PORT),
-      username: process.env.PG_USER,
-      password: String(process.env.PG_PASS),
-      database: process.env.PG_DB,
-      // models: [ Category ],
-      autoLoadModels: true,
-      logging: true,
-      dialectOptions:
-        process.env.NODE_ENV === 'production'
-          ? {
-            ssl: {
-              require: true,
-              rejectUnauthorized: false,
-            },
-          }
-          : {},
-    }),
+    // SequelizeModule.forRoot({
+    //   dialect: 'postgres',
+    //   host: process.env.PG_HOST,
+    //   port: Number(process.env.PG_PORT),
+    //   username: process.env.PG_USER,
+    //   password: String(process.env.PG_PASS),
+    //   database: process.env.PG_DB,
+    //   // models: [ Category ],
+    //   autoLoadModels: true,
+    //   logging: true,
+    //   dialectOptions:
+    //     process.env.NODE_ENV === 'production'
+    //       ? {
+    //         ssl: {
+    //           require: true,
+    //           rejectUnauthorized: false,
+    //         },
+    //       }
+    //       : {},
+    // }),
     ServeStaticModule.forRoot({
       rootPath: resolve(__dirname, '..', 'static'),
     }),
