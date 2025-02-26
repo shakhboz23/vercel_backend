@@ -38,20 +38,20 @@ import { BOT_NAME } from './app.constants';
 
 @Module({
   imports: [
-    TelegrafModule.forRootAsync({
-      botName: BOT_NAME,
-      useFactory: () => ({
-        token: process.env.BOT_TOKEN,
-        middlewares: [],
-        includes: [BotModule],
-        launchOptions: {
-          webhook: {
-            domain: 'https://starfish-app-ueywh.ondigitalocean.app/api',
-            hookPath: '/webhook',
-          }
-        }
-      }),
-    }),
+    // TelegrafModule.forRootAsync({
+    //   botName: BOT_NAME,
+    //   useFactory: () => ({
+    //     token: process.env.BOT_TOKEN,
+    //     middlewares: [],
+    //     includes: [BotModule],
+    //     launchOptions: {
+    //       webhook: {
+    //         domain: 'https://starfish-app-ueywh.ondigitalocean.app/api',
+    //         hookPath: '/webhook',
+    //       }
+    //     }
+    //   }),
+    // }),
     ConfigModule.forRoot({
       envFilePath: '.env',
       isGlobal: true,
@@ -63,30 +63,7 @@ import { BOT_NAME } from './app.constants';
       username: process.env.PG_USER,
       password: String(process.env.PG_PASS),
       database: process.env.PG_DB,
-      // models: [
-      // Category,
-      // Group,
-      // Course,
-      // Lesson,
-      // Like,
-      // Chat,
-      // Tests,
-      // User,
-      // ChatGroup,
-      // Uploaded,
-      // Notification,
-      // Message,
-      // Role,
-      // Activity,
-      // Reyting,
-      // News,
-      // Otp,
-      // UserStep,
-      // Subscriptions,
-      // SubscriptionActivity,
-      // VideoChat,
-      // Bot,
-      // ],
+      // models: [ Category ],
       autoLoadModels: true,
       logging: true,
       dialectOptions:
@@ -135,19 +112,19 @@ import { BOT_NAME } from './app.constants';
   providers: [AppService],
   exports: []
 })
-// export class AppModule {}
-export class AppModule implements OnApplicationBootstrap {
+export class AppModule { }
+// export class AppModule implements OnApplicationBootstrap {
 
-  constructor(
-    private readonly userService: UserService,
-  ) { }
+//   // constructor(
+//   //   private readonly userService: UserService,
+//   // ) { }
 
-  async onApplicationBootstrap() {
-    await this.userService.createDefaultUser();
-    // ConsoleUtils.startAutoClear();
-  }
+//   // async onApplicationBootstrap() {
+//   //   await this.userService.createDefaultUser();
+//   //   // ConsoleUtils.startAutoClear();
+//   // }
 
-}
+// }
 
 
 // import { Module } from '@nestjs/common';
