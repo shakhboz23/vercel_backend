@@ -128,8 +128,8 @@ import { VideoChatModule } from './video_chat/video_chat.module';
     VideoChatModule,
     // BotModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [],
+  providers: [],
   exports: []
 })
 export class AppModule { }
