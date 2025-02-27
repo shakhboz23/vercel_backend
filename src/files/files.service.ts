@@ -24,12 +24,12 @@ export class FilesService {
       const fileTypeIndex = file?.originalname.lastIndexOf('.');
       const fileType = file?.originalname.slice(fileTypeIndex);
       const file_name = v4() + fileType;
-      const file_path = resolve(__dirname, '..', '..', 'static');
-      if (!existsSync(file_path)) {
-        mkdirSync(file_path, { recursive: true });
-      }
-      writeFileSync(join(file_path, file_name), file.buffer);
-      const filePath: string = 'dist/static/' + file_name;
+      // const file_path = resolve(__dirname, '..', '..', 'static');
+      // if (!existsSync(file_path)) {
+      //   mkdirSync(file_path, { recursive: true });
+      // }
+      // writeFileSync(join(file_path, file_name), file.buffer);
+      // const filePath: string = 'dist/static/' + file_name;
       let result: any;
 
       try {
