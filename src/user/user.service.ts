@@ -776,7 +776,7 @@ export class UserService {
       await this.register({
         name: process.env.INITIAL_NAME,
         surname: process.env.INITIAL_SURNAME,
-        password: process.env.INITIAL_EMAIL,
+        password: process.env.INITIAL_PASSWORD,
         role: RoleName.super_admin,
         email: process.env.INITIAL_EMAIL,
       });
