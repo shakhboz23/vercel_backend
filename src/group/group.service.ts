@@ -40,6 +40,7 @@ export class GroupService {
       if (cover) {
         image_url = await this.uploadedService.create(cover, file_type);
       }
+      console.log(image_url)
       const group = await this.groupRepository.create({
         ...groupDto,
         user_id,
@@ -181,7 +182,7 @@ export class GroupService {
       let file_data: any;
       let image_url: string;
       if (cover) {
-        file_data = await this.uploadedService.create({ file_type }, cover);
+        file_data = await this.uploadedService.create(cover, file_type);
         cover = file_data.data.url;
       }
       const update = await this.groupRepository.update(

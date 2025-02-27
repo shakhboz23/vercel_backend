@@ -304,7 +304,7 @@ export class LessonService {
           video = youtube;
         } else if (video) {
           file_type = 'video';
-          file_data = await this.uploadedService.create({ file_type }, video);
+          file_data = await this.uploadedService.create(video, file_type);
           console.log(file_data);
           video = file_data;
         }
