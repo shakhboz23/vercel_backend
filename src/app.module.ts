@@ -133,28 +133,15 @@ import { VideoChatModule } from './video_chat/video_chat.module';
   providers: [],
   exports: []
 })
-export class AppModule { }
-// export class AppModule implements OnApplicationBootstrap {
+export class AppModule implements OnApplicationBootstrap {
 
-//   // constructor(
-//   //   private readonly userService: UserService,
-//   // ) { }
+  constructor(
+    private readonly userService: UserService,
+  ) { }
 
-//   // async onApplicationBootstrap() {
-//   //   await this.userService.createDefaultUser();
-//   //   // ConsoleUtils.startAutoClear();
-//   // }
+  async onApplicationBootstrap() {
+    await this.userService.createDefaultUser();
+    // ConsoleUtils.startAutoClear();
+  }
 
-// }
-
-
-// import { Module } from '@nestjs/common';
-// import { AppController } from './app.controller';
-// import { AppService } from './app.service';
-
-// @Module({
-//   imports: [],
-//   controllers: [AppController],
-//   providers: [AppService],
-// })
-// export class AppModule {}
+}
