@@ -3,6 +3,7 @@ import { v4 } from 'uuid';
 import { resolve, join } from 'path';
 import { existsSync, mkdirSync, writeFileSync, unlinkSync } from 'fs';
 import cloudinary from '../../cloudinary.config';
+import { Readable } from 'stream';
 
 @Injectable()
 export class FilesService {
@@ -31,25 +32,22 @@ export class FilesService {
       const filePath: string = 'dist/static/' + file_name;
       let result: any;
 
-      // {
-      //   access_type: 'anonymous',
-      //   start: '2024-06-28T00:00:00Z',
-      //   end: '2024-06-29T00:00:00Z'
-      // },
       try {
-        result = await cloudinary.uploader.upload(filePath, {
-          resource_type: 'auto',
-          // type: 'authenticated',
-          // access_key: 'jkdjfkdfj',
-          // access_control: [
-          //   {
-          //     access_type: 'token',
-          //   },
-          // ],
+        // result = await cloudinary.uploader.upload(filePath, {
+        //   resource_type: 'auto',
+        // });
+        // Faylni to‘g‘ridan-to‘g‘ri Cloudinary'ga yuklash
+        result = await new Promise((resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream(
+            { resource_type: 'auto' },
+            (error, result) => {
+              if (error) return reject(error);
+              resolve(result);
+            }
+          );
+
+          Readable.from(file.buffer).pipe(stream);
         });
-        console.log(result);
-        // console.log(result.public_id, result.url, result);
-        // console.log(result.resource_type);
       } catch (error) {
         console.log(error);
         return 'error';
