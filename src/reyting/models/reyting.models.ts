@@ -8,6 +8,7 @@ interface ReytingAttributes {
   user_id: number;
   ball: number;
   lesson_id: number;
+  step: number;
 }
 
 @Table({ tableName: 'reyting' })
@@ -24,6 +25,12 @@ export class Reyting extends Model<Reyting, ReytingAttributes> {
     allowNull: true,
   })
   ball: number;
+
+  @Column({
+    type: DataType.INTEGER,
+    defaultValue: 0,
+  })
+  step: number;
 
   @ForeignKey(() => User)
   @Column({

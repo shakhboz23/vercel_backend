@@ -10,12 +10,14 @@ import {
 import { User } from '../../user/models/user.models';
 import { Course } from 'src/course/models/course.models';
 import { ChatGroup } from 'src/chat_group/models/chat_group.models';
+import { GroupType } from '../dto/group.dto';
 
 interface GroupAttributes {
   title: string;
   description: string;
   cover: string;
   user_id: number;
+  group_type: string;
 }
 
 @Table({ tableName: 'group' })
@@ -49,7 +51,15 @@ export class Group extends Model<Group, GroupAttributes> {
   @Column({
     type: DataType.INTEGER,
   })
-  user_id: number; 
+  user_id: number;
+
+  @Column({
+    type: DataType.ENUM({
+      values: Object.keys(GroupType),
+    }),
+    defaultValue: GroupType.public,
+  })
+  group_type: GroupType;
 
   @BelongsTo(() => User)
   user: User[];

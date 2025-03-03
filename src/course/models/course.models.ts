@@ -8,13 +8,14 @@ import {
   Model,
   Table,
 } from 'sequelize-typescript';
-import { Group } from '../../group/models/group.models';
-import { Lesson } from '../../lesson/models/lesson.models';
+import { Lesson } from 'src/lesson/models/lesson.models';
 import { Subscriptions } from 'src/subscriptions/models/subscriptions.models';
 import { Category } from 'src/category/models/category.models';
 import { User } from 'src/user/models/user.models';
 import { SubscriptionActivity } from 'src/subscription_activity/models/subscription_activity.models';
 import { ChatGroup } from 'src/chat_group/models/chat_group.models';
+import { Group } from 'src/group/models/group.models';
+import { GroupType } from 'src/group/dto/group.dto';
 
 interface CourseAttributes {
   title: string;
@@ -25,6 +26,7 @@ interface CourseAttributes {
   group_id: number;
   category_id: number;
   user_id: number
+  group_type: string;
 }
 
 @Table({ tableName: 'course' })
@@ -66,6 +68,14 @@ export class Course extends Model<Course, CourseAttributes> {
     type: DataType.STRING,
   })
   cover: string;
+
+  @Column({
+    type: DataType.ENUM({
+      values: Object.keys(GroupType),
+    }),
+    defaultValue: GroupType.public,
+  })
+  group_type: GroupType;
 
   @ForeignKey(() => Group)
   @Column({

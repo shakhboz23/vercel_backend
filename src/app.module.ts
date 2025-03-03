@@ -32,6 +32,25 @@ import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 import { UserService } from './user/user.service';
 import { Subscription_activityModule } from './subscription_activity/subscription_activity.module';
 import { VideoChatModule } from './video_chat/video_chat.module';
+import { Category } from './category/models/category.models';
+import { Group } from './group/models/group.models';
+import { Course } from './course/models/course.models';
+import { Lesson } from './lesson/models/lesson.models';
+import { Like } from './likes/models/like.models';
+import { Chat } from './chat/models/chat.model';
+import { Tests } from './test/models/test.models';
+import { User } from './user/models/user.models';
+import { ChatGroup } from './chat_group/models/chat_group.models';
+import { Uploaded } from './uploaded/models/uploaded.models';
+import { Notification } from './notification/models/notification.model';
+import { Activity } from './activity/models/activity.models';
+import { Role } from './role/models/role.models';
+import { Reyting } from './reyting/models/reyting.models';
+import { News } from './news/models/news.model';
+import { UserStep } from './user_step/models/class.models';
+import { SubscriptionActivity } from './subscription_activity/models/subscription_activity.models';
+import { Subscriptions } from './subscriptions/models/subscriptions.models';
+import { VideoChat } from './video_chat/models/video_chat.model';
 // import { BotModule } from './bot/bot.module';
 // import { TelegrafModule } from 'nestjs-telegraf';
 // import { BOT_NAME } from './app.constants';
@@ -56,46 +75,85 @@ import { VideoChatModule } from './video_chat/video_chat.module';
       envFilePath: '.env',
       isGlobal: true,
     }),
-    // SequelizeModule.forRoot({
-    //   dialect: 'postgres',
-    //   host: process.env.PG_HOST,
-    //   port: Number(process.env.PG_PORT),
-    //   username: process.env.PG_USER,
-    //   password: String(process.env.PG_PASS),
-    //   database: process.env.PG_DB,
-    //   // models: [ Category ],
-    //   autoLoadModels: true,
-    //   logging: true,
-    //   dialectOptions:
-    //     process.env.NODE_ENV === 'production'
-    //       ? {
-    //         ssl: {
-    //           require: true,
-    //           rejectUnauthorized: false,
-    //         },
-    //       }
-    //       : {},
-    // }),
-    SequelizeModule.forRoot({
-      dialect: 'postgres',
-      host: process.env.PGHOST,
-      // port: Number(process.env.PG_PORT),
-      username: process.env.PGUSER,
-      password: String(process.env.PGPASSWORD),
-      database: process.env.PGDATABASE,
-      // models: [ Category ],
-      autoLoadModels: true,
-      logging: true,
-      dialectOptions:
-        process.env.NODE_ENV === 'production'
-          ? {
-            ssl: {
-              require: true,
-              rejectUnauthorized: false,
-            },
-          }
-          : {},
-    }),
+    process.env.NODE_ENV === 'production'
+      ? SequelizeModule.forRoot({
+        dialect: 'postgres',
+        host: process.env.PGHOST,
+        // port: Number(process.env.PG_PORT),
+        username: process.env.PGUSER,
+        password: String(process.env.PGPASSWORD),
+        database: process.env.PGDATABASE,
+        models: [
+          Category,
+          Group,
+          Course,
+          Lesson,
+          Like,
+          Chat,
+          Tests,
+          User,
+          ChatGroup,
+          Uploaded,
+          Notification,
+          Activity,
+          Role,
+          Reyting,
+          News,
+          UserStep,
+          Subscriptions,
+          SubscriptionActivity,
+          VideoChat,
+        ],
+        autoLoadModels: true,
+        logging: true,
+        synchronize: true,
+        dialectOptions: {
+          ssl: {
+            require: true,
+            rejectUnauthorized: false,
+          },
+        },
+      }) : SequelizeModule.forRoot({
+        dialect: 'postgres',
+        host: process.env.PG_HOST,
+        port: Number(process.env.PG_PORT),
+        username: process.env.PG_USER,
+        password: String(process.env.PG_PASS),
+        database: process.env.PG_DB,
+        models: [
+          Category,
+          Group,
+          Course,
+          Lesson,
+          Like,
+          Chat,
+          Tests,
+          User,
+          ChatGroup,
+          Uploaded,
+          Notification,
+          Activity,
+          Role,
+          Reyting,
+          News,
+          UserStep,
+          Subscriptions,
+          SubscriptionActivity,
+          VideoChat,
+        ],
+        autoLoadModels: true,
+        logging: true,
+        synchronize: true,
+        dialectOptions:
+          process.env.NODE_ENV === 'production'
+            ? {
+              ssl: {
+                require: true,
+                rejectUnauthorized: false,
+              },
+            }
+            : {},
+      }),
     ServeStaticModule.forRoot({
       rootPath: resolve(__dirname, '..', 'static'),
       serveRoot: '/static',

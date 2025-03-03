@@ -20,12 +20,14 @@ import { Op } from 'sequelize';
 import { Reyting } from 'src/reyting/models/reyting.models';
 import { CourseService } from 'src/course/course.service';
 import { Group } from 'src/group/models/group.models';
+import { ReytingService } from 'src/reyting/reyting.service';
 
 @Injectable()
 export class LessonService {
   constructor(
     @InjectModel(Lesson) private lessonRepository: typeof Lesson,
     private readonly courseService: CourseService,
+    private readonly reytingService: ReytingService,
     // private readonly userService: UserService,
     private uploadedService: UploadedService,
   ) { }
@@ -141,6 +143,12 @@ export class LessonService {
                   ),
                   'is_finished',
                 ],
+                [
+                  Sequelize.literal(
+                    `(CASE WHEN EXISTS (SELECT 1 FROM "reyting" WHERE "reyting"."lesson_id" = "Lesson"."id" AND "reyting"."user_id" = :user_id AND "reyting"."ball" >= 0) THEN true ELSE false END)`,
+                  ),
+                  'is_viewed',
+                ],
               ],
             },
           },
@@ -153,6 +161,12 @@ export class LessonService {
                 `(CASE WHEN EXISTS (SELECT 1 FROM "reyting" WHERE "reyting"."lesson_id" = "lessons"."id" AND "reyting"."user_id" = :user_id AND "reyting"."ball" >= (SELECT COUNT(*) FROM "tests" WHERE "tests"."lesson_id" = "lessons"."id") * 70 / 100) THEN true ELSE false END)`,
               ),
               'is_finished',
+            ],
+            [
+              Sequelize.literal(
+                `(CASE WHEN EXISTS (SELECT 1 FROM "reyting" WHERE "reyting"."lesson_id" = "Lesson"."id" AND "reyting"."user_id" = :user_id AND "reyting"."ball" >= 0) THEN true ELSE false END)`,
+              ),
+              'is_viewed',
             ],
           ],
         },
@@ -203,6 +217,7 @@ export class LessonService {
   async getById(id: number, user_id?: number): Promise<object> {
     try {
       user_id = user_id || null;
+      await this.reytingService.create({ lesson_id: id, ball: 0 }, user_id);
       const lesson = await this.lessonRepository.findOne({
         where: { id },
         include: [

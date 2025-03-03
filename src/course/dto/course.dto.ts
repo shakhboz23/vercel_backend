@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import {
   IsBoolean,
   IsBooleanString,
+  IsEnum,
   IsNotEmpty,
   IsNumber,
   IsNumberString,
@@ -9,6 +10,7 @@ import {
   IsPhoneNumber,
   IsString,
 } from 'class-validator';
+import { GroupType } from 'src/group/dto/group.dto';
 
 export class CourseDto {
   @ApiProperty({
@@ -66,4 +68,13 @@ export class CourseDto {
   @IsOptional()
   @IsBooleanString()
   type: boolean;
+
+
+  @ApiProperty({
+    example: 'A',
+    description: 'group type',
+  })
+  @IsOptional()
+  @IsEnum(GroupType)
+  group_type?: GroupType;
 }
