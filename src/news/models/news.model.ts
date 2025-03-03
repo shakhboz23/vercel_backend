@@ -13,6 +13,7 @@ interface NewsAttr {
   title: string;
   source: string;
   description: string;
+  status: string;
 }
 
 @Table({ tableName: 'news' })
@@ -41,4 +42,10 @@ export class News extends Model<News, NewsAttr> {
     allowNull: true,
   })
   description: string;
+
+  @Column({
+    type: DataType.STRING,
+    allowNull: true,
+  })
+  status: string;
 }
