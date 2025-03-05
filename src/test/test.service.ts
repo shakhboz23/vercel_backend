@@ -196,7 +196,7 @@ export class TestsService {
           const randomizedOptions = this.shuffle(variant.get('variants'));
           return {
             ...variant.toJSON(),
-            test: variant.question?.replace(/@\w/g, '...'),
+            question: variant.question?.replace(/@\w/g, '...'),
             variants: randomizedOptions,
           };
         });
