@@ -60,7 +60,7 @@ export class TestsService {
         console.log(test[i].is_action, '2303');
         if (test[i].is_action == ActionType.edited && test[i].id) {
           await this.update(test[i].id, test[i])
-        } else if(test[i].is_action != ActionType.old) {
+        } else if (test[i].is_action != ActionType.old) {
           await this.testsRepository.create({
             lesson_id,
             question: test[i].question,
@@ -196,6 +196,7 @@ export class TestsService {
           const randomizedOptions = this.shuffle(variant.get('variants'));
           return {
             ...variant.toJSON(),
+            test: variant.replace(/@\w/g, '...'),
             variants: randomizedOptions,
           };
         });
