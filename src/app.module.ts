@@ -106,8 +106,8 @@ import { VideoChat } from './video_chat/models/video_chat.model';
         ],
         autoLoadModels: true,
         logging: true,
-        synchronize: true,
-        sync: { alter: true },
+        // synchronize: true,
+        // sync: { alter: true },
         dialectOptions: {
           ssl: {
             require: true,

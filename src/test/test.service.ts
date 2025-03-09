@@ -196,7 +196,7 @@ export class TestsService {
           const randomizedOptions = this.shuffle(variant.get('variants'));
           return {
             ...variant.toJSON(),
-            question: variant.question?.replace(/@\w/g, '...'),
+            question: this.maskMentions(variant.question),
             variants: randomizedOptions,
           };
         });
@@ -216,15 +216,31 @@ export class TestsService {
   async checkById(id: number, answer: string): Promise<object> {
     try {
       const test = await this.testsRepository.findByPk(id);
+      
       if (!test) {
         throw new NotFoundException('Tests not found');
       }
-      console.log(answer);
-      console.log(test.variants[test.true_answer[0]]);
-      if (test.variants[test.true_answer[0]] == answer) {
-        return [id, true];
+      let t = 0;
+      let true_list = [];
+      if (test.type == 'fill') {
+        for (let i of test.variants) {
+          console.log(i);
+          console.log(this.containsAnswer(i.toString()), this.containsAnswer(answer[0]));
+          if (this.containsAnswer(i.toString()) == this.containsAnswer(answer[0])) {
+            return [id, [true]];
+          }
+        }
+      } else {
+        for (let i of test.true_answer) {
+          if (test.variants[i] == answer[0][t]) {
+            true_list.push(true);
+          } else {
+            true_list.push(false);
+          }
+          t++;
+        }
       }
-      return [id, false];
+      return [id, true_list];
     } catch (error) {
       throw new BadRequestException(error.message);
     }
@@ -245,7 +261,7 @@ export class TestsService {
         id = +i[0];
         answer = i[1];
         res = await this.checkById(id, answer);
-        results[res[0]] = res[1];
+        results[res[0]] = this.checkAnswerList(res[1]);
       }
       let ball = 0;
       for (let i in results) {
@@ -374,5 +390,25 @@ export class TestsService {
       ];
     }
     return shuffledArray;
+  }
+
+  private maskMentions(html: string): string {
+    let mentionCount = 0; // Nechta mention uchraganini sanash uchun
+    return html.replace(
+      /(<span[^>]*data-type="mention"[^>]*>)(@[\w👆🏾]+)(<\/span>)/g,
+      (match, startTag, mentionText, endTag) => {
+        mentionCount++; // Har bir uchragan mention uchun +1
+        return `${startTag}<span class="mentionstep">${mentionCount}</span>......${endTag}`;
+      }
+    );
+  }
+
+  private checkAnswerList(list: boolean[]): boolean {
+    return list.every(item => item === true);
+  }
+
+  private containsAnswer(htmlString: string) {
+    const textContent = htmlString.replace(/<[^>]*>/g, '').trim();
+    return textContent.toLowerCase();
   }
 }
