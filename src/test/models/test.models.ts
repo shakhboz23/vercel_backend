@@ -15,6 +15,7 @@ export enum TestType {
   multiple = 'multiple',
   fill = 'fill',
   customizable = 'customizable',
+  deleted = 'deleted',
 }
 
 export enum ActionType {

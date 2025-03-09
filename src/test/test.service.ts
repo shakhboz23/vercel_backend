@@ -60,6 +60,8 @@ export class TestsService {
         console.log(test[i].is_action, '2303');
         if (test[i].is_action == ActionType.edited && test[i].id) {
           await this.update(test[i].id, test[i])
+        } else if (test[i].is_action == ActionType.deleted && test[i].id) {
+          await this.delete(test[i].id)
         } else if (test[i].is_action != ActionType.old) {
           await this.testsRepository.create({
             lesson_id,
@@ -216,7 +218,7 @@ export class TestsService {
   async checkById(id: number, answer: string): Promise<object> {
     try {
       const test = await this.testsRepository.findByPk(id);
-      
+
       if (!test) {
         throw new NotFoundException('Tests not found');
       }
@@ -398,7 +400,7 @@ export class TestsService {
       /(<span[^>]*data-type="mention"[^>]*>)(@[\w👆🏾]+)(<\/span>)/g,
       (match, startTag, mentionText, endTag) => {
         mentionCount++; // Har bir uchragan mention uchun +1
-        return `${startTag}<span class="mentionstep">${mentionCount}</span>......${endTag}`;
+        return `${startTag}<span>${mentionCount}</span>......${endTag}`;
       }
     );
   }
