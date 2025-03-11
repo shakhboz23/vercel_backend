@@ -232,6 +232,7 @@ export class TestsService {
             return [id, [true]];
           }
         }
+        return [id, [false]];
       } else {
         for (let i of test.true_answer) {
           if (test.variants[i] == answer[0][t]) {
@@ -241,6 +242,9 @@ export class TestsService {
           }
           t++;
         }
+      }
+      if (!true_list?.length) {
+        true_list.push(false);
       }
       return [id, true_list];
     } catch (error) {
