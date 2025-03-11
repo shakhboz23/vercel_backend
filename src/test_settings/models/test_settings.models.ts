@@ -12,7 +12,7 @@ interface Test_settingsAttributes {
   start_date: Date;
   end_date: Date;
   sort_level: any[];
-  period: number;
+  period: string;
   mix: boolean;
   lesson_id: number;
 }
@@ -45,9 +45,9 @@ export class Test_settings extends Model<
   sort_level: any[];
 
   @Column({
-    type: DataType.INTEGER,
+    type: DataType.TIME,
   })
-  period: number;
+  period: string;
 
   @Column({
     type: DataType.BOOLEAN,

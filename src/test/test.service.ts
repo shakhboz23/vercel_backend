@@ -224,10 +224,12 @@ export class TestsService {
       }
       let t = 0;
       let true_list = [];
+      console.log(answer);
+      if (!answer || !answer?.length || !answer[0]) {
+        return [id, [false]];
+      }
       if (test.type == 'fill') {
         for (let i of test.variants) {
-          console.log(i);
-          console.log(this.containsAnswer(i.toString()), this.containsAnswer(answer[0]));
           if (this.containsAnswer(i.toString()) == this.containsAnswer(answer[0])) {
             return [id, [true]];
           }
@@ -264,6 +266,9 @@ export class TestsService {
       let student: any;
       let res: object, id: number, answer: string;
       for (let i of answers) {
+        if (!i?.length) {
+          continue
+        }
         id = +i[0];
         answer = i[1];
         res = await this.checkById(id, answer);

@@ -40,7 +40,7 @@ export class Test_settingsDto {
   })
   @IsOptional()
   // @IsNumber()
-  period: number;
+  period: string;
 
   @ApiProperty({
     example: true,
