@@ -20,7 +20,7 @@
         "src": "/swagger-ui/(.*)",
         "dest": "/api/swagger-ui/$1"
       },
-      {
+      { 
         "src": "/(.*)",
         "dest": "/static/$1"
       }
