@@ -67,10 +67,10 @@ import { BotModule } from './bot/bot.module';
         middlewares: [],
         includes: [BotModule],
         launchOptions: {
-          webhook: {
-            domain: 'https://ilmnur.vercel.app',
-            hookPath: '/api/webhook',
-          }
+          // webhook: {
+          //   domain: 'http://localhost:4000/',
+          //   hookPath: '/api/webhook',
+          // }
         }
       }),
     }),
