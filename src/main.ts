@@ -18,15 +18,15 @@ async function bootstrap() {
 
     const PORT = process.env.PORT || 4200;
     app.enableCors({
-      origin: '*',
-      methods: '*',
+      origin: ['https://ilmnur.online', 'https://ilmnur.vercel.app', 'http://localhost:3000'],
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization'],
       credentials: true,
-      allowedHeaders: '*',
     });
     app.setGlobalPrefix('api');
     // app.use(cookieParser()); 
 
-    const server = app.getHttpServer(); // Get the underlying HTTP server
+    // const server = app.getHttpServer(); // Get the underlying HTTP server
     // const peerServer = ExpressPeerServer(server, { path: '/peerjs' }); // Create the PeerJS server with a custom path
     // const peerServer = ExpressPeerServer(server);
     // console.log(peerServer)
