@@ -1,28 +1,21 @@
-  {
-    "version": 2,
-    "functions": {
-      "api/**/*.ts": {
-        "maxDuration": 10
-      }
+{
+  "functions": {
+    "api/**/*.ts": {
+      "maxDuration": 10
+    }
+  },
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api"
     },
-    "builds": [{ "src": "dist/main.js", "use": "@vercel/node" }],
-    "routes": [
-      {
-        "src": "/api/(.*)",
-        "dest": "/api",
-        "headers": {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "GET,OPTIONS,PATCH,DELETE,POST,PUT",
-          "Access-Control-Allow-Headers": "Content-Type, Authorization"
-        }
-      },
-      {
-        "src": "/swagger-ui/(.*)",
-        "dest": "/api/swagger-ui/$1"
-      },
-      { 
-        "src": "/(.*)",
-        "dest": "/static/$1"
-      }
-    ]
-  }
+    {
+      "src": "/swagger-ui/(.*)",
+      "dest": "/api/swagger-ui/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/static/$1"
+    }
+  ]
+}

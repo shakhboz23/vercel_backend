@@ -60,20 +60,20 @@ import { BotModule } from './bot/bot.module';
 
 @Module({
   imports: [
-    TelegrafModule.forRootAsync({
-      botName: BOT_NAME,
-      useFactory: () => ({
-        token: process.env.BOT_TOKEN,
-        middlewares: [],
-        includes: [BotModule],
-        launchOptions: {
-          // webhook: {
-          //   domain: 'http://localhost:4000/',
-          //   hookPath: '/api/webhook',
-          // }
-        }
-      }),
-    }),
+    // TelegrafModule.forRootAsync({
+    //   botName: BOT_NAME,
+    //   useFactory: () => ({
+    //     token: process.env.BOT_TOKEN,
+    //     middlewares: [],
+    //     includes: [BotModule],
+    //     // launchOptions: {
+    //     //   webhook: {
+    //     //     domain: 'https://ilmnur.vercel.app',
+    //     //     hookPath: '/api/webhook',
+    //     //   }
+    //     // }
+    //   }),
+    // }),
     ConfigModule.forRoot({
       envFilePath: '.env',
       isGlobal: true,
@@ -190,7 +190,7 @@ import { BotModule } from './bot/bot.module';
     SubscriptionsModule,
     Subscription_activityModule,
     VideoChatModule,
-    BotModule,
+    // BotModule,
   ],
   controllers: [],
   providers: [],
