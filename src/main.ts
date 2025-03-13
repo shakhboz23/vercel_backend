@@ -13,11 +13,15 @@ async function bootstrap() {
     const app = await NestFactory.create(AppModule);
 
 
-  // Serve static files for Swagger UI
-  app.use('/swagger-ui', express.static(join(__dirname, '../node_modules/swagger-ui-dist')));
-  
+    // Serve static files for Swagger UI
+    app.use('/swagger-ui', express.static(join(__dirname, '../node_modules/swagger-ui-dist')));
+
     const PORT = process.env.PORT || 4200;
-    app.enableCors();
+    app.enableCors({
+      origin: ['https://ilmnur.online'], // Faqat shu domen uchun
+      methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+      credentials: true, // Agar cookie yoki authentication tokenlar bo'lsa
+    });
     app.setGlobalPrefix('api');
     // app.use(cookieParser()); 
 
