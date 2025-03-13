@@ -22,7 +22,6 @@ async function bootstrap() {
       methods: '*',
       credentials: true,
       allowedHeaders: '*',
-      'Access-Control-Allow-Origin': '*',
     });
     app.setGlobalPrefix('api');
     // app.use(cookieParser()); 
