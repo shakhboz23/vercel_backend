@@ -68,8 +68,8 @@ import { BotModule } from './bot/bot.module';
         includes: [BotModule],
         launchOptions: {
           webhook: {
-            domain: 'https://ilmnur.vercel.app/api',
-            hookPath: '/webhook',
+            domain: 'https://ilmnur.vercel.app',
+            hookPath: '/api/webhook',
           }
         }
       }),
