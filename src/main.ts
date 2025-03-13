@@ -18,10 +18,11 @@ async function bootstrap() {
 
     const PORT = process.env.PORT || 4200;
     app.enableCors({
-      origin: '*', // Faqat shu domen uchun
-      methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-      credentials: true, // Agar cookie yoki authentication tokenlar bo'lsa
+      origin: '*',
+      methods: '*',
+      credentials: true,
       allowedHeaders: '*',
+      'Access-Control-Allow-Origin': '*',
     });
     app.setGlobalPrefix('api');
     // app.use(cookieParser()); 
