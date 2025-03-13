@@ -54,7 +54,7 @@ export class BotService {
       await ctx.reply(
         'Click the button below to open Mini App:',
         Markup.inlineKeyboard([
-          Markup.button.webApp('Open Mini App', 'https://ilmnur.online'),
+          Markup.button.webApp('Open Mini App', 'http://localhost:3000/'),
         ]),
       );
       if (!user) {

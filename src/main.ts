@@ -18,9 +18,10 @@ async function bootstrap() {
 
     const PORT = process.env.PORT || 4200;
     app.enableCors({
-      origin: ['https://ilmnur.online'], // Faqat shu domen uchun
+      origin: '*', // Faqat shu domen uchun
       methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
       credentials: true, // Agar cookie yoki authentication tokenlar bo'lsa
+      allowedHeaders: '*',
     });
     app.setGlobalPrefix('api');
     // app.use(cookieParser()); 
