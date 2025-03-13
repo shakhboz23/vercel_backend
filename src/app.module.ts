@@ -51,26 +51,23 @@ import { UserStep } from './user_step/models/class.models';
 import { SubscriptionActivity } from './subscription_activity/models/subscription_activity.models';
 import { Subscriptions } from './subscriptions/models/subscriptions.models';
 import { VideoChat } from './video_chat/models/video_chat.model';
+import { BotModule } from './bot/bot.module';
+import { BOT_NAME } from './app.constants';
+import { TelegrafModule } from 'nestjs-telegraf';
 // import { BotModule } from './bot/bot.module';
 // import { TelegrafModule } from 'nestjs-telegraf';
 // import { BOT_NAME } from './app.constants';
 
 @Module({
   imports: [
-    // TelegrafModule.forRootAsync({
-    //   botName: BOT_NAME,
-    //   useFactory: () => ({
-    //     token: process.env.BOT_TOKEN,
-    //     middlewares: [],
-    //     includes: [BotModule],
-    //     launchOptions: {
-    //       webhook: {
-    //         domain: 'https://starfish-app-ueywh.ondigitalocean.app/api',
-    //         hookPath: '/webhook',
-    //       }
-    //     }
-    //   }),
-    // }),
+    TelegrafModule.forRootAsync({
+      botName: BOT_NAME,
+      useFactory: () => ({
+        token: process.env.BOT_TOKEN,
+        middlewares: [],
+        includes: [BotModule],
+      }),
+    }),
     ConfigModule.forRoot({
       envFilePath: '.env',
       isGlobal: true,
@@ -187,7 +184,7 @@ import { VideoChat } from './video_chat/models/video_chat.model';
     SubscriptionsModule,
     Subscription_activityModule,
     VideoChatModule,
-    // BotModule,
+    BotModule,
   ],
   controllers: [],
   providers: [],

@@ -187,10 +187,11 @@ export class BotService {
     const user = await this.botRepo.findOne({ where: { bot_id } });
     let bot_user: any;
     if (!user?.user_id) {
+      console.log(user);
       // bot_user = await this.userService.register({ password, role: RoleName.student, name: user.name, surname: user.surname, phone: user.phone });
       console.log(bot_user);
-      console.log(bot_user.data.user.get('id'));
-      await this.botRepo.update({ user_id: bot_user.data.user.get('id') }, {
+      console.log(bot_user?.data?.user.get('id'));
+      await this.botRepo.update({ user_id: bot_user?.data?.user.get('id') }, {
         where: { bot_id: user.bot_id },
         returning: true
       })
