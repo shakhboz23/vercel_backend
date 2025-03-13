@@ -51,6 +51,12 @@ export class BotService {
     try {
       const bot_id = ctx.from.id;
       const user = await this.botRepo.findOne({ where: { bot_id } });
+      await ctx.reply(
+        'Click the button below to open Mini App:',
+        Markup.inlineKeyboard([
+          Markup.button.webApp('Open Mini App', 'https://ilmnur.online'),
+        ]),
+      );
       if (!user) {
         await this.botRepo.create({
           bot_id: bot_id,
