@@ -15,7 +15,7 @@ import { User } from 'src/user/models/user.models';
 export class ReytingService {
   constructor(
     @InjectModel(Reyting) private reytingRepository: typeof Reyting,
-  ) {}
+  ) { }
 
   async create(reytingDto: ReytingDto, user_id: number): Promise<object> {
     try {
@@ -36,6 +36,19 @@ export class ReytingService {
         return {
           statusCode: HttpStatus.OK,
           message: 'Successfully added!',
+          data: reyting,
+        };
+      } else {
+        const reyting = await this.reytingRepository.update({
+          ...reytingDto,
+          user_id,
+        }, {
+          where: { id: user_id },
+          returning: true,
+        });
+        return {
+          statusCode: HttpStatus.OK,
+          message: 'Successfully updated!',
           data: reyting,
         };
       }
