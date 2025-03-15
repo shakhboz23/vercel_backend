@@ -37,7 +37,7 @@ export class Group extends Model<Group, GroupAttributes> {
   title: string;
 
   @Column({
-    type: DataType.STRING,
+    type: DataType.TEXT,
     allowNull: false,
   })
   description: string;

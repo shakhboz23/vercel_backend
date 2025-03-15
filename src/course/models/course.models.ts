@@ -46,7 +46,7 @@ export class Course extends Model<Course, CourseAttributes> {
   title: string;
 
   @Column({
-    type: DataType.STRING,
+    type: DataType.TEXT,
     allowNull: false,
   })
   description: string;

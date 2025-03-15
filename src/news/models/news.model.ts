@@ -38,7 +38,7 @@ export class News extends Model<News, NewsAttr> {
   source: string;
 
   @Column({
-    type: DataType.STRING,
+    type: DataType.TEXT,
     allowNull: true,
   })
   description: string;
