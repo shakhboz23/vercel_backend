@@ -114,7 +114,7 @@ export class UserService {
           { where: { id: user.id }, returning: true },
         );
 
-        await this.mailService.sendUserConfirmation(updateuser[1][0], access_token);
+        await this.mailService.sendUserConfirmation(updateuser[1][0], uniqueKey);
 
         const roleData: RoleDto = {
           ...registerUserDto,
@@ -191,12 +191,17 @@ export class UserService {
       throw new BadRequestException('User already activated');
     }
     const updateduser = await this.userRepository.update(
-      { is_active: true },
+      { is_active: true, activation_link: "" },
       { where: { activation_link }, returning: true },
+    );
+    const { access_token, refresh_token } = await generateToken(
+      { id: user.id },
+      this.jwtService,
     );
     return {
       message: 'User activated successfully',
-      admin: updateduser[1][0],
+      user: updateduser[1][0],
+      token: access_token,
     };
   }
 
@@ -221,6 +226,25 @@ export class UserService {
         if (!isMatchPass) {
           throw new BadRequestException('Password did not match!');
         }
+      }
+
+      if (!user.is_active) {
+        const uniqueKey: string = uuid.v4();
+
+        const updateuser = await this.userRepository.update(
+          {
+            activation_link: uniqueKey,
+          },
+          { where: { id: user.id }, returning: true },
+        );
+
+        await this.mailService.sendUserConfirmation(updateuser[1][0], uniqueKey);
+
+        return {
+          statusCode: HttpStatus.OK,
+          message: 'Verification code sended successfully',
+          user,
+        };
       }
 
       const { access_token, refresh_token } = await generateToken(
@@ -734,9 +758,10 @@ export class UserService {
       idToken: token,
       audience: process.env.CLIENT_ID,
     });
-    const payload = ticket.getPayload();
+    const payload: any = ticket.getPayload();
     // If request specified a G Suite domain:
     // const domain = payload['hd'];
+    
     return payload;
   }
 

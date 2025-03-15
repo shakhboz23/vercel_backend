@@ -226,7 +226,7 @@ export class TestsService {
       let true_list = [];
       console.log(answer);
       if (!answer || !answer?.length || !answer[0]) {
-        return [id, [false]];
+        return [id, [false], test];
       }
       if (test.type == 'fill') {
         for (let i of test.variants) {
@@ -234,7 +234,7 @@ export class TestsService {
             return [id, [true]];
           }
         }
-        return [id, [false]];
+        return [id, [false], test];
       } else {
         for (let i of test.true_answer) {
           if (test.variants[i] == answer[0][t]) {
@@ -246,9 +246,9 @@ export class TestsService {
         }
       }
       if (!true_list?.length) {
-        true_list.push(false);
+        true_list.push(false, test);
       }
-      return [id, true_list];
+      return [id, true_list, test];
     } catch (error) {
       throw new BadRequestException(error.message);
     }
