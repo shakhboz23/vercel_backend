@@ -43,7 +43,7 @@ export class ReytingService {
           ...reytingDto,
           user_id,
         }, {
-          where: { id: user_id },
+          where: { id: is_reyting.id },
           returning: true,
         });
         return {
