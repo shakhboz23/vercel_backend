@@ -775,6 +775,7 @@ export class UserService {
         surname: payload.family_name,
         password: credential,
         email: payload.email,
+        is_active: true,
         role: 'student',
       };
       const is_user = await this.userRepository.findOne({

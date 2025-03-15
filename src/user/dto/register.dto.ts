@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
+  IsBoolean,
   IsEmail,
   IsNotEmpty,
   IsOptional,
@@ -26,6 +27,14 @@ export class RegisterUserDto extends RoleDto {
   @IsNotEmpty()
   @IsString()
   surname: string;
+
+  @ApiProperty({
+    example: true,
+    description: 'Is active of user',
+  })
+  @IsOptional()
+  @IsBoolean()
+  is_active?: boolean;
 
   @ApiProperty({
     example: 'shahbozmamatkarimov2303@gmail.com',
