@@ -20,14 +20,12 @@ import { Op } from 'sequelize';
 import { Reyting } from 'src/reyting/models/reyting.models';
 import { CourseService } from 'src/course/course.service';
 import { Group } from 'src/group/models/group.models';
-import { ReytingService } from 'src/reyting/reyting.service';
 
 @Injectable()
 export class LessonService {
   constructor(
     @InjectModel(Lesson) private lessonRepository: typeof Lesson,
     private readonly courseService: CourseService,
-    private readonly reytingService: ReytingService,
     // private readonly userService: UserService,
     private uploadedService: UploadedService,
   ) { }
@@ -46,7 +44,7 @@ export class LessonService {
           );
         }
         console.log(youtube, '23033');
-        if (youtube) {
+        if (youtube && youtube != undefined) {
           let ydata = await this.uploadedService.getVideoDuration(youtube);
           console.log(ydata, '23033')
           video = youtube;
@@ -55,6 +53,7 @@ export class LessonService {
           file_data = await this.uploadedService.create(video, file_type);
           video = file_data;
         }
+        console.log(video, )
         lessonDto.lesson_id = +lessonDto.lesson_id || null;
         let video_lesson: any = await this.lessonRepository.create({
           ...lessonDto,
@@ -143,12 +142,6 @@ export class LessonService {
                   ),
                   'is_finished',
                 ],
-                [
-                  Sequelize.literal(
-                    `(CASE WHEN EXISTS (SELECT 1 FROM "reyting" WHERE "reyting"."lesson_id" = "Lesson"."id" AND "reyting"."user_id" = :user_id AND "reyting"."ball" >= 0) THEN true ELSE false END)`,
-                  ),
-                  'is_viewed',
-                ],
               ],
             },
           },
@@ -161,12 +154,6 @@ export class LessonService {
                 `(CASE WHEN EXISTS (SELECT 1 FROM "reyting" WHERE "reyting"."lesson_id" = "lessons"."id" AND "reyting"."user_id" = :user_id AND "reyting"."ball" >= (SELECT COUNT(*) FROM "tests" WHERE "tests"."lesson_id" = "lessons"."id") * 70 / 100) THEN true ELSE false END)`,
               ),
               'is_finished',
-            ],
-            [
-              Sequelize.literal(
-                `(CASE WHEN EXISTS (SELECT 1 FROM "reyting" WHERE "reyting"."lesson_id" = "Lesson"."id" AND "reyting"."user_id" = :user_id AND "reyting"."ball" >= 0) THEN true ELSE false END)`,
-              ),
-              'is_viewed',
             ],
           ],
         },
@@ -217,7 +204,6 @@ export class LessonService {
   async getById(id: number, user_id?: number): Promise<object> {
     try {
       user_id = user_id || null;
-      await this.reytingService.create({ lesson_id: id, ball: 0 }, user_id);
       const lesson = await this.lessonRepository.findOne({
         where: { id },
         include: [
@@ -298,7 +284,7 @@ export class LessonService {
 
   async update(id: number, lessonDto: LessonDto, video: any): Promise<object> {
     try {
-      console.log(LessonDto);
+      console.log(video);
       const { title, content, youtube } = lessonDto;
       const lesson = await this.lessonRepository.findByPk(id);
       if (!lesson) {

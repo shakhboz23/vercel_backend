@@ -80,6 +80,7 @@ export class Course extends Model<Course, CourseAttributes> {
   @ForeignKey(() => Group)
   @Column({
     type: DataType.INTEGER,
+    onDelete: 'CASCADE',
   })
   group_id: number;
 
@@ -89,6 +90,7 @@ export class Course extends Model<Course, CourseAttributes> {
   @ForeignKey(() => User)
   @Column({
     type: DataType.INTEGER,
+    onDelete: 'SET NULL',
   })
   user_id: number;
 
@@ -99,6 +101,7 @@ export class Course extends Model<Course, CourseAttributes> {
   @ForeignKey(() => Category)
   @Column({
     type: DataType.INTEGER,
+    onDelete: 'SET NULL',
   })
   category_id: number;
 
@@ -128,6 +131,12 @@ export class Course extends Model<Course, CourseAttributes> {
     hooks: true,
   })
   chatGroup: ChatGroup[];
+
+  @HasMany(() => Lesson, {
+    onDelete: 'CASCADE',
+    hooks: true,
+  })
+  lesson: Lesson[];
 
   // @BelongsToMany(() => User, {
   // through: { model: () => Subscriptions }, // Use a function to specify the model type

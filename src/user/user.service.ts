@@ -228,6 +228,7 @@ export class UserService {
         }
       }
 
+      console.log(user);
       if (!user.is_active) {
         const uniqueKey: string = uuid.v4();
 
@@ -255,7 +256,7 @@ export class UserService {
       return {
         statusCode: HttpStatus.OK,
         mesage: 'Logged in successfully',
-        data: user,
+        user,
         token: access_token,
       };
     } catch (error) {

@@ -45,7 +45,7 @@ export class Test_settings extends Model<
   sort_level: any[];
 
   @Column({
-    type: DataType.TIME,
+    type: DataType.STRING,
   })
   period: string;
 
@@ -59,6 +59,8 @@ export class Test_settings extends Model<
   @Column({
     type: DataType.INTEGER,
     unique: true,
+    allowNull: true,
+    onDelete: 'SET NULL',
   })
   lesson_id: number;
 

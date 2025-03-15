@@ -37,6 +37,8 @@ export class Tests extends Model<Tests, TestsAttributes> {
   @ForeignKey(() => Lesson)
   @Column({
     type: DataType.INTEGER,
+    allowNull: true,
+    onDelete: 'SET NULL',
   })
   lesson_id: number;
 

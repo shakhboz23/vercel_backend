@@ -109,8 +109,8 @@ import { BotModule } from './bot/bot.module';
         ],
         autoLoadModels: true,
         logging: true,
-        // synchronize: true,
-        // sync: { alter: true },
+        synchronize: true,
+        sync: { alter: true },
         dialectOptions: {
           ssl: {
             require: true,

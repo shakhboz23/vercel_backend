@@ -50,6 +50,35 @@ export class UploadedService {
     return hours * 3600 + minutes * 60 + seconds;
   }
 
+  // async create(file: any, file_type: string) {
+  //   try {
+  //     let file_data: any;
+  //     let data: any;
+  //     if (file_type != 'youtube') {
+  //       file_data = await this.fileService.createFile(
+  //         file,
+  //         file_type,
+  //       );
+  //       data = await this.uploadedRepository.create({
+  //         duration: Math.floor(file_data.duration) || null,
+  //         file_type,
+  //         url: file_data.url,
+  //       });
+  //     } else {
+  //       data = await this.uploadedRepository.create({
+  //         duration: Math.floor(file_data.duration) || null,
+  //         file_type,
+  //         url: file_data.url,
+  //       });
+  //     }
+  //     return file_data.url;
+  //   } catch (error) {
+  //     console.log(error.message);
+  //     return { statusCode: HttpStatus.BAD_REQUEST, error: error.message };
+  //   }
+  // }
+
+
   async create(file: any, file_type: string) {
     try {
       let file_data: any;

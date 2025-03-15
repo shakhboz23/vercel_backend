@@ -138,7 +138,7 @@ export class LessonController {
     },
   })
   @Put('/:id')
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FileInterceptor('video'))
   update(
     @Param('id') id: number,
     @Body() lessonDto: LessonDto, 

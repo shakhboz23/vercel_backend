@@ -35,6 +35,7 @@ export class Reyting extends Model<Reyting, ReytingAttributes> {
   @ForeignKey(() => User)
   @Column({
     type: DataType.INTEGER,
+    onDelete: 'CASCADE',
   })
   user_id: number;
 
@@ -44,6 +45,8 @@ export class Reyting extends Model<Reyting, ReytingAttributes> {
   @ForeignKey(() => Lesson)
   @Column({
     type: DataType.INTEGER,
+    allowNull: true,
+    onDelete: 'SET NULL',
   })
   lesson_id: number;
 

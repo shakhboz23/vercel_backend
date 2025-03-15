@@ -48,6 +48,7 @@ export class FilesService {
 
           Readable.from(file.buffer).pipe(stream);
         });
+        console.log(result);
       } catch (error) {
         console.log(error);
         return 'error';

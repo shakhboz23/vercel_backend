@@ -68,7 +68,7 @@ export class User extends Model<User, UserAttributes> {
   // phone: string;
 
   @Column({
-    type: DataType.STRING,
+    type: DataType.TEXT,
   })
   bio: string;
 

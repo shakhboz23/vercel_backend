@@ -34,6 +34,10 @@ export class ChatGroup extends Model<ChatGroup, ChatGroupAttributes> {
   // title: string;
 
   @ForeignKey(() => Course)
+  @Column({
+    type: DataType.INTEGER,
+    onDelete: 'CASCADE',
+  })
   course_id: number;
 
   // @BelongsTo(() => Course)
@@ -50,6 +54,7 @@ export class ChatGroup extends Model<ChatGroup, ChatGroupAttributes> {
   @ForeignKey(() => Group)
   @Column({
     type: DataType.INTEGER,
+    onDelete: 'CASCADE',
   })
   group_id: number;
 
