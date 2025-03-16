@@ -59,19 +59,19 @@ import { WatchedModule } from './watched/watched.module';
 
 @Module({
   imports: [
-    TelegrafModule.forRootAsync({
-      botName: BOT_NAME,
-      useFactory: () => ({
-        token: process.env.BOT_TOKEN,
-        includes: [BotModule],
-        launchOptions: {
-          webhook: {
-            domain: 'https://ilmnur.vercel.app',
-            hookPath: '/api/webhook',
-          }
-        }
-      }), 
-    }),
+    // TelegrafModule.forRootAsync({
+    //   botName: BOT_NAME,
+    //   useFactory: () => ({
+    //     token: process.env.BOT_TOKEN,
+    //     includes: [BotModule],
+    //     launchOptions: {
+    //       webhook: {
+    //         domain: 'https://ilmnur.vercel.app',
+    //         hookPath: '/api/webhook',
+    //       }
+    //     }
+    //   }), 
+    // }),
     ConfigModule.forRoot({
       envFilePath: '.env',
       isGlobal: true,
