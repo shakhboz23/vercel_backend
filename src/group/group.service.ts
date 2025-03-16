@@ -127,9 +127,11 @@ export class GroupService {
 
   async getAllAnalytics(category_id: number, user_id?: number): Promise<object> {
     try {
-      let category: any = {}
+      let category: any = {
+        where: { user_id }
+      }
       if (category_id != 0) {
-        category = { where: { category_id } }
+        category = { where: { category_id, user_id } }
       }
       const filters: any = {
         order: [['title', 'ASC']],
