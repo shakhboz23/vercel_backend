@@ -21,7 +21,6 @@ async function bootstrap() {
     app.setGlobalPrefix('api');
     
     // app.use(cookieParser()); 
-
     // const server = app.getHttpServer(); // Get the underlying HTTP server
     // const peerServer = ExpressPeerServer(server, { path: '/peerjs' }); // Create the PeerJS server with a custom path
     // const peerServer = ExpressPeerServer(server);
