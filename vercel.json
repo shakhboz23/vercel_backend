@@ -7,15 +7,15 @@
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "/api"
+      "dest": "/api/$1"
     },
     {
       "src": "/swagger-ui/(.*)",
-      "dest": "/api/swagger-ui/$1"
+      "dest": "/swagger-ui/$1"
     },
     {
       "src": "/(.*)",
-      "dest": "/static/$1"
+      "dest": "/index.html"
     }
   ]
 }
