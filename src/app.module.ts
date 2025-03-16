@@ -65,12 +65,12 @@ import { WatchedModule } from './watched/watched.module';
         token: process.env.BOT_TOKEN,
         middlewares: [],
         includes: [BotModule],
-        launchOptions: {
-          webhook: {
-            domain: 'https://ilmnur.vercel.app',
-            hookPath: '/api/webhook',
-          }
-        }
+        // launchOptions: {
+        //   webhook: {
+        //     domain: 'https://ilmnur.vercel.app',
+        //     hookPath: '/api/webhook',
+        //   }
+        // }
       }),
     }),
     ConfigModule.forRoot({
