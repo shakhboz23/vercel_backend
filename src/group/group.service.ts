@@ -163,6 +163,12 @@ export class GroupService {
               ),
               'users_count',
             ],
+            [
+              Sequelize.literal(
+                `EXTRACT(EPOCH FROM "Group"."createdAt")::int`
+              ),
+              'createdAt',
+            ],
           ],
         },
         replacements: { category_id, user_id },
@@ -196,6 +202,12 @@ export class GroupService {
                 `(SELECT COUNT(*) FROM "subscriptions" WHERE "course"."group_id" = "Group"."id" AND "course"."id" = "subscriptions"."course_id")::int`,
               ),
               'users_count',
+            ],
+            [
+              Sequelize.literal(
+                `EXTRACT(EPOCH FROM "Group"."createdAt")::int`
+              ),
+              'createdAt',
             ],
           ],
         },

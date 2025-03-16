@@ -63,13 +63,37 @@ export class WatchedService {
     }
   }
 
-  async getAll(user_id: number): Promise<object> {
+  async getAll(user_id: number, type: string, analytics_id: number): Promise<object> {
     try {
       const watched = await this.watchedRepository.findAll({
         where: {
-          user_id
+          [type]: { [Op.ne]: null },
         },
-        include: [{ model: Lesson }, { model: Course }, { model: Group }]
+        order: [[Sequelize.col('Watched.createdAt'), 'ASC']],
+        include: [{
+          model: Lesson, 
+          // required: type == 'lesson_id' ? true : false,
+          // where: { user_id },
+        }, {
+          model: Course, required: type == 'course_id' ? true : false,
+          where: { user_id, id: analytics_id },
+        }, {
+          model: Group, required: type == 'group_id' ? true : false,
+          where: { user_id, 
+            ...(analytics_id && analytics_id != 0 ? { id: analytics_id } : {}),
+            // id: analytics_id ? analytics_id : null
+           },
+        }],
+        attributes: {
+          include: [
+            [
+              Sequelize.literal(
+                `EXTRACT(EPOCH FROM "Watched"."createdAt")::int`
+              ),
+              'createdAt',
+            ],
+          ],
+        },
       });
       return watched;
     } catch (error) {

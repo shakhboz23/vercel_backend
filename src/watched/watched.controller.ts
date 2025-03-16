@@ -35,14 +35,14 @@ export class WatchedController {
 
   @ApiOperation({ summary: 'Get watcheds with pagination' })
   // @UseGuards(AuthGuard)
-  @Get('/')
+  @Get('/:type/:analytics_id')
   getAll(
-    @Param('page') page: number, @Param('limit') limit: number,
+    @Param('page') page: number, @Param('type') type: string, @Param('analytics_id') analytics_id: number,
     @Headers() headers: Record<string, string>
   ) {
     const user_id = extractUserIdFromToken(headers, this.jwtService, true)
 
-    return this.watchedService.getAll(user_id);
+    return this.watchedService.getAll(user_id, type, analytics_id);
   }
 
   @ApiOperation({ summary: 'Get watcheds with pagination' })
