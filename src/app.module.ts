@@ -63,15 +63,14 @@ import { WatchedModule } from './watched/watched.module';
       botName: BOT_NAME,
       useFactory: () => ({
         token: process.env.BOT_TOKEN,
-        middlewares: [],
         includes: [BotModule],
-        // launchOptions: {
-        //   webhook: {
-        //     domain: 'https://ilmnur.vercel.app',
-        //     hookPath: '/api/webhook',
-        //   }
-        // }
-      }),
+        launchOptions: {
+          webhook: {
+            domain: 'https://ilmnur.vercel.app',
+            hookPath: '/api/webhook',
+          }
+        }
+      }), 
     }),
     ConfigModule.forRoot({
       envFilePath: '.env',
@@ -192,7 +191,7 @@ import { WatchedModule } from './watched/watched.module';
     WatchedModule,
     BotModule,
   ],
-  controllers: [],
+  controllers: [], 
   providers: [],
   exports: []
 })
