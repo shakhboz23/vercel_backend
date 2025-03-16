@@ -189,7 +189,7 @@ import { WatchedModule } from './watched/watched.module';
     Subscription_activityModule,
     VideoChatModule,
     WatchedModule,
-    BotModule,
+    // BotModule,
   ],
   controllers: [], 
   providers: [],
