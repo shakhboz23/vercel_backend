@@ -17,14 +17,11 @@ async function bootstrap() {
     app.use('/swagger-ui', express.static(join(__dirname, '../node_modules/swagger-ui-dist')));
 
     const PORT = process.env.PORT || 4200;
-    app.enableCors({
-      origin: ['https://ilmnur.online'],
-      methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-      credentials: true,
-    });
+    app.enableCors();
     app.setGlobalPrefix('api');
-
+    
     // app.use(cookieParser()); 
+
     // const server = app.getHttpServer(); // Get the underlying HTTP server
     // const peerServer = ExpressPeerServer(server, { path: '/peerjs' }); // Create the PeerJS server with a custom path
     // const peerServer = ExpressPeerServer(server);
