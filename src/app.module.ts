@@ -1,4 +1,6 @@
 import { Module, OnApplicationBootstrap } from '@nestjs/common';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { JwtModule } from '@nestjs/jwt';
@@ -52,7 +54,6 @@ import { VideoChat } from './video_chat/models/video_chat.model';
 import { TelegrafModule } from 'nestjs-telegraf';
 import { BOT_NAME } from './app.constants';
 import { BotModule } from './bot/bot.module';
-import { WatchedModule } from './watched/watched.module';
 // import { BotModule } from './bot/bot.module';
 // import { TelegrafModule } from 'nestjs-telegraf';
 // import { BOT_NAME } from './app.constants';
@@ -63,6 +64,7 @@ import { WatchedModule } from './watched/watched.module';
       botName: BOT_NAME,
       useFactory: () => ({
         token: process.env.BOT_TOKEN,
+        middlewares: [],
         includes: [BotModule],
         launchOptions: {
           webhook: {
@@ -70,7 +72,7 @@ import { WatchedModule } from './watched/watched.module';
             hookPath: '/api/webhook',
           }
         }
-      }), 
+      }),
     }),
     ConfigModule.forRoot({
       envFilePath: '.env',
@@ -188,10 +190,9 @@ import { WatchedModule } from './watched/watched.module';
     SubscriptionsModule,
     Subscription_activityModule,
     VideoChatModule,
-    WatchedModule,
     BotModule,
   ],
-  controllers: [], 
+  controllers: [],
   providers: [],
   exports: []
 })
