@@ -20,6 +20,7 @@ import { Op } from 'sequelize';
 import { Reyting } from 'src/reyting/models/reyting.models';
 import { CourseService } from 'src/course/course.service';
 import { Group } from 'src/group/models/group.models';
+import { WatchedService } from 'src/watched/watched.service';
 
 @Injectable()
 export class LessonService {
@@ -28,6 +29,7 @@ export class LessonService {
     private readonly courseService: CourseService,
     // private readonly userService: UserService,
     private uploadedService: UploadedService,
+    private readonly watchedService: WatchedService,
   ) { }
 
   async create(lessonDto: LessonDto, video: any): Promise<object> {
@@ -35,6 +37,7 @@ export class LessonService {
       console.log(lessonDto);
       console.log(video);
       const { title, content, youtube } = lessonDto;
+      let duration: number;
       if (lessonDto.type == 'lesson') {
         let file_type: string;
         let file_data: any;
@@ -45,18 +48,18 @@ export class LessonService {
         }
         console.log(youtube, '23033');
         if (youtube && youtube != undefined) {
-          let ydata = await this.uploadedService.getVideoDuration(youtube);
-          console.log(ydata, '23033')
+          duration = await this.uploadedService.getVideoDuration(youtube);
           video = youtube;
         } else if (video) {
           file_type = 'video';
           file_data = await this.uploadedService.create(video, file_type);
           video = file_data;
         }
-        console.log(video, )
+        console.log(video,)
         lessonDto.lesson_id = +lessonDto.lesson_id || null;
         let video_lesson: any = await this.lessonRepository.create({
           ...lessonDto,
+          duration: duration || null,
           video,
         });
         video_lesson = await this.lessonRepository.update(
@@ -195,6 +198,8 @@ export class LessonService {
       //     user_id,
       //   },
       // });
+      await this.watchedService.create({ course_id }, user_id);
+
       return { lessons, course: course };
     } catch (error) {
       throw new BadRequestException(error.message);
@@ -252,6 +257,7 @@ export class LessonService {
       if (!lesson) {
         throw new NotFoundException('Lesson not found');
       }
+      await this.watchedService.create({ lesson_id: id }, user_id);
       return lesson;
     } catch (error) {
       throw new BadRequestException(error.message);
@@ -286,6 +292,7 @@ export class LessonService {
     try {
       console.log(video);
       const { title, content, youtube } = lessonDto;
+      let duration: number;
       const lesson = await this.lessonRepository.findByPk(id);
       if (!lesson) {
         throw new NotFoundException('Lesson not found');
@@ -300,9 +307,9 @@ export class LessonService {
           );
         };
         if (youtube) {
-          let ydata = await this.uploadedService.getVideoDuration(youtube);
-          console.log(ydata, '23033')
+          duration = await this.uploadedService.getVideoDuration(youtube);
           video = youtube;
+          return;
         } else if (video) {
           file_type = 'video';
           file_data = await this.uploadedService.create(video, file_type);
@@ -316,6 +323,7 @@ export class LessonService {
         update = await this.lessonRepository.update(
           {
             ...lessonDto,
+            duration: duration || null,
             video,
             course_id: lesson.course_id,
           },

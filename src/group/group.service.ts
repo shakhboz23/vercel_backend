@@ -12,12 +12,15 @@ import { UploadedService } from '../uploaded/uploaded.service';
 import { Sequelize } from 'sequelize-typescript';
 import { User } from '../user/models/user.models';
 import { Course } from 'src/course/models/course.models';
+import { WatchedService } from 'src/watched/watched.service';
+import { Lesson } from 'src/lesson/models/lesson.models';
 
 @Injectable()
 export class GroupService {
   constructor(
     @InjectModel(Group) private groupRepository: typeof Group,
     private readonly uploadedService: UploadedService,
+    private readonly watchedService: WatchedService,
   ) { }
 
   async create(
@@ -122,7 +125,107 @@ export class GroupService {
     }
   }
 
-  async getById(id: number): Promise<object> {
+  async getAllAnalytics(category_id: number, user_id?: number): Promise<object> {
+    try {
+      let category: any = {}
+      if (category_id != 0) {
+        category = { where: { category_id } }
+      }
+      const filters: any = {
+        order: [['title', 'ASC']],
+        ...category,
+        include: [{ model: User }, {
+          model: Course, attributes: [],
+        }],
+        attributes: {
+          include: [
+            [
+              Sequelize.literal(
+                `(SELECT COUNT(*) FROM "watched" WHERE "watched"."group_id" = "Group"."id")::int`,
+              ),
+              'watched_count',
+            ],
+            [
+              Sequelize.literal(
+                `(SELECT COUNT(*) FROM "likes"
+                  JOIN "lesson" AS "l" ON "likes"."lesson_id" = "l"."id"
+                  JOIN "course" AS "c" ON "l"."course_id" = "c"."id"
+                  JOIN "group" AS "g" ON "c"."group_id" = "g"."id"
+                  WHERE g."user_id" = :user_id)::int`
+              ),
+              'likes_count',
+            ],
+            [
+              Sequelize.literal(
+                `(SELECT COUNT(*) FROM "subscriptions" WHERE "course"."group_id" = "Group"."id" AND "course"."id" = "subscriptions"."course_id")::int`,
+              ),
+              'users_count',
+            ],
+          ],
+        },
+        replacements: { category_id, user_id },
+      };
+
+      const filters2: any = {
+        ...category,
+        include: [{ model: User }, {
+          model: Course, attributes: [],
+        }],
+        attributes: {
+          include: [
+            [
+              Sequelize.literal(
+                `(SELECT COUNT(*) FROM "watched" WHERE "watched"."group_id" = "Group"."id" AND "Group"."user_id" = :user_id)::int`
+              ),
+              'watched_count',
+            ],
+            [
+              Sequelize.literal(
+                `(SELECT COUNT(*) FROM "likes"
+                  JOIN "lesson" AS "l" ON "likes"."lesson_id" = "l"."id"
+                  JOIN "course" AS "c" ON "l"."course_id" = "c"."id"
+                  JOIN "group" AS "g" ON "c"."group_id" = "g"."id"
+                  WHERE g."user_id" = :user_id)::int`
+              ),
+              'likes_count',
+            ],
+            [
+              Sequelize.literal(
+                `(SELECT COUNT(*) FROM "subscriptions" WHERE "course"."group_id" = "Group"."id" AND "course"."id" = "subscriptions"."course_id")::int`,
+              ),
+              'users_count',
+            ],
+          ],
+        },
+        replacements: { user_id },
+      };
+
+      const groups = await this.groupRepository.findAll({
+        ...filters,
+      });
+
+      const summary = await this.groupRepository.findAll({
+        ...filters2,
+      });
+      let my_groups = [];
+      if (user_id) {
+        my_groups = await this.groupRepository.findAll({
+          where: { user_id },
+          ...filters,
+        });
+      }
+
+      return {
+        groups,
+        my_groups,
+        summary,
+      };
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
+  }
+
+  async getById(id: number, user_id: number): Promise<object> {
     try {
       const groups = await this.groupRepository.findOne({
         where: { id },
@@ -131,6 +234,7 @@ export class GroupService {
       if (!groups) {
         throw new NotFoundException('Group not found');
       }
+      await this.watchedService.create({ group_id: id }, user_id);
       return {
         statusCode: HttpStatus.OK,
         data: groups,

@@ -75,8 +75,12 @@ export class GroupController {
   @ApiOperation({ summary: 'Get group by ID' })
   // @UseGuards(AuthGuard)
   @Get('/getById/:id')
-  getById(@Param('id') id: number) {
-    return this.groupService.getById(id);
+  getById(
+    @Param('id') id: number,
+    @Headers() headers: Record<string, string>
+  ) {
+    const user_id = extractUserIdFromToken(headers, this.jwtService, true);
+    return this.groupService.getById(id, user_id);
   }
 
   @ApiOperation({ summary: 'Get all groups' })
@@ -87,6 +91,16 @@ export class GroupController {
     console.log(headers);
     const user_id = extractUserIdFromToken(headers, this.jwtService, true);
     return this.groupService.getAll(category_id, user_id);
+  }
+
+  @ApiOperation({ summary: 'Get all groups' })
+  // @UseGuards(AuthGuard)
+  // @ApiBearerAuth()
+  @Get('/get-analytics/:category_id')
+  getAllAnalytics(@Param('category_id') category_id: number, @Headers() headers: string) {
+    console.log(headers);
+    const user_id = extractUserIdFromToken(headers, this.jwtService, true);
+    return this.groupService.getAllAnalytics(category_id, user_id);
   }
 
   @ApiOperation({ summary: 'Get all groups' })

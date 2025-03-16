@@ -120,8 +120,9 @@ export class CourseController {
   @ApiOperation({ summary: 'Get all courses' })
   // @UseGuards(AuthGuard)
   @Get('/getByCourse/:id/:category_id')
-  getByCourse(@Param() { id, category_id }: { id: number, category_id: number }) {
-    return this.courseService.getByCourse(id, category_id);
+  getByCourse(@Param() { id, category_id }: { id: number, category_id: number }, @Headers() headers: string) {
+    const user_id = extractUserIdFromToken(headers, this.jwtService, true);
+    return this.courseService.getByCourse(id, category_id, user_id);
   }
 
   @ApiOperation({ summary: 'Get courses with pagination' })

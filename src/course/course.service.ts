@@ -20,6 +20,7 @@ import { SubscriptionActivity } from 'src/subscription_activity/models/subscript
 import { Group } from 'src/group/models/group.models';
 import { ChatGroupService } from 'src/chat_group/chat_group.service';
 import { ChatGroupType } from 'src/chat_group/dto/chat_group.dto';
+import { WatchedService } from 'src/watched/watched.service';
 
 @Injectable()
 export class CourseService {
@@ -28,6 +29,7 @@ export class CourseService {
     private readonly userService: UserService,
     private readonly chatGroupService: ChatGroupService,
     private readonly uploadedService: UploadedService,
+    private readonly watchedService: WatchedService,
   ) { }
 
   async create(courseDto: CourseDto, cover: any, user_id: number): Promise<object> {
@@ -41,7 +43,7 @@ export class CourseService {
       }
       const file_type: string = 'image';
       let file_data: any;
-      let image_url: string; 
+      let image_url: string;
       if (cover) {
         file_data = await this.uploadedService.create(cover, file_type);
         cover = file_data;
@@ -82,7 +84,7 @@ export class CourseService {
     }
   }
 
-  async getByCourse(group_id: number, category_id: number): Promise<Object> {
+  async getByCourse(group_id: number, category_id: number, user_id: number): Promise<Object> {
     try {
       let category: any = {
         where: {
@@ -107,6 +109,7 @@ export class CourseService {
           },
         ],
       });
+      await this.watchedService.create({ group_id }, user_id);
       // if (!courses.length) {
       //   throw new NotFoundException('Courses not found');
       // }
@@ -230,9 +233,7 @@ export class CourseService {
           user_id,
         },
       });
-      // if (!course) {
-      //   throw new NotFoundException('Course not found');
-      // }
+      await this.watchedService.create({ course_id: id }, user_id);
       return course;
     } catch (error) {
       throw new BadRequestException(error.message);

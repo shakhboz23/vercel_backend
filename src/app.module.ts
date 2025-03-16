@@ -54,6 +54,7 @@ import { VideoChat } from './video_chat/models/video_chat.model';
 import { TelegrafModule } from 'nestjs-telegraf';
 import { BOT_NAME } from './app.constants';
 import { BotModule } from './bot/bot.module';
+import { WatchedModule } from './watched/watched.module';
 // import { BotModule } from './bot/bot.module';
 // import { TelegrafModule } from 'nestjs-telegraf';
 // import { BOT_NAME } from './app.constants';
@@ -190,6 +191,7 @@ import { BotModule } from './bot/bot.module';
     SubscriptionsModule,
     Subscription_activityModule,
     VideoChatModule,
+    WatchedModule,
     // BotModule,
   ],
   controllers: [],

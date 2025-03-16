@@ -16,53 +16,24 @@ import { LikeDto } from './dto/like.dto';
 import { JwtService } from '@nestjs/jwt';
 import { ImageValidationPipe } from '../pipes/image-validation.pipe';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { extractUserIdFromToken } from 'src/utils/token';
 
-@ApiTags('Like')
-@Controller('like')
+@ApiTags('Likes')
+@Controller('likes')
 export class LikeController {
   constructor(
     private readonly likeService: LikeService,
     private readonly jwtService: JwtService,
-  ) {}
+  ) { }
 
   @ApiOperation({ summary: 'Create a new like' })
-  @ApiConsumes('multipart/form-data')
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        course_id: {
-          type: 'number',
-        },
-        like_id: {
-          type: 'number',
-        },
-        title: {
-          type: 'string',
-        },
-        content: {
-          type: 'string',
-        },
-        type: {
-          type: 'string',
-        },
-        published: {
-          type: 'boolean',
-        },
-        file: {
-          type: 'string',
-          format: 'binary',
-        },
-      },
-    },
-  })
   @Post('/create')
-  @UseInterceptors(FileInterceptor('file'))
   async create(
     @Body() likeDto: LikeDto,
-    @UploadedFile(new ImageValidationPipe()) file: Express.Multer.File,
+    @Headers() headers: Record<string, string>,
   ) {
-    return this.likeService.create(likeDto);
+    const user_id = extractUserIdFromToken(headers, this.jwtService, true);
+    return this.likeService.create(likeDto, user_id);
   }
 
   @ApiOperation({ summary: 'Get like by ID' })
@@ -86,7 +57,7 @@ export class LikeController {
     console.log(user_id, '565456');
     return this.likeService.getAll();
   }
-  
+
   @ApiOperation({ summary: 'Get likes with pagination' })
   // @UseGuards(AuthGuard)
   @Get('pagination/:page')

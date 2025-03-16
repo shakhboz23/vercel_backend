@@ -7,9 +7,10 @@ import { UserModule } from '../user/user.module';
 import { UploadedModule } from '../uploaded/uploaded.module';
 import { CourseModule } from 'src/course/course.module';
 import { ReytingModule } from 'src/reyting/reyting.module';
+import { WatchedModule } from 'src/watched/watched.module';
 
 @Module({
-  imports: [SequelizeModule.forFeature([Lesson]), CourseModule, UploadedModule, ReytingModule,],
+  imports: [SequelizeModule.forFeature([Lesson]), CourseModule, UploadedModule, ReytingModule, WatchedModule,],
   controllers: [LessonController],
   providers: [LessonService],
   exports: [LessonService],

@@ -21,11 +21,11 @@ export class LikeService {
     private uploadedService: UploadedService,
   ) {}
 
-  async create(likeDto: LikeDto): Promise<object> {
+  async create(likeDto: LikeDto, user_id: number): Promise<object> {
     try {
-      const { user_id, course_id } = likeDto;
+      const { lesson_id } = likeDto;
       const exist = await this.likeRepository.findOne({
-        where: { user_id, course_id },
+        where: { user_id, lesson_id },
       });
       if (exist) {
         throw new BadRequestException('Already created');

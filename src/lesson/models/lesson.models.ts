@@ -19,6 +19,7 @@ interface LessonAttributes {
   content: string;
   type: lessonType;
   position: number;
+  duration: number;
 }
 
 export enum lessonType {
@@ -84,6 +85,12 @@ export class Lesson extends Model<Lesson, LessonAttributes> {
     allowNull: true,
   })
   lesson_id: number;
+
+  @Column({
+    type: DataType.INTEGER,
+    allowNull: true,
+  })
+  duration: number;
 
   @BelongsTo(() => Course)
   course: Course[];

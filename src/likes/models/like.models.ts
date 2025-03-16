@@ -8,14 +8,14 @@ import {
   Model,
   Table,
 } from 'sequelize-typescript';
-import { Course } from '../../course/models/course.models';
+import { Lesson } from 'src/lesson/models/lesson.models';
 
 interface LikeAttributes {
   course_id: number;
   user_id: number;
 }
 
-@Table({ tableName: 'like' })
+@Table({ tableName: 'likes' })
 export class Like extends Model<Like, LikeAttributes> {
   @Column({
     type: DataType.INTEGER,
@@ -24,11 +24,11 @@ export class Like extends Model<Like, LikeAttributes> {
   })
   id: number;
 
-  @ForeignKey(() => Course)
+  @ForeignKey(() => Lesson)
   @Column({
     type: DataType.INTEGER,
   })
-  course_id: number;
+  lesson_id: number;
 
   @ForeignKey(() => User)
   @Column({
@@ -37,8 +37,8 @@ export class Like extends Model<Like, LikeAttributes> {
   })
   user_id: number;
 
-  @BelongsTo(() => Course)
-  course: Course[];
+  @BelongsTo(() => Lesson)
+  lesson: Lesson[];
 
   @BelongsTo(() => User)
   user: User[];
