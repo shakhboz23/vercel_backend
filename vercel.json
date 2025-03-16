@@ -8,14 +8,14 @@
     {
       "src": "/api/(.*)",
       "dest": "/api/$1"
-    },
+    },    
     {
       "src": "/swagger-ui/(.*)",
-      "dest": "/swagger-ui/$1"
+      "dest": "/api/swagger-ui/$1"
     },
     {
       "src": "/(.*)",
-      "dest": "/index.html"
+      "dest": "/static/$1"
     }
   ]
 }
