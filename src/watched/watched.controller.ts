@@ -49,7 +49,7 @@ export class WatchedController {
   // @UseGuards(AuthGuard)
   @Get('pagination/:page/:limit')
   pagination(@Param('page') page: number, @Param('limit') limit: number) {
-    return this.watchedService.pagination(page, limit);
+    // return this.watchedService.pagination(page, limit);
   }
 
   @ApiOperation({ summary: 'Delete watched by ID' })

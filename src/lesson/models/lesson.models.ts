@@ -9,6 +9,7 @@ import {
 } from 'sequelize-typescript';
 import { Course } from '../../course/models/course.models';
 import { Group } from '../../group/models/group.models';
+import { Like } from 'src/likes/models/like.models';
 
 interface LessonAttributes {
   title: string;
@@ -100,4 +101,10 @@ export class Lesson extends Model<Lesson, LessonAttributes> {
     hooks: true,
   })
   lessons: Lesson[];
+
+  @HasMany(() => Like, {
+    onDelete: 'CASCADE',
+    hooks: true,
+  })
+  likes: Like[];
 }

@@ -54,15 +54,15 @@ export class LikeController {
       ? this.jwtService.verify(token, { secret: process.env.ACCESS_TOKEN_KEY })
       : null;
     const user_id = user?.id;
-    console.log(user_id, '565456');
-    return this.likeService.getAll();
+    // console.log(user_id, '565456');
+    return this.likeService.getAll(0);
   }
 
   @ApiOperation({ summary: 'Get likes with pagination' })
   // @UseGuards(AuthGuard)
   @Get('pagination/:page')
   pagination(@Param('page') page: number) {
-    return this.likeService.pagination(page);
+    // return this.likeService.pagination(page);
   }
 
   @ApiOperation({ summary: 'Update like profile by ID' })

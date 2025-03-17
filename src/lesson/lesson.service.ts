@@ -21,6 +21,7 @@ import { Reyting } from 'src/reyting/models/reyting.models';
 import { CourseService } from 'src/course/course.service';
 import { Group } from 'src/group/models/group.models';
 import { WatchedService } from 'src/watched/watched.service';
+import { Like } from 'src/likes/models/like.models';
 
 @Injectable()
 export class LessonService {
@@ -229,12 +230,25 @@ export class LessonService {
                   ),
                   'lesson_count',
                 ],
+                // [
+                //   Sequelize.literal(
+                //     `(SELECT * FROM "lesson" WHERE "lesson"."course_id" = "Lesson"."course_id" 
+                //      AND "lesson"."type" = 'lesson')::int`,
+                //   ),
+                //   'is_liked',
+                // ],
                 [
                   Sequelize.literal(
                     `(SELECT COUNT(*) FROM "lesson" WHERE "lesson"."course_id" = "Lesson"."course_id" 
                      AND LENGTH("lesson"."content") > 0)::int`,
                   ),
                   'lecture_count',
+                ],
+                [
+                  Sequelize.literal(
+                    `(SELECT COALESCE(SUM("lesson"."duration"), 0) FROM "lesson" WHERE "lesson"."course_id" = "Lesson"."course_id")::int`
+                  ),
+                  'total_duration',
                 ],
                 [
                   Sequelize.literal(
@@ -252,6 +266,23 @@ export class LessonService {
             },
           },
         ],
+        attributes: {
+          include: [
+            [
+              Sequelize.literal(
+                `(CASE 
+                  WHEN EXISTS (
+                    SELECT 1 FROM "likes" 
+                    WHERE "likes"."lesson_id" = "Lesson"."id" 
+                    AND "likes"."user_id" = :user_id
+                  ) THEN true 
+                  ELSE false 
+                END)`,
+              ),
+              'is_liked',
+            ],
+          ]
+        },
         replacements: { user_id },
       });
       if (!lesson) {

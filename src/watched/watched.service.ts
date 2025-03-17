@@ -13,11 +13,13 @@ import { User } from 'src/user/models/user.models';
 import { Lesson } from 'src/lesson/models/lesson.models';
 import { Course } from 'src/course/models/course.models';
 import { Group } from 'src/group/models/group.models';
+import { LikeService } from 'src/likes/like.service';
 
 @Injectable()
 export class WatchedService {
   constructor(
     @InjectModel(Watched) private watchedRepository: typeof Watched,
+    private readonly likeService: LikeService,
   ) { }
 
   async create(watchedDto: WatchedDto, user_id: number): Promise<object> {
@@ -65,24 +67,27 @@ export class WatchedService {
 
   async getAll(user_id: number, type: string, analytics_id: number): Promise<object> {
     try {
-      const watched = await this.watchedRepository.findAll({
+      let watched: any = await this.watchedRepository.findAll({
         where: {
           [type]: { [Op.ne]: null },
         },
         order: [[Sequelize.col('Watched.createdAt'), 'ASC']],
-        include: [{
-          model: Lesson, 
+        include: [{ model: User }, {
+          model: Lesson,
           // required: type == 'lesson_id' ? true : false,
           // where: { user_id },
         }, {
           model: Course, required: type == 'course_id' ? true : false,
-          where: { user_id, id: analytics_id },
+          where: {
+            user_id,
+            ...(analytics_id && analytics_id != 0 ? { id: analytics_id } : {}),
+          },
         }, {
           model: Group, required: type == 'group_id' ? true : false,
-          where: { user_id, 
+          where: {
+            user_id,
             ...(analytics_id && analytics_id != 0 ? { id: analytics_id } : {}),
-            // id: analytics_id ? analytics_id : null
-           },
+          },
         }],
         attributes: {
           include: [
@@ -95,30 +100,78 @@ export class WatchedService {
           ],
         },
       });
-      return watched;
+      let likes: any
+      if (type == 'group_id') {
+        likes = await this.likeService.getAll(analytics_id);
+      }
+
+      const groupedByYearMonth = watched.reduce((acc, current) => {
+        const createdAt = new Date(current.createdAt * 1000); // timestampni datega aylantiramiz
+        const yearMonth = `${createdAt.getFullYear()}-${createdAt.getMonth() + 1}`; // Yil va oy formatida olish
+
+        // Yil va oy bo'yicha guruhlash
+        if (!acc[yearMonth]) {
+          acc[yearMonth] = [];
+        }
+        acc[yearMonth].push(current);
+
+        return acc;
+      }, {});
+
+      let watchedList = await this.pagination(analytics_id, user_id, type, 1);
+
+      watched = Object.keys(groupedByYearMonth).map((key, index) => {
+        const [year, month] = key.split('-');
+        const date = new Date(+year, +month - 1);
+
+        return {
+          index,
+          yearMonth: key,
+          timestamp: Math.floor(date.getTime()), // Sekundga aylantirish
+          watchedList,
+          watchedCount: groupedByYearMonth[key]?.length,
+        };
+      });
+      return { watched, likes };
     } catch (error) {
       throw new BadRequestException(error.message);
     }
   }
 
-  async pagination(page: number, limit: number): Promise<object> {
+  async pagination(analytics_id: number, user_id: number, type: string, page: number, limit?: number): Promise<object> {
     try {
+      limit = limit || 10;
       const offset = (page - 1) * limit;
-      const watcheds = await this.watchedRepository.findAll({ offset, limit });
+      const watched = await this.watchedRepository.findAll({
+        order: [[Sequelize.col('Watched.createdAt'), 'ASC']],
+        offset, limit, include: [{ model: User }, {
+          model: Lesson,
+          // required: type == 'lesson_id' ? true : false,
+          // where: { user_id },
+        }, {
+          model: Course, required: type == 'course_id' ? true : false,
+          where: {
+            user_id,
+            ...(analytics_id && analytics_id != 0 ? { id: analytics_id } : {}),
+          },
+        }, {
+          model: Group, required: type == 'group_id' ? true : false,
+          where: {
+            user_id,
+            ...(analytics_id && analytics_id != 0 ? { id: analytics_id } : {}),
+          },
+        }],
+      });
       const total_count = await this.watchedRepository.count();
       const total_pages = Math.ceil(total_count / limit);
-      const response = {
-        statusCode: HttpStatus.OK,
-        data: {
-          records: watcheds,
-          pagination: {
-            currentPage: Number(page),
-            total_pages,
-            total_count,
-          },
+      return {
+        records: watched,
+        pagination: {
+          currentPage: Number(page),
+          total_pages,
+          total_count,
         },
       };
-      return response;
     } catch (error) {
       throw new BadRequestException(error.message);
     }

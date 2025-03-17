@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsNumberString } from 'class-validator';
+import { IsNotEmpty, IsNumber } from 'class-validator';
 
 export class LikeDto {
   @ApiProperty({
@@ -7,6 +7,6 @@ export class LikeDto {
     description: 'Course id',
   })
   @IsNotEmpty()
-  @IsNumberString()
+  @IsNumber()
   lesson_id: number;
 }

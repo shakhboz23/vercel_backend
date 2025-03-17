@@ -11,7 +11,7 @@ import {
 import { Lesson } from 'src/lesson/models/lesson.models';
 
 interface LikeAttributes {
-  course_id: number;
+  lesson_id: number;
   user_id: number;
 }
 

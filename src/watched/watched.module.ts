@@ -7,9 +7,10 @@ import { FilesModule } from '../files/files.module'; // Verify import path
 import { NotificationModule } from '../notification/notification.module';
 import { UserModule } from '../user/user.module';
 import { JwtModule } from '@nestjs/jwt';
+import { LikeModule } from 'src/likes/like.module';
 
 @Module({
-  imports: [SequelizeModule.forFeature([Watched]), JwtModule],
+  imports: [SequelizeModule.forFeature([Watched]), JwtModule, LikeModule],
   controllers: [WatchedController],
   providers: [WatchedService],
   exports: [WatchedService],

@@ -12,6 +12,10 @@ import { Uploaded } from '../uploaded/models/uploaded.models';
 import { UserService } from '../user/user.service';
 import { Course } from '../course/models/course.models';
 import { UploadedService } from '../uploaded/uploaded.service';
+import { Sequelize } from 'sequelize-typescript';
+import { Lesson } from 'src/lesson/models/lesson.models';
+import { Group } from 'src/group/models/group.models';
+import { User } from 'src/user/models/user.models';
 
 @Injectable()
 export class LikeService {
@@ -19,7 +23,7 @@ export class LikeService {
     @InjectModel(Like) private likeRepository: typeof Like,
     private readonly userService: UserService,
     private uploadedService: UploadedService,
-  ) {}
+  ) { }
 
   async create(likeDto: LikeDto, user_id: number): Promise<object> {
     try {
@@ -28,27 +32,70 @@ export class LikeService {
         where: { user_id, lesson_id },
       });
       if (exist) {
-        throw new BadRequestException('Already created');
+        return this.delete(exist.id);
+        // throw new BadRequestException('Already created');
       }
-      return this.likeRepository.create(likeDto);
+      return this.likeRepository.create({ lesson_id, user_id });
     } catch (error) {
       throw new BadRequestException(error.message);
     }
   }
 
-  async getAll(): Promise<object> {
+  async getAll(group_id: number): Promise<object> {
     try {
-      // const user_data: any = await this.userService.getById(user_id);
-      // if (!user_data) {
-      //   new BadRequestException('User not found!');
-      // }
-
-      const likes: any = await this.likeRepository.findAll({
-        order: [['id', 'ASC']],
+      let likes: any = await this.likeRepository.findAll({
+        include: [{ model: User }, {
+          model: Lesson,
+          include: [{
+            model: Course, include: [{
+              model: Group, where: { id: group_id }
+            }]
+          }]
+        }],
+        order: [[Sequelize.col('Like.createdAt'), 'ASC']],
+        attributes: {
+          include: [
+            [
+              Sequelize.literal(
+                `EXTRACT(EPOCH FROM "Like"."createdAt")::int`
+              ),
+              'createdAt',
+            ],
+          ],
+        },
       });
       if (!likes.length) {
         throw new NotFoundException('Likes not found');
       }
+
+      const groupedByYearMonth = likes.reduce((acc, current) => {
+        const createdAt = new Date(current.createdAt * 1000); // timestampni datega aylantiramiz
+        const yearMonth = `${createdAt.getFullYear()}-${createdAt.getMonth() + 1}`; // Yil va oy formatida olish
+
+        // Yil va oy bo'yicha guruhlash
+        if (!acc[yearMonth]) {
+          acc[yearMonth] = [];
+        }
+        acc[yearMonth].push(current);
+
+        return acc;
+      }, {});
+
+      let likesList = await this.pagination(1, group_id);
+
+
+      likes = Object.keys(groupedByYearMonth).map((key, index) => {
+        const [year, month] = key.split('-');
+        const date = new Date(+year, +month - 1);
+
+        return {
+          index,
+          yearMonth: key,
+          timestamp: Math.floor(date.getTime()), // Sekundga aylantirish
+          likesList,
+          likesCount: groupedByYearMonth[key]?.length,
+        };
+      });
       return likes;
     } catch (error) {
       throw new BadRequestException(error.message);
@@ -70,25 +117,31 @@ export class LikeService {
     }
   }
 
-  async pagination(page: number): Promise<object> {
+  async pagination(page: number, group_id: number): Promise<object> {
     try {
       const offset = (page - 1) * 10;
       const limit = 10;
-      const likes = await this.likeRepository.findAll({ offset, limit });
+      const likes = await this.likeRepository.findAll({
+        offset, limit,
+        include: [{ model: User }, {
+          model: Lesson,
+          include: [{
+            model: Course, include: [{
+              model: Group, where: { id: group_id }
+            }]
+          }]
+        }],
+      });
       const total_count = await this.likeRepository.count();
       const total_pages = Math.ceil(total_count / 10);
-      const response = {
-        statusCode: HttpStatus.OK,
-        data: {
-          records: likes,
-          pagination: {
-            currentPage: page,
-            total_pages,
-            total_count,
-          },
+      return {
+        records: likes,
+        pagination: {
+          currentPage: page,
+          total_pages,
+          total_count,
         },
       };
-      return response;
     } catch (error) {
       throw new BadRequestException(error.message);
     }

@@ -10,5 +10,6 @@ import { UploadedModule } from '../uploaded/uploaded.module';
   imports: [SequelizeModule.forFeature([Like]), UserModule, UploadedModule],
   controllers: [LikeController],
   providers: [LikeService],
+  exports: [LikeService],
 })
 export class LikeModule {}
