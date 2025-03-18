@@ -20,6 +20,7 @@ async function bootstrap() {
     app.enableCors({
       origin: "https://ilmnur.online",
       methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
+      allowedHeaders: "Content-Type, Authorization",
       credentials: true,
     });
     app.setGlobalPrefix('api');
