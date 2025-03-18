@@ -64,13 +64,13 @@ import { WatchedModule } from './watched/watched.module';
     //   useFactory: () => ({
     //     token: process.env.BOT_TOKEN,
     //     includes: [BotModule],
-    //     // launchOptions: {
-    //     //   webhook: {
-    //     //     domain: 'https://ilmnur.vercel.app',
-    //     //     hookPath: '/api/webhook',
-    //     //   }
-    //     // }
-    //   }),
+    //     launchOptions: {
+    //       webhook: {
+    //         domain: 'https://ilmnur.vercel.app',
+    //         hookPath: '/api/webhook',
+    //       }
+    //     }
+    //   }), 
     // }),
     ConfigModule.forRoot({
       envFilePath: '.env',
@@ -191,7 +191,7 @@ import { WatchedModule } from './watched/watched.module';
     WatchedModule,
     // BotModule,
   ],
-  controllers: [],
+  controllers: [], 
   providers: [],
   exports: []
 })

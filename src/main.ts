@@ -17,14 +17,9 @@ async function bootstrap() {
     app.use('/swagger-ui', express.static(join(__dirname, '../node_modules/swagger-ui-dist')));
 
     const PORT = process.env.PORT || 4200;
-    app.enableCors({
-      origin: ["https://ilmnur.online", "http://localhost:3000"],
-      methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
-      allowedHeaders: "Content-Type, Authorization",
-      credentials: true,
-    });
+    app.enableCors();
     app.setGlobalPrefix('api');
-
+    
     // app.use(cookieParser()); 
 
     // const server = app.getHttpServer(); // Get the underlying HTTP server
