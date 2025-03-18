@@ -18,7 +18,7 @@ async function bootstrap() {
 
     const PORT = process.env.PORT || 4200;
     app.enableCors({
-      origin: "https://ilmnur.online",
+      origin: ["https://ilmnur.online", "http://localhost:3000"],
       methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
       allowedHeaders: "Content-Type, Authorization",
       credentials: true,
