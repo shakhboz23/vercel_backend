@@ -86,6 +86,13 @@ export class UploadedController {
     return this.uploadedService.getById(id);
   }
 
+  @ApiOperation({ summary: 'Cron' })
+  // @UseGuards(AuthGuard)
+  @Get('/cron')
+  cron() {
+    return "cron is working in vercel";
+  }
+
   @ApiOperation({ summary: 'Get all classs' })
   // @UseGuards(AuthGuard)
   @Get()

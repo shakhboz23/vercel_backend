@@ -17,5 +17,9 @@
       "src": "/(.*)",
       "dest": "/static/$1"
     }
-  ]
+  ],
+  "crons": [{
+    "path": "/api/uploaded/cron",
+    "schedule": "0 10 * * *"
+  }]
 }
