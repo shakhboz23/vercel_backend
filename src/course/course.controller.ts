@@ -72,7 +72,7 @@ export class CourseController {
     @UploadedFile(new ImageValidationPipe()) image: Express.Multer.File,
     @Headers() headers: string,
   ) {
-    console.log(image);
+    console.log(image, 2303);
     const user_id = extractUserIdFromToken(headers, this.jwtService, true);
     console.log(user_id);
     return this.courseService.create(courseDto, image, user_id);

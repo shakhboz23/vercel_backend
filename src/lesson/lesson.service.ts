@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Lesson, lessonType } from './models/lesson.models';
+import { Lesson } from './models/lesson.models';
 import { InjectModel } from '@nestjs/sequelize';
 import { LessonDto } from './dto/lesson.dto';
 import { Tests } from '../test/models/test.models';

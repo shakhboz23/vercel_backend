@@ -53,6 +53,9 @@ import { TelegrafModule } from 'nestjs-telegraf';
 import { BOT_NAME } from './app.constants';
 import { BotModule } from './bot/bot.module';
 import { WatchedModule } from './watched/watched.module';
+import { Telegraf } from 'telegraf';
+import { ScheduleModule } from '@nestjs/schedule';
+import { MyService } from './schedules/schedule.service';
 // import { BotModule } from './bot/bot.module';
 // import { TelegrafModule } from 'nestjs-telegraf';
 // import { BOT_NAME } from './app.constants';
@@ -72,6 +75,7 @@ import { WatchedModule } from './watched/watched.module';
     //     }
     //   }), 
     // }),
+    ScheduleModule.forRoot(),
     ConfigModule.forRoot({
       envFilePath: '.env',
       isGlobal: true,
@@ -191,8 +195,19 @@ import { WatchedModule } from './watched/watched.module';
     WatchedModule,
     // BotModule,
   ],
-  controllers: [], 
-  providers: [],
+  controllers: [],
+  providers: [
+    MyService,
+    {
+      provide: 'TELEGRAM_BOT',
+      useFactory: () => {
+        const bot = new Telegraf(process.env.BOT_TOKEN);
+        bot.start((ctx) => ctx.reply('Welcome to the bot!'));
+        bot.launch();
+        return bot;
+      },
+    },
+  ],
   exports: []
 })
 export class AppModule implements OnApplicationBootstrap {
