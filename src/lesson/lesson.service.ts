@@ -22,6 +22,7 @@ import { CourseService } from 'src/course/course.service';
 import { Group } from 'src/group/models/group.models';
 import { WatchedService } from 'src/watched/watched.service';
 import { Like } from 'src/likes/models/like.models';
+import { FilesService } from 'src/files/files.service';
 
 @Injectable()
 export class LessonService {
@@ -31,6 +32,7 @@ export class LessonService {
     // private readonly userService: UserService,
     private uploadedService: UploadedService,
     private readonly watchedService: WatchedService,
+    private readonly filesService: FilesService,
   ) { }
 
   async create(lessonDto: LessonDto, video: any): Promise<object> {
@@ -343,6 +345,7 @@ export class LessonService {
           return;
         } else if (video) {
           file_type = 'video';
+          await this.filesService.deleteFile(lesson.video);
           file_data = await this.uploadedService.create(video, file_type);
           console.log(file_data);
           video = file_data;
@@ -395,6 +398,7 @@ export class LessonService {
       if (!lesson) {
         throw new NotFoundException('Lesson not found');
       }
+      await this.filesService.deleteFile(lesson.video);
       lesson.destroy();
       return {
         statusCode: HttpStatus.OK,

@@ -14,6 +14,7 @@ import { User } from '../user/models/user.models';
 import { Course } from 'src/course/models/course.models';
 import { WatchedService } from 'src/watched/watched.service';
 import { Lesson } from 'src/lesson/models/lesson.models';
+import { FilesService } from 'src/files/files.service';
 
 @Injectable()
 export class GroupService {
@@ -21,6 +22,7 @@ export class GroupService {
     @InjectModel(Group) private groupRepository: typeof Group,
     private readonly uploadedService: UploadedService,
     private readonly watchedService: WatchedService,
+    private readonly filesService: FilesService,
   ) { }
 
   async create(
@@ -289,22 +291,23 @@ export class GroupService {
     user_id: number,
   ): Promise<object> {
     try {
-      const groupes = await this.groupRepository.findByPk(id);
-      if (!groupes) {
+      const group = await this.groupRepository.findByPk(id);
+      if (!group) {
         throw new NotFoundException('Group not found');
       }
-      if (groupes.user_id != user_id) {
+      if (group.user_id != user_id) {
         throw new ForbiddenException("You don't have an access");
       }
       const file_type: string = 'image';
       let file_data: any;
       let image_url: string;
       if (cover) {
+        await this.filesService.deleteFile(group.cover);
         file_data = await this.uploadedService.create(cover, file_type);
         cover = file_data.data.url;
       }
       const update = await this.groupRepository.update(
-        { ...groupDto, cover: cover || groupes.cover },
+        { ...groupDto, cover: cover || group.cover },
         {
           where: { id },
           returning: true,
@@ -324,11 +327,12 @@ export class GroupService {
 
   async delete(id: number): Promise<object> {
     try {
-      const groupes = await this.groupRepository.findByPk(id);
-      if (!groupes) {
+      const group = await this.groupRepository.findByPk(id);
+      if (!group) {
         throw new NotFoundException('Group not found');
       }
-      groupes.destroy();
+      await this.filesService.deleteFile(group.cover);
+      group.destroy();
       return {
         statusCode: HttpStatus.OK,
         message: 'Deleted successfully',

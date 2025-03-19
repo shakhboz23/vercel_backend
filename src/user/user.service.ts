@@ -41,7 +41,7 @@ export class UserService {
     private readonly roleService: RoleService,
     private readonly mailService: MailService,
     private readonly resetpasswordService: ResetpasswordService,
-    private readonly fileService: FilesService,
+    private readonly filesService: FilesService,
 
   ) { }
   async register(
@@ -534,7 +534,8 @@ export class UserService {
         throw new NotFoundException('User not found');
       }
       if (image) {
-        image = await this.fileService.createFile(image, 'image');
+        await this.filesService.deleteFile(user.image);
+        image = await this.filesService.createFile(image, 'image');
         updateDto.image = image.url;
         console.log(updateDto.image)
         if (image == 'error') {
@@ -743,6 +744,7 @@ export class UserService {
       if (!user) {
         throw new NotFoundException('User not found');
       }
+      await this.filesService.deleteFile(user.image);
       user.destroy();
       return {
         statusCode: HttpStatus.ACCEPTED,

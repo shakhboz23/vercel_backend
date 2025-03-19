@@ -7,10 +7,11 @@ import { ChatGateway } from '../gateway/gateway';
 import { UploadedModule } from '../uploaded/uploaded.module';
 import { JwtModule } from '@nestjs/jwt';
 import { WatchedModule } from 'src/watched/watched.module';
+import { FilesModule } from 'src/files/files.module';
 
 @Module({
   imports: [
-    SequelizeModule.forFeature([Group]), UploadedModule, JwtModule, WatchedModule,
+    SequelizeModule.forFeature([Group]), UploadedModule, JwtModule, WatchedModule, FilesModule,
   ],
   controllers: [GroupController],
   providers: [GroupService, ChatGateway],

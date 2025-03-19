@@ -21,6 +21,7 @@ import { Group } from 'src/group/models/group.models';
 import { ChatGroupService } from 'src/chat_group/chat_group.service';
 import { ChatGroupType } from 'src/chat_group/dto/chat_group.dto';
 import { WatchedService } from 'src/watched/watched.service';
+import { FilesService } from 'src/files/files.service';
 
 @Injectable()
 export class CourseService {
@@ -30,6 +31,7 @@ export class CourseService {
     private readonly chatGroupService: ChatGroupService,
     private readonly uploadedService: UploadedService,
     private readonly watchedService: WatchedService,
+    private readonly filesService: FilesService,
   ) { }
 
   async create(courseDto: CourseDto, cover: any, user_id: number): Promise<object> {
@@ -278,6 +280,7 @@ export class CourseService {
       let file_data: any;
       let image_url: string;
       if (cover) {
+        await this.filesService.deleteFile(course.cover);
         file_data = await this.uploadedService.create({ file_type }, cover);
         cover = file_data.data.url;
       }
@@ -299,11 +302,11 @@ export class CourseService {
 
   async delete(id: number): Promise<object> {
     try {
-      console.log(id);
       const course = await this.courseRepository.findByPk(id);
       if (!course) {
         throw new NotFoundException('Course not found');
       }
+      await this.filesService.deleteFile(course.cover);
       course.destroy();
       return {
         statusCode: HttpStatus.OK,
