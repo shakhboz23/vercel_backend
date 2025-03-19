@@ -198,15 +198,6 @@ import { MyService } from './schedules/schedule.service';
   controllers: [],
   providers: [
     MyService,
-    {
-      provide: 'TELEGRAM_BOT',
-      useFactory: () => {
-        const bot = new Telegraf(process.env.BOT_TOKEN);
-        bot.start((ctx) => ctx.reply('Welcome to the bot!'));
-        bot.launch();
-        return bot;
-      },
-    },
   ],
   exports: []
 })

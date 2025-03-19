@@ -136,7 +136,7 @@ export class NewsController
   @ApiOperation({ summary: 'Delete user by ID' })
   // @UseGuards(AuthGuard)
   @Delete(':id')
-  async deleteUser(@Param('id') id: string, @ConnectedSocket() client: Socket) {
+  async deleteUser(@Param('id') id: number, @ConnectedSocket() client: Socket) {
     const news = await this.newsService.delete(id);
     client.emit('created');
     return news;

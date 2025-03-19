@@ -9,13 +9,14 @@ import { User } from '../user/models/user.models';
 @Injectable()
 export class NewsService {
   constructor(
-    @InjectModel(News) private readonly NewsRepository: typeof News,
-  ) {}
+    @InjectModel(News) private readonly newsRepository: typeof News,
+    private readonly filesService: FilesService,
+  ) { }
   // private readonly deviceDetector = new DeviceDetector();
 
   async create(newsDto: NewsDto) {
     try {
-      const news = await this.NewsRepository.create({ ...newsDto });
+      const news = await this.newsRepository.create({ ...newsDto });
       return { status: HttpStatus.OK, data: news };
     } catch (error) {
       return { status: HttpStatus.BAD_REQUEST, error: error.message };
@@ -27,12 +28,12 @@ export class NewsService {
     const offset = (page - 1) * limit;
     console.log(offset);
     try {
-      const news = await this.NewsRepository.findAll({
+      const news = await this.newsRepository.findAll({
         order: [['createdAt', 'DESC']],
         // offset,
         // limit,
       });
-      // const total_count = await this.NewsRepository.count();
+      // const total_count = await this.newsRepository.count();
       // const total_pages = Math.ceil(total_count / limit);
       const res = {
         status: HttpStatus.OK,
@@ -58,7 +59,7 @@ export class NewsService {
     const offset = (page - 1) * limit;
     console.log(offset);
     try {
-      const news = await this.NewsRepository.findAll({
+      const news = await this.newsRepository.findAll({
         where: {
           // newsgroup_id,
         },
@@ -71,7 +72,7 @@ export class NewsService {
         offset,
         limit,
       });
-      const total_count = await this.NewsRepository.count();
+      const total_count = await this.newsRepository.count();
       const total_pages = Math.ceil(total_count / limit);
       const res = {
         status: HttpStatus.OK,
@@ -124,7 +125,7 @@ export class NewsService {
   //   const offset = (page - 1) * limit;
   //   console.log(where);
   //   try {
-  //     const news = await this.NewsRepository.findAll({
+  //     const news = await this.newsRepository.findAll({
   //       where,
   //       order: [['id', 'DESC']],
   //       include: [
@@ -139,7 +140,7 @@ export class NewsService {
   //       offset,
   //       limit,
   //     });
-  //     const total_count = await this.NewsRepository.count({
+  //     const total_count = await this.newsRepository.count({
   //       where,
   //     });
   //     const total_pages = Math.ceil(total_count / limit);
@@ -163,7 +164,7 @@ export class NewsService {
 
   async findAllId() {
     try {
-      const newsId = await this.NewsRepository.findAll({
+      const newsId = await this.newsRepository.findAll({
         attributes: ['id'],
       });
       return newsId;
@@ -174,7 +175,7 @@ export class NewsService {
 
   async findById(id: string) {
     try {
-      const news = await this.NewsRepository.findOne({
+      const news = await this.newsRepository.findOne({
         where: { id },
       });
       if (!news) {
@@ -192,7 +193,7 @@ export class NewsService {
   //     if (news.status === 400) {
   //       return { status: HttpStatus.NOT_FOUND, error: 'Not found' };
   //     }
-  //     const updated_info = await this.NewsRepository.update(newsDto, {
+  //     const updated_info = await this.newsRepository.update(newsDto, {
   //       where: { id: news.data.id },
   //       returning: true,
   //     });
@@ -205,13 +206,14 @@ export class NewsService {
   //   }
   // }
 
-  async delete(id: string) {
+  async delete(id: number) {
     try {
-      const news = await this.findById(id);
-      if (news.status === 400) {
+      const news = await this.newsRepository.findByPk(id);
+      if (news) {
         return { status: HttpStatus.NOT_FOUND, error: 'Not found' };
       }
-      await news.data.destroy();
+      await this.filesService.deleteFile(news.source);
+      await news.destroy();
       return { status: HttpStatus.OK, data: 'deleted' };
     } catch (error) {
       return { status: HttpStatus.NOT_FOUND, error: error.message };
