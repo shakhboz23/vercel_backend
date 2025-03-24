@@ -15,6 +15,12 @@ import { BOT_NAME } from 'src/app.constants';
     useFactory: async (configService: ConfigService) => ({
       token: process.env.BOT_TOKEN,
       includes: [BotModule],
+      launchOptions: {
+        webhook: {
+          domain: 'https://ilmnur.vercel.app',
+          hookPath: '/api/webhook',
+        }
+      }
     }),
     inject: [ConfigService]
   })],
