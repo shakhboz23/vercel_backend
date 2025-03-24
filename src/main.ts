@@ -10,7 +10,7 @@ import { join } from 'path';
 
 async function bootstrap() {
   try {
-    const app = await NestFactory.create(AppModule);
+    const app = await NestFactory.create(AppModule, { cors: true });
 
 
     // Serve static files for Swagger UI
