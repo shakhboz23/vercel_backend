@@ -17,7 +17,7 @@ async function bootstrap() {
     app.use('/swagger-ui', express.static(join(__dirname, '../node_modules/swagger-ui-dist')));
 
     const PORT = process.env.PORT || 4200;
-    app.enableCors();
+    // app.enableCors();
     app.setGlobalPrefix('api');
     
     // app.use(cookieParser()); 
