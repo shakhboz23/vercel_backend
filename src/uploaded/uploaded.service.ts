@@ -92,10 +92,10 @@ export class UploadedService {
       let data = await this.uploadedRepository.create({
         duration: Math.floor(file_data.duration) || null,
         file_type,
-        url: file_data.url,
+        url: file_data.secure_url,
       });
       console.log(data);
-      return file_data.url;
+      return file_data.secure_url;
     } catch (error) {
       console.log(error.message);
       return { statusCode: HttpStatus.BAD_REQUEST, error: error.message };
