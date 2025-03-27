@@ -301,10 +301,12 @@ export class GroupService {
       const file_type: string = 'image';
       let file_data: any;
       let image_url: string;
+      console.log(cover, '2303');
       if (cover) {
-        await this.filesService.deleteFile(group.cover);
-        file_data = await this.uploadedService.create(cover, file_type);
-        cover = file_data.data.url;
+        if (group.cover) {
+          await this.filesService.deleteFile(group.cover);
+        }
+        cover = await this.uploadedService.create(cover, file_type);
       }
       const update = await this.groupRepository.update(
         { ...groupDto, cover: cover || group.cover },

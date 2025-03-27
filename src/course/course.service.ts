@@ -281,8 +281,7 @@ export class CourseService {
       let image_url: string;
       if (cover) {
         await this.filesService.deleteFile(course.cover);
-        file_data = await this.uploadedService.create({ file_type }, cover);
-        cover = file_data.data.url;
+        cover = await this.uploadedService.create({ file_type }, cover);
       }
       const update = await this.courseRepository.update({ ...courseDto, cover: cover || course.cover }, {
         where: { id },
