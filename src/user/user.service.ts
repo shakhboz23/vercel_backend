@@ -534,9 +534,11 @@ export class UserService {
         throw new NotFoundException('User not found');
       }
       if (image) {
-        await this.filesService.deleteFile(user.image);
+        if (user.image) {
+          await this.filesService.deleteFile(user.image);
+        }
         image = await this.filesService.createFile(image, 'image');
-        updateDto.image = image.url;
+        updateDto.image = image.secure_url;
         console.log(updateDto.image)
         if (image == 'error') {
           return {
@@ -764,7 +766,7 @@ export class UserService {
     const payload: any = ticket.getPayload();
     // If request specified a G Suite domain:
     // const domain = payload['hd'];
-    
+
     return payload;
   }
 
