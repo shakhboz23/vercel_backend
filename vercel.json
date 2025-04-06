@@ -1,12 +1,14 @@
 {
-  "functions": {
-    "api/**/*.ts": {
-      "maxDuration": 50
-    }
-  },
-  "headers": [
+  "version": 2,
+  "builds": [
     {
-      "source": "/api/(.*)",
+      "src": "dist/main.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
       "headers": [
         {
           "key": "Access-Control-Allow-Origin",
@@ -24,21 +26,16 @@
           "key": "Access-Control-Allow-Credentials",
           "value": "true"
         }
-      ]
-    }
-  ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/api"
+      ],
+      "dest": "/dist/main.js"
     },
     {
       "src": "/swagger-ui/(.*)",
-      "dest": "/api/swagger-ui/$1"
+      "dest": "/dist/main.js"
     },
     {
       "src": "/(.*)",
-      "dest": "/static/$1"
+      "dest": "/dist/main.js"
     }
   ],
   "crons": [
