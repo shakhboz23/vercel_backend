@@ -56,9 +56,6 @@ import { WatchedModule } from './watched/watched.module';
 import { Telegraf } from 'telegraf';
 import { ScheduleModule } from '@nestjs/schedule';
 import { MyService } from './schedules/schedule.service';
-// import { BotModule } from './bot/bot.module';
-// import { TelegrafModule } from 'nestjs-telegraf';
-// import { BOT_NAME } from './app.constants';
 
 @Module({
   imports: [
@@ -193,7 +190,7 @@ import { MyService } from './schedules/schedule.service';
     Subscription_activityModule,
     VideoChatModule,
     WatchedModule,
-    // BotModule,
+    BotModule,
   ],
   controllers: [],
   providers: [
