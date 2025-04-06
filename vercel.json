@@ -1,46 +1,44 @@
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "dist/main.js",
-      "use": "@vercel/node"
-    }
-  ],
   "headers": [
     {
       "source": "/api/(.*)",
       "headers": [
         {
+          "key": "Access-Control-Allow-Credentials",
+          "value": "true"
+        },
+        {
           "key": "Access-Control-Allow-Origin",
-          "value": "https://ilmnur.online"
+          "value": "*"
         },
         {
           "key": "Access-Control-Allow-Methods",
-          "value": "GET,POST,PUT,DELETE,OPTIONS"
+          "value": "GET,OPTIONS,PATCH,DELETE,POST,PUT"
         },
         {
           "key": "Access-Control-Allow-Headers",
-          "value": "Content-Type, Authorization"
-        },
-        {
-          "key": "Access-Control-Allow-Credentials",
-          "value": "true"
+          "value": "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version"
         }
       ]
     }
   ],
+  "functions": {
+    "api/**/*.ts": {
+      "maxDuration": 50
+    }
+  },
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "/dist/main.js"
+      "dest": "/api"
     },
     {
       "src": "/swagger-ui/(.*)",
-      "dest": "/dist/main.js"
+      "dest": "/api/swagger-ui/$1"
     },
     {
       "src": "/(.*)",
-      "dest": "/dist/main.js"
+      "dest": "/static/$1"
     }
   ],
   "crons": [
