@@ -13,11 +13,11 @@ async function bootstrap() {
     const app = await NestFactory.create(AppModule);
 
 
+    app.enableCors();
     // Serve static files for Swagger UI
     app.use('/swagger-ui', express.static(join(__dirname, '../node_modules/swagger-ui-dist')));
-
     const PORT = process.env.PORT || 4200;
-    app.enableCors();
+
   //   app.enableCors({
   //     origin: true,
   //     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
