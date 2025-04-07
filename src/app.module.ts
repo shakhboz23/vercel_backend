@@ -59,6 +59,9 @@ import { MyService } from './schedules/schedule.service';
 
 @Module({
   imports: [
+    // TelegrafModule.forRoot({
+    //   token: process.env.BOT_TOKEN,
+    // }),
     TelegrafModule.forRootAsync({
       botName: BOT_NAME,
       useFactory: () => ({

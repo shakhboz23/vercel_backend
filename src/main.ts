@@ -4,6 +4,8 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { BadRequestException, ValidationPipe } from '@nestjs/common';
 import * as express from 'express';
 import { join } from 'path';
+import { getBotToken } from 'nestjs-telegraf';
+import { BOT_NAME } from './app.constants';
 
 // import * as cookieParser from 'cookie-parser';
 // import { ExpressPeerServer } from 'peer';
@@ -47,6 +49,8 @@ async function bootstrap() {
         docExpansion: 'none', // collapse the dropdown by default
       },
     });
+    const bot = app.get(getBotToken(BOT_NAME));
+    app.use(bot.webhookCallback('/api/webhook'));
     await app.listen(PORT, () => {
       console.log('Server listening on port', PORT);
     });
