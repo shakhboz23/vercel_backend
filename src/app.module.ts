@@ -62,19 +62,19 @@ import { MyService } from './schedules/schedule.service';
     // TelegrafModule.forRoot({
     //   token: process.env.BOT_TOKEN,
     // }),
-    TelegrafModule.forRootAsync({
-      botName: BOT_NAME,
-      useFactory: () => ({
-        token: process.env.BOT_TOKEN,
-        includes: [BotModule],
-        // launchOptions: {
-        //   webhook: {
-        //     domain: 'https://ilmnur.vercel.app',
-        //     hookPath: '/api/webhook',
-        //   }
-        // }
-      }),  
-    }),
+    // TelegrafModule.forRootAsync({
+    //   botName: BOT_NAME,
+    //   useFactory: () => ({
+    //     token: process.env.BOT_TOKEN,
+    //     includes: [BotModule],
+    //     // launchOptions: {
+    //     //   webhook: {
+    //     //     domain: 'https://ilmnur.vercel.app',
+    //     //     hookPath: '/api/webhook',
+    //     //   }
+    //     // }
+    //   }),  
+    // }),
     ScheduleModule.forRoot(),
     ConfigModule.forRoot({
       envFilePath: '.env',
