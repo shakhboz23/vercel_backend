@@ -67,12 +67,12 @@ import { MyService } from './schedules/schedule.service';
       useFactory: () => ({
         token: process.env.BOT_TOKEN,
         includes: [BotModule],
-        launchOptions: {
-          webhook: {
-            domain: 'https://ilmnur.vercel.app',
-            hookPath: '/api/webhook',
-          }
-        }
+        // launchOptions: {
+        //   webhook: {
+        //     domain: 'https://ilmnur.vercel.app',
+        //     hookPath: '/api/webhook',
+        //   }
+        // }
       }),  
     }),
     ScheduleModule.forRoot(),
