@@ -4,6 +4,20 @@
       "maxDuration": 50
     }
   },
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
+    },
+    {
+      "src": "/swagger-ui/(.*)",
+      "dest": "/api/swagger-ui/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/static/$1"
+    }
+  ],
   "headers": [
     {
       "source": "/api/(.*)",
@@ -25,20 +39,6 @@
           "value": "Content-Type, Authorization"
         }
       ]
-    }
-  ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/$1"
-    },
-    {
-      "src": "/swagger-ui/(.*)",
-      "dest": "/api/swagger-ui/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/static/$1"
     }
   ],
   "crons": [
