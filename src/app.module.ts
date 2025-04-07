@@ -193,8 +193,8 @@ import { MyService } from './schedules/schedule.service';
     Subscription_activityModule,
     VideoChatModule,
     WatchedModule,
-    BotModule,
-  ],
+    // BotModule,
+  ], 
   controllers: [],
   providers: [
     MyService,
