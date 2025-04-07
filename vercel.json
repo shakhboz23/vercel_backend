@@ -9,25 +9,29 @@
       "source": "/api/(.*)",
       "headers": [
         {
-          "key": "Access-Control-Allow-Credentials",
-          "value": "true"
-        },
-        {
           "key": "Access-Control-Allow-Origin",
           "value": "https://ilmnur.online"
         },
         {
+          "key": "Access-Control-Allow-Credentials",
+          "value": "true"
+        },
+        {
           "key": "Access-Control-Allow-Methods",
-          "value": "GET,OPTIONS,PATCH,DELETE,POST,PUT"
+          "value": "GET,POST,PUT,DELETE,OPTIONS"
         },
         {
           "key": "Access-Control-Allow-Headers",
-          "value": "Content-Type, Authorization, X-Requested-With"
+          "value": "Content-Type, Authorization"
         }
       ]
     }
   ],
   "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
+    },
     {
       "src": "/swagger-ui/(.*)",
       "dest": "/api/swagger-ui/$1"
