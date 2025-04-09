@@ -7,7 +7,7 @@
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "/api/$1"
+      "dest": "/api"
     },
     {
       "src": "/swagger-ui/(.*)",
@@ -18,10 +18,8 @@
       "dest": "/static/$1"
     }
   ],
-  "crons": [
-    {
-      "path": "/api/uploaded/cron",
-      "schedule": "0 10 * * *"
-    }
-  ]
+  "crons": [{
+    "path": "/api/uploaded/cron",
+    "schedule": "0 10 * * *"
+  }]
 }
