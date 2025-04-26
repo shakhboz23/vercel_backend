@@ -17,7 +17,13 @@ async function bootstrap() {
     app.use('/swagger-ui', express.static(join(__dirname, '../node_modules/swagger-ui-dist')));
 
     const PORT = process.env.PORT || 4200;
-    app.enableCors();
+    // app.enableCors();
+    app.enableCors({
+      origin: 'https://ilmnur.online', // faqat bu domenni ruxsat berish
+      methods: 'GET, POST, PUT, DELETE', // ruxsat berilgan metodlar
+      allowedHeaders: 'Content-Type, Authorization', // ruxsat berilgan xususiyatlar
+    });
+    
   //   app.enableCors({
   //     origin: true,
   //     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
