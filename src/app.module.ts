@@ -56,25 +56,22 @@ import { WatchedModule } from './watched/watched.module';
 import { Telegraf } from 'telegraf';
 import { ScheduleModule } from '@nestjs/schedule';
 import { MyService } from './schedules/schedule.service';
-// import { BotModule } from './bot/bot.module';
-// import { TelegrafModule } from 'nestjs-telegraf';
-// import { BOT_NAME } from './app.constants';
 
 @Module({
   imports: [
-    // TelegrafModule.forRootAsync({
-    //   botName: BOT_NAME,
-    //   useFactory: () => ({
-    //     token: process.env.BOT_TOKEN,
-    //     includes: [BotModule],
-    //     launchOptions: {
-    //       webhook: {
-    //         domain: 'https://ilmnur.vercel.app',
-    //         hookPath: '/api/webhook',
-    //       }
-    //     }
-    //   }), 
-    // }),
+    TelegrafModule.forRootAsync({
+      botName: BOT_NAME,
+      useFactory: () => ({
+        token: process.env.BOT_TOKEN,
+        includes: [BotModule],
+        launchOptions: {
+          webhook: {
+            domain: 'https://ilmnur.vercel.app',
+            hookPath: '/api/webhook',
+          }
+        }
+      }), 
+    }),
     ScheduleModule.forRoot(),
     ConfigModule.forRoot({
       envFilePath: '.env',
