@@ -10,9 +10,9 @@ export class AppController {
     return this.appService.getHello();
   }
 
-  @Post('webhook')
-  async handleWebhook(@Req() req: Request) {
-    console.log('Telegramdan yangi xabar:', req.body);
-    return { status: 'ok' };
-  }
+  // @Post('webhook')
+  // async handleWebhook(@Req() req: Request) {
+  //   console.log('Telegramdan yangi xabar:', req.body);
+  //   return { status: 'ok' };
+  // }
 }
