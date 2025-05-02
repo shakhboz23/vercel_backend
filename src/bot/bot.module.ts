@@ -17,7 +17,7 @@ import { BOT_NAME } from 'src/app.constants';
       includes: [BotModule],
       launchOptions: {
         webhook: {
-          domain: 'https://ilmnur.vercel.app',
+          domain: 'https://vercelbackend-production.up.railway.app',
           hookPath: '/api/webhook',
         }
       }
