@@ -12,8 +12,8 @@ export class FilesService {
 
   async createFile(file: any, file_type: string): Promise<string> {
     try {
-      const fileTypeIndex = file?.originalname.lastIndexOf('.');
-      const fileType = file?.originalname.slice(fileTypeIndex);
+      const fileTypeIndex = file?.originalname?.lastIndexOf('.');
+      const fileType = file?.originalname?.slice(fileTypeIndex);
       const file_name = v4() + fileType;
       let result: any;
 

@@ -277,11 +277,10 @@ export class CourseService {
         throw new ForbiddenException("You don't have an access");
       }
       const file_type: string = 'image';
-      let file_data: any;
-      let image_url: string;
       if (cover) {
         await this.filesService.deleteFile(course.cover);
-        cover = await this.uploadedService.create({ file_type }, cover);
+        cover = await this.uploadedService.create(cover, file_type);
+        console.log(cover)
       }
       const update = await this.courseRepository.update({ ...courseDto, cover: cover || course.cover }, {
         where: { id },
