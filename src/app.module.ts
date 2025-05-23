@@ -50,7 +50,7 @@ import { SubscriptionActivity } from './subscription_activity/models/subscriptio
 import { Subscriptions } from './subscriptions/models/subscriptions.models';
 import { VideoChat } from './video_chat/models/video_chat.model';
 import { TelegrafModule } from 'nestjs-telegraf';
-import { BOT_NAME } from './app.constants';
+// import { BOT_NAME } from './app.constants';
 import { BotModule } from './bot/bot.module';
 import { WatchedModule } from './watched/watched.module';
 import { ScheduleModule } from '@nestjs/schedule';
