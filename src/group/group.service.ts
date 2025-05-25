@@ -251,10 +251,7 @@ export class GroupService {
         throw new NotFoundException('Group not found');
       }
       await this.watchedService.create({ group_id: id }, user_id);
-      return {
-        statusCode: HttpStatus.OK,
-        data: groups,
-      };
+      return groups;
     } catch (error) {
       throw new BadRequestException(error.message);
     }
