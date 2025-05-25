@@ -24,8 +24,8 @@ interface SubscriptionsAttributes {
 export enum SubscribeActive {
   // not_found = 'not_found',
   requested = 'requested',
-  active = 'active',
   pending = 'pending',
+  active = 'active',
 }
 
 @Table({ tableName: 'subscriptions' })

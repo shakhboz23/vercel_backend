@@ -90,6 +90,12 @@ export class UserController {
     return this.userService.getReyting(group_id, course_id);
   }
 
+  @ApiOperation({ summary: 'Get user reytings' })
+  @Get('/lesson-reyting/:lesson_id')
+  getLessonReyting(@Param() { lesson_id }: { lesson_id: number }) {
+    return this.userService.getLessonReyting(lesson_id);
+  }
+
   @ApiOperation({ summary: 'Get user by ID' })
   // @UseGuards(AuthGuard)
   @Get(':id')

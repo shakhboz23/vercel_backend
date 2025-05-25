@@ -373,6 +373,38 @@ export class UserService {
     }
   }
 
+  async getLessonReyting(lesson_id: number): Promise<object> {
+    try {
+      const users = await this.userRepository.findAll({
+        where: {
+          id: {
+            [Op.in]: Sequelize.literal(`(
+              SELECT DISTINCT "Reyting"."user_id"
+              FROM "reyting" AS "Reyting" WHERE "Reyting"."lesson_id" = ${lesson_id}
+              AND "Reyting"."user_id" = "User"."id"
+            )`),
+          },
+        },
+        attributes: {
+          include: [
+            [
+              Sequelize.literal(`(
+                SELECT SUM("reyting"."ball")
+                FROM "reyting" WHERE "reyting"."lesson_id" = ${lesson_id}
+                AND "reyting"."user_id" = "User"."id"
+              )::int`),
+              'totalReyting',
+            ],
+          ],
+        },
+        order: [['totalReyting', 'DESC']],
+      });
+      return users;
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
+  }
+
 
   async getById(id: number): Promise<object> {
     console.log('getById', id);

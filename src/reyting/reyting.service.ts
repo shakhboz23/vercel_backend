@@ -127,6 +127,22 @@ export class ReytingService {
     }
   }
 
+  async getLessonsReyting(
+    lesson_id: number,
+    user_id: number,
+  ): Promise<object> {
+    try {
+      const reytings = await this.reytingRepository.findAll({
+        where: { lesson_id },
+        order: [['ball' as 'TotalReyting', 'ASC']],
+        include: [{ model: User }],
+      });
+      return reytings;
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
+  }
+
   async pagination(page: number, limit: number): Promise<object> {
     try {
       const offset = (page - 1) * limit;

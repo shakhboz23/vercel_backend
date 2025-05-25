@@ -7,29 +7,20 @@ import {
 import { Lesson } from './models/lesson.models';
 import { InjectModel } from '@nestjs/sequelize';
 import { LessonDto } from './dto/lesson.dto';
-import { Tests } from '../test/models/test.models';
-import { Uploaded } from '../uploaded/models/uploaded.models';
-import { UserService } from '../user/user.service';
 import { Course } from '../course/models/course.models';
 import { UploadedService } from '../uploaded/uploaded.service';
 import { Sequelize } from 'sequelize-typescript';
-import { Subscriptions } from 'src/subscriptions/models/subscriptions.models';
-import { User } from 'src/user/models/user.models';
-import { Role } from 'src/role/models/role.models';
-import { Op } from 'sequelize';
-import { Reyting } from 'src/reyting/models/reyting.models';
 import { CourseService } from 'src/course/course.service';
-import { Group } from 'src/group/models/group.models';
 import { WatchedService } from 'src/watched/watched.service';
-import { Like } from 'src/likes/models/like.models';
 import { FilesService } from 'src/files/files.service';
+import { Tests } from 'src/test/models/test.models';
+import { Reyting } from 'src/reyting/models/reyting.models';
 
 @Injectable()
 export class LessonService {
   constructor(
     @InjectModel(Lesson) private lessonRepository: typeof Lesson,
     private readonly courseService: CourseService,
-    // private readonly userService: UserService,
     private uploadedService: UploadedService,
     private readonly watchedService: WatchedService,
     private readonly filesService: FilesService,
@@ -117,6 +108,17 @@ export class LessonService {
       //   throw new NotFoundException('Lessons not found');
       // }
       return lessons;
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
+  }
+
+  async getReyting(lesson_id: number): Promise<object> {
+    try {
+      const reyting: any = await this.lessonRepository.findAll({
+        include: [{model: Reyting }]
+      });
+      return reyting;
     } catch (error) {
       throw new BadRequestException(error.message);
     }

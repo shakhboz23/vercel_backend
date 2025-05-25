@@ -36,7 +36,7 @@ export class SubscriptionsService {
       if (exist) {
         return this.delete(user_id, subscriptionsDto.course_id);
         // throw new BadRequestException('Already created');
-      }
+      } 
       return this.subscriptionsRepository.create({ course_id, user_id, is_active: SubscribeActive.requested });
     } catch (error) {
       throw new BadRequestException(error.message);
