@@ -55,6 +55,8 @@ import { BotModule } from './bot/bot.module';
 import { WatchedModule } from './watched/watched.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { MyService } from './schedules/schedule.service';
+import { Comment } from './comment/models/comment.models';
+import { CommentModule } from './comment/comment.module';
 @Module({
   imports: [
     // TelegrafModule.forRootAsync({
@@ -103,6 +105,7 @@ import { MyService } from './schedules/schedule.service';
           Subscriptions,
           SubscriptionActivity,
           VideoChat,
+          Comment,
         ],
         autoLoadModels: true,
         logging: true,
@@ -141,6 +144,7 @@ import { MyService } from './schedules/schedule.service';
           Subscriptions,
           SubscriptionActivity,
           VideoChat,
+          Comment,
         ],
         autoLoadModels: true,
         logging: true,
@@ -188,6 +192,7 @@ import { MyService } from './schedules/schedule.service';
     Subscription_activityModule,
     VideoChatModule,
     WatchedModule,
+    CommentModule,
     // BotModule,
   ],
   controllers: [],

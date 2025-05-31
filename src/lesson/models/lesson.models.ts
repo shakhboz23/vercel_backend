@@ -10,6 +10,7 @@ import {
 import { Course } from '../../course/models/course.models';
 import { Group } from '../../group/models/group.models';
 import { Like } from 'src/likes/models/like.models';
+import { Comment } from 'src/comment/models/comment.models';
 
 interface LessonAttributes {
   title: string;
@@ -107,4 +108,10 @@ export class Lesson extends Model<Lesson, LessonAttributes> {
     hooks: true,
   })
   likes: Like[];
+
+  @HasMany(() => Comment, {
+    onDelete: 'CASCADE',
+    hooks: true,
+  })
+  comments: Comment[];
 }

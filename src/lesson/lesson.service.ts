@@ -15,6 +15,8 @@ import { WatchedService } from 'src/watched/watched.service';
 import { FilesService } from 'src/files/files.service';
 import { Tests } from 'src/test/models/test.models';
 import { Reyting } from 'src/reyting/models/reyting.models';
+import { Comment } from 'src/comment/models/comment.models';
+import { User } from 'src/user/models/user.models';
 
 @Injectable()
 export class LessonService {
@@ -116,7 +118,7 @@ export class LessonService {
   async getReyting(lesson_id: number): Promise<object> {
     try {
       const reyting: any = await this.lessonRepository.findAll({
-        include: [{model: Reyting }]
+        include: [{ model: Reyting }]
       });
       return reyting;
     } catch (error) {
@@ -217,6 +219,10 @@ export class LessonService {
       const lesson = await this.lessonRepository.findOne({
         where: { id },
         include: [
+          {
+            model: Comment,
+            include: [{ model: User }],
+          },
           {
             model: Course,
             attributes: {
