@@ -17,6 +17,7 @@ import { Tests } from 'src/test/models/test.models';
 import { Reyting } from 'src/reyting/models/reyting.models';
 import { Comment } from 'src/comment/models/comment.models';
 import { User } from 'src/user/models/user.models';
+import { CommentService } from 'src/comment/comment.service';
 
 @Injectable()
 export class LessonService {
@@ -26,6 +27,7 @@ export class LessonService {
     private uploadedService: UploadedService,
     private readonly watchedService: WatchedService,
     private readonly filesService: FilesService,
+    private readonly commentService: CommentService,
   ) { }
 
   async create(lessonDto: LessonDto, video: any): Promise<object> {
@@ -216,13 +218,13 @@ export class LessonService {
   async getById(id: number, user_id?: number): Promise<object> {
     try {
       user_id = user_id || null;
-      const lesson = await this.lessonRepository.findOne({
+      let lesson: any = await this.lessonRepository.findOne({
         where: { id },
         include: [
-          {
-            model: Comment,
-            include: [{ model: User }],
-          },
+          // {
+          //   model: Comment,
+          //   include: [{ model: User }],
+          // },
           {
             model: Course,
             attributes: {
@@ -295,6 +297,9 @@ export class LessonService {
         },
         replacements: { user_id },
       });
+      lesson = lesson.get({ plain: true });
+      const comments = await this.commentService.pagination(1, id)
+      lesson.comments = comments;
       if (!lesson) {
         throw new NotFoundException('Lesson not found');
       }

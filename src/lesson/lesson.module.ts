@@ -9,9 +9,10 @@ import { CourseModule } from 'src/course/course.module';
 import { ReytingModule } from 'src/reyting/reyting.module';
 import { WatchedModule } from 'src/watched/watched.module';
 import { FilesModule } from 'src/files/files.module';
+import { CommentModule } from 'src/comment/comment.module';
 
 @Module({
-  imports: [SequelizeModule.forFeature([Lesson]), CourseModule, UploadedModule, ReytingModule, WatchedModule, FilesModule,],
+  imports: [SequelizeModule.forFeature([Lesson]), CourseModule, UploadedModule, ReytingModule, WatchedModule, FilesModule, CommentModule, ],
   controllers: [LessonController],
   providers: [LessonService],
   exports: [LessonService],

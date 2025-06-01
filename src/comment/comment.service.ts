@@ -27,7 +27,16 @@ export class CommentService {
 
   async create(commentDto: CommentDto, user_id: number): Promise<object> {
     try {
-      return this.commentRepository.create({ user_id, ...commentDto });
+      const comment = await this.commentRepository.create({ user_id, ...commentDto });
+      return this.commentRepository.findOne({
+        where: { id: comment.id },
+        include: [
+          {
+            model: User,
+            attributes: ['id', 'name', 'surname', 'image'],
+          },
+        ],
+      });
     } catch (error) {
       throw new BadRequestException(error.message);
     }
@@ -109,27 +118,23 @@ export class CommentService {
     }
   }
 
-  async pagination(page: number, group_id: number): Promise<object> {
+  async pagination(page: number, lesson_id: number): Promise<object> {
     try {
+      console.log(lesson_id, 230303);
       const offset = (page - 1) * 10;
       const limit = 10;
       const comments = await this.commentRepository.findAll({
+        where: { lesson_id },
         offset, limit,
-        include: [{ model: User }, {
-          model: Lesson,
-          include: [{
-            model: Course, include: [{
-              model: Group, where: { id: group_id }
-            }]
-          }]
-        }],
+        include: [{ model: User }],
+        order: [['createdAt', 'DESC']],
       });
       const total_count = await this.commentRepository.count();
       const total_pages = Math.ceil(total_count / 10);
       return {
         records: comments,
         pagination: {
-          currentPage: page,
+          currentPage: +page,
           total_pages,
           total_count,
         },

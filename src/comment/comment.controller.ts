@@ -60,9 +60,9 @@ export class CommentController {
 
   @ApiOperation({ summary: 'Get comments with pagination' })
   // @UseGuards(AuthGuard)
-  @Get('pagination/:page')
-  pagination(@Param('page') page: number) {
-    // return this.commentService.pagination(page);
+  @Get('pagination/:page/:lesson_id')
+  pagination(@Param('page') page: number, @Param('lesson_id') lesson_id: number) {
+    return this.commentService.pagination(page, lesson_id);
   }
 
   @ApiOperation({ summary: 'Update comment profile by ID' })
