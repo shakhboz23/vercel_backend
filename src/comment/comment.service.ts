@@ -122,7 +122,7 @@ export class CommentService {
     try {
       console.log(lesson_id, 230303);
       const offset = (page - 1) * 10;
-      const limit = 10;
+      const limit = 30;
       const comments = await this.commentRepository.findAll({
         where: { lesson_id },
         offset, limit,

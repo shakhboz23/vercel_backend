@@ -22,6 +22,7 @@ import { ChatGroupService } from 'src/chat_group/chat_group.service';
 import { ChatGroupType } from 'src/chat_group/dto/chat_group.dto';
 import { WatchedService } from 'src/watched/watched.service';
 import { FilesService } from 'src/files/files.service';
+import { lessonType } from 'src/lesson/models/lesson.models';
 
 @Injectable()
 export class CourseService {
@@ -67,7 +68,7 @@ export class CourseService {
     }
   }
 
-  async getAll(category_id: number): Promise<object> {
+  async getAll(category_id: number, user_id: number): Promise<object> {
     try {
       let category: any = {}
       if (+category_id) {
@@ -75,6 +76,46 @@ export class CourseService {
       }
       const courses: any = await this.courseRepository.findAll({
         ...category,
+        attributes: {
+          include: [
+            [
+              Sequelize.literal(`
+                (
+                  SELECT COUNT(*) FROM "reyting"
+                  WHERE
+                    "reyting"."lesson_id" IN (
+                      SELECT "id" FROM "lesson" WHERE "lesson"."course_id" = "Course"."id"
+                    )
+                    AND "reyting"."user_id" = ${user_id}
+                    AND "reyting"."ball" > (
+                      SELECT COUNT(*) * 0.7 FROM "tests" WHERE "tests"."lesson_id" = "reyting"."lesson_id"
+                    )
+                )::int
+              `),
+              'finished_count',
+            ],
+            [
+              Sequelize.literal(`
+                (
+                  SELECT COUNT(*) FROM "lesson"
+                  WHERE "lesson"."course_id" = "Course"."id" and "lesson"."type" = '${lessonType.lesson}'
+                )
+              `),
+              'lessons_count',
+            ],
+            [
+              Sequelize.literal(`
+                (
+                  SELECT COUNT(*) FROM "likes"
+                  WHERE "likes"."lesson_id" IN (
+                    SELECT "id" FROM "lesson" WHERE "lesson"."course_id" = "Course"."id"
+                  )
+                )
+              `),
+              'likes_count',
+            ],
+          ]
+        },
         order: [['id', 'ASC']],
       });
       if (!courses.length) {
@@ -110,6 +151,49 @@ export class CourseService {
             include: [{ model: User, include: [{ model: Role }] }],
           },
         ],
+        attributes: {
+          include: [
+            [
+              Sequelize.literal(`
+                (
+                  SELECT COUNT(*) FROM "reyting"
+                  WHERE
+                    "reyting"."lesson_id" IN (
+                      SELECT "id" FROM "lesson" WHERE "lesson"."course_id" = "Course"."id"
+                    )
+                    AND "reyting"."user_id" = ${user_id}
+                    AND "reyting"."ball" > (
+                      SELECT COUNT(*) * 0.7 FROM "tests" WHERE "tests"."lesson_id" = "reyting"."lesson_id"
+                    )
+                )::int
+              `),
+              'finished_count',
+            ],
+            [
+              Sequelize.literal(`
+                (
+                  SELECT COUNT(*) FROM "lesson"
+                  WHERE "lesson"."course_id" = "Course"."id" and "lesson"."type" = '${lessonType.lesson}'
+                )
+              `),
+              'lessons_count',
+            ],
+            [
+              Sequelize.literal(`
+                (
+                  SELECT COUNT(*) FROM "likes"
+                  WHERE "likes"."lesson_id" IN (
+                    SELECT "id" FROM "lesson" WHERE "lesson"."course_id" = "Course"."id"
+                  )
+                )
+              `),
+              'likes_count',
+            ],
+          ]
+        },
+        replacements: {
+          user_id,
+        },
       });
       await this.watchedService.create({ group_id }, user_id);
       // if (!courses.length) {
@@ -217,9 +301,19 @@ export class CourseService {
               'lessons_count',
             ],
             [
-              Sequelize.literal(
-                `(SELECT COUNT(*) FROM "reyting" WHERE "reyting"."lesson_id" IN (SELECT "id" FROM "lesson" WHERE "lesson"."course_id" = :id) AND "reyting"."user_id" = :user_id AND "reyting"."ball" > 70)::int`,
-              ),
+              Sequelize.literal(`
+                (
+                  SELECT COUNT(*) FROM "reyting"
+                  WHERE
+                    "reyting"."lesson_id" IN (
+                      SELECT "id" FROM "lesson" WHERE "lesson"."course_id" = :id
+                    )
+                    AND "reyting"."user_id" = :user_id
+                    AND "reyting"."ball" > (
+                      SELECT COUNT(*) * 0.7 FROM "tests" WHERE "tests"."lesson_id" = "reyting"."lesson_id"
+                    )
+                )::int
+              `),
               'finished_count',
             ],
             [

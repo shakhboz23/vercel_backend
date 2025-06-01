@@ -102,6 +102,21 @@ export class GroupService {
               ),
               'high_price',
             ],
+            [
+              Sequelize.literal(`
+                (
+                  SELECT COUNT(*) FROM "likes"
+                  WHERE "likes"."lesson_id" IN (
+                    SELECT "id" FROM "lesson"
+                    WHERE "lesson"."course_id" IN (
+                      SELECT "id" FROM "course"
+                      WHERE "course"."group_id" = "Group"."id"
+                    )
+                  )
+                )
+              `),
+              'likes_count',
+            ],
           ],
         },
         replacements: { category_id },

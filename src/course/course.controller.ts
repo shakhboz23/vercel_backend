@@ -98,8 +98,12 @@ export class CourseController {
   @ApiOperation({ summary: 'Get all lessons' })
   // @UseGuards(AuthGuard)
   @Get('/:category_id')
-  getAll(@Param('category_id') category_id: number) {
-    return this.courseService.getAll(category_id);
+  getAll(
+    @Param('category_id') category_id: number,
+    @Headers() headers: string,
+  ) {
+    const user_id = extractUserIdFromToken(headers, this.jwtService, true);
+    return this.courseService.getAll(category_id, user_id);
   }
 
 
@@ -167,10 +171,10 @@ export class CourseController {
   @Put('/:id')
   @UseInterceptors(FileInterceptor('image'))
   update(@Param('id') id: number, @Body() courseDto: CourseDto,
-  @UploadedFile(new ImageValidationPipe()) image: Express.Multer.File,
-  @Headers() headers: string,
-) {
-  const user_id = extractUserIdFromToken(headers, this.jwtService, true);
+    @UploadedFile(new ImageValidationPipe()) image: Express.Multer.File,
+    @Headers() headers: string,
+  ) {
+    const user_id = extractUserIdFromToken(headers, this.jwtService, true);
 
     return this.courseService.update(id, courseDto, image, user_id);
   }

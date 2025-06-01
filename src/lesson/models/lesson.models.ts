@@ -46,7 +46,6 @@ export class Lesson extends Model<Lesson, LessonAttributes> {
   @Column({
     type: DataType.STRING,
     allowNull: false,
-    unique: true,
   })
   title: string;
 

@@ -32,8 +32,6 @@ export class LessonService {
 
   async create(lessonDto: LessonDto, video: any): Promise<object> {
     try {
-      console.log(lessonDto);
-      console.log(video);
       const { title, content, youtube } = lessonDto;
       let duration: number;
       if (lessonDto.type == 'lesson') {
@@ -44,7 +42,6 @@ export class LessonService {
             'Please enter a content',
           );
         }
-        console.log(youtube, '23033');
         if (youtube && youtube != undefined) {
           duration = await this.uploadedService.getVideoDuration(youtube);
           video = youtube;
@@ -53,7 +50,6 @@ export class LessonService {
           file_data = await this.uploadedService.create(video, file_type);
           video = file_data;
         }
-        console.log(video,)
         lessonDto.lesson_id = +lessonDto.lesson_id || null;
         let video_lesson: any = await this.lessonRepository.create({
           ...lessonDto,
@@ -71,12 +67,6 @@ export class LessonService {
         );
         return video_lesson[1][0];
       } else {
-        const exist = await this.lessonRepository.findOne({
-          where: { title },
-        });
-        if (exist) {
-          throw new BadRequestException('Already created');
-        }
         const lesson: any = await this.lessonRepository.create({
           title: lessonDto.title,
           published: lessonDto.published,
@@ -106,6 +96,19 @@ export class LessonService {
         include: [{ model: Lesson }, {
           model: Course, attributes: [], ...category,
         }],
+        attributes: {
+          include: [
+            [
+              Sequelize.literal(`
+                (
+                  SELECT COUNT(*) FROM "likes"
+                  WHERE "likes"."lesson_id" = "Lesson"."id"
+                )
+              `),
+              'likes_count',
+            ],
+          ]
+        },
         order: [['id', 'ASC']],
       });
       // if (!lessons.length) {
@@ -130,14 +133,7 @@ export class LessonService {
 
   async getByCourse(course_id: number, user_id: number): Promise<Object> {
     try {
-
-      console.log(user_id);
       user_id = user_id || null;
-      console.log(this.lessonRepository.associations);
-
-      // if (user_id == undefined) {
-
-      // }
       const lessons: any = await this.lessonRepository.findAll({
         where: {
           course_id,
@@ -174,7 +170,6 @@ export class LessonService {
       if (!lessons.length) {
         // throw new NotFoundException('Lessons not found');
       }
-      console.log(user_id);
       const course = await this.courseService.getById(course_id, user_id);
       // const course: any = await this.lessonRepository.findOne({
       //   where: {
@@ -274,6 +269,26 @@ export class LessonService {
                   ),
                   'test_count',
                 ],
+                [
+                  Sequelize.literal(`
+                    (
+                      SELECT COUNT(*) FROM "likes"
+                      WHERE "likes"."lesson_id" = "Lesson"."id"
+                    )
+                  `),
+                  'likes_count',
+                ],
+                [
+                  Sequelize.literal(`
+                    (
+                      SELECT COUNT(*) FROM "subscriptions"
+                      WHERE "subscriptions"."course_id" = "Lesson"."course_id"
+                    )
+                  `),
+                  'subscriptions_count',
+                ]
+
+
               ],
             },
           },
@@ -336,7 +351,6 @@ export class LessonService {
 
   async update(id: number, lessonDto: LessonDto, video: any): Promise<object> {
     try {
-      console.log(video);
       const { title, content, youtube } = lessonDto;
       let duration: number;
       const lesson = await this.lessonRepository.findByPk(id);
@@ -360,12 +374,10 @@ export class LessonService {
           file_type = 'video';
           await this.filesService.deleteFile(lesson.video);
           file_data = await this.uploadedService.create(video, file_type);
-          console.log(file_data);
           video = file_data;
         }
         lessonDto.lesson_id = +lessonDto.lesson_id || null;
         lessonDto.course_id = lesson.course_id;
-        console.log(lessonDto, '=========')
 
         update = await this.lessonRepository.update(
           {
