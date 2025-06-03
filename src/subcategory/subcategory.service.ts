@@ -4,24 +4,23 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Category } from './models/category.models';
+import { SubCategory } from './models/subcategory.models';
 import { InjectModel } from '@nestjs/sequelize';
-import { CategoryDto } from './dto/category.dto';
-import { SubCategory } from 'src/subcategory/models/subcategory.models';
+import { SubCategoryDto } from './dto/subcategory.dto';
 
 @Injectable()
-export class CategoryService {
+export class SubCategoryService {
   constructor(
-    @InjectModel(Category) private categoryRepository: typeof Category,
-  ) { }
+    @InjectModel(SubCategory) private categoryRepository: typeof SubCategory,
+  ) {}
 
-  async create(categoryDto: CategoryDto): Promise<object> {
+  async create(categoryDto: SubCategoryDto): Promise<object> {
     try {
-      const category: any = await this.categoryRepository.create(categoryDto);
+      const subCategory: any = await this.categoryRepository.create(categoryDto);
       return {
         statusCode: HttpStatus.OK,
         message: 'Created successfully',
-        data: category,
+        data: subCategory,
       };
     } catch (error) {
       throw new BadRequestException(error.message);
@@ -30,14 +29,13 @@ export class CategoryService {
 
   async getAll(): Promise<object> {
     try {
-      const category: any = await this.categoryRepository.findAll({
-        include: { model: SubCategory },
-        order: [['title', 'ASC']],
+      const subCategory: any = await this.categoryRepository.findAll({
+        order: [['subCategory', 'ASC']],
       });
-      if (category.IsNotEmpty) {
-        throw new NotFoundException('Category not found');
+      if (subCategory.IsNotEmpty) {
+        throw new NotFoundException('SubCategory not found');
       }
-      return category;
+      return subCategory;
     } catch (error) {
       throw new BadRequestException(error.message);
     }
@@ -45,15 +43,15 @@ export class CategoryService {
 
   async getById(id: number): Promise<object> {
     try {
-      const category: any = await this.categoryRepository.findOne({
+      const subCategory: any = await this.categoryRepository.findOne({
         where: { id },
       });
-      if (category.IsNotEmpty) {
-        throw new NotFoundException('Category not found');
+      if (subCategory.IsNotEmpty) {
+        throw new NotFoundException('SubCategory not found');
       }
       return {
         statusCode: HttpStatus.OK,
-        data: category,
+        data: subCategory,
       };
     } catch (error) {
       throw new BadRequestException(error.message);
@@ -64,13 +62,13 @@ export class CategoryService {
     try {
       const offset = (page - 1) * 10;
       const limit = 10;
-      const category = await this.categoryRepository.findAll({ offset, limit });
+      const subCategory = await this.categoryRepository.findAll({ offset, limit });
       const total_count = await this.categoryRepository.count();
       const total_pages = Math.ceil(total_count / 10);
       const response = {
         statusCode: HttpStatus.OK,
         data: {
-          records: category,
+          records: subCategory,
           pagination: {
             currentPage: page,
             total_pages,
@@ -82,13 +80,13 @@ export class CategoryService {
     } catch (error) {
       throw new BadRequestException(error.message);
     }
-  }
+  }   
 
-  async update(id: number, categoryDto: CategoryDto): Promise<object> {
+  async update(id: number, categoryDto: SubCategoryDto): Promise<object> {
     try {
-      const category: any = await this.categoryRepository.findByPk(id);
-      if (category.IsNotEmpty) {
-        throw new NotFoundException('Category not found');
+      const subCategory: any = await this.categoryRepository.findByPk(id);
+      if (subCategory.IsNotEmpty) {
+        throw new NotFoundException('SubCategory not found');
       }
       const update = await this.categoryRepository.update(categoryDto, {
         where: { id },
@@ -98,7 +96,7 @@ export class CategoryService {
         statusCode: HttpStatus.OK,
         message: 'Updated successfully',
         data: {
-          category: update[1][0],
+          subCategory: update[1][0],
         },
       };
     } catch (error) {
@@ -108,11 +106,11 @@ export class CategoryService {
 
   async delete(id: number): Promise<object> {
     try {
-      const category = await this.categoryRepository.findByPk(id);
-      if (!category) {
-        throw new NotFoundException('Category not found');
+      const subCategory = await this.categoryRepository.findByPk(id);
+      if (!subCategory) {
+        throw new NotFoundException('SubCategory not found');
       }
-      await category.destroy();
+      subCategory.destroy();
       return {
         statusCode: HttpStatus.OK,
         message: 'Deleted successfully',

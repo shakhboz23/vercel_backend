@@ -57,6 +57,8 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { MyService } from './schedules/schedule.service';
 import { Comment } from './comment/models/comment.models';
 import { CommentModule } from './comment/comment.module';
+import { SubCategory } from './subcategory/models/subcategory.models';
+import { SubCategoryModule } from './subcategory/subcategory.module';
 @Module({
   imports: [
     // TelegrafModule.forRootAsync({
@@ -106,11 +108,12 @@ import { CommentModule } from './comment/comment.module';
           SubscriptionActivity,
           VideoChat,
           Comment,
+          SubCategory,
         ],
         autoLoadModels: true,
         logging: true,
-        synchronize: true,
-        sync: { alter: true },
+        // synchronize: true,
+        // sync: { alter: true },
         dialectOptions: {
           ssl: {
             require: true,
@@ -145,6 +148,7 @@ import { CommentModule } from './comment/comment.module';
           SubscriptionActivity,
           VideoChat,
           Comment,
+          SubCategory,
         ],
         autoLoadModels: true,
         logging: true,
@@ -168,6 +172,7 @@ import { CommentModule } from './comment/comment.module';
     MailModule,
     FilesModule,
     CategoryModule,
+    SubCategoryModule,
     GroupModule,
     CourseModule,
     LessonModule,

@@ -8,10 +8,18 @@ import {
 
 export class CategoryDto {
   @ApiProperty({
+    example: '🧠',
+    description: 'Category icon',
+  })
+  @IsNotEmpty()
+  @IsString()
+  icon: string;
+
+  @ApiProperty({
     example: 'Atomlar haqida',
     description: 'Category Title',
   })
   @IsNotEmpty()
   @IsString()
-  category: string;
+  title: string;
 }
