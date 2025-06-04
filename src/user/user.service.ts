@@ -46,6 +46,7 @@ export class UserService {
   ) { }
   async register(
     registerUserDto: RegisterUserDto,
+    type?: string,
   ): Promise<object> {
     try {
       let is_new_role = false;
@@ -83,7 +84,9 @@ export class UserService {
         const user_data: any = await this.userRepository.findByPk(user.id, {
           include: { model: Role },
         });
-        await this.mailService.sendUserConfirmation(user_data, access_token);
+        if (type != 'googleauth') {
+          await this.mailService.sendUserConfirmation(user_data, access_token);
+        }
 
         return {
           statusCode: HttpStatus.OK,
@@ -114,7 +117,9 @@ export class UserService {
           { where: { id: user.id }, returning: true },
         );
 
-        await this.mailService.sendUserConfirmation(updateuser[1][0], uniqueKey);
+        if (type != 'googleauth') {
+          await this.mailService.sendUserConfirmation(updateuser[1][0], uniqueKey);
+        }
 
         const roleData: RoleDto = {
           ...registerUserDto,
@@ -132,17 +137,16 @@ export class UserService {
 
         const user_data: any = await this.userRepository.findByPk(user.id, {
           include: { model: Role },
+          attributes: { exclude: ['activation_link', 'hashed_password', 'is_active', 'hashed_refresh_token', ''] },
         });
 
         // await this.mailService.sendUserConfirmation(user_data);
-
         return {
           statusCode: HttpStatus.OK,
           message: 'Verification code sended successfully',
           data: {
             user: user_data,
           },
-          token: access_token,
         };
       }
     } catch (error) {
@@ -821,11 +825,10 @@ export class UserService {
         },
       });
       let user: any;
-      console.log(is_user);
       if (is_user) {
         user = await this.login(data, 'googleauth');
       } else {
-        user = await this.register(data);
+        user = await this.register(data, 'googleauth');
       }
       return user;
     } catch (error) {
