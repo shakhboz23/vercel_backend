@@ -59,7 +59,7 @@ export class CourseDto {
   })
   @IsNotEmpty()
   @IsNumberString()
-  category_id: number;
+  subcategory_id: number;
 
   @ApiProperty({
     example: false,

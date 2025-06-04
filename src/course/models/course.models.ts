@@ -16,6 +16,7 @@ import { SubscriptionActivity } from 'src/subscription_activity/models/subscript
 import { ChatGroup } from 'src/chat_group/models/chat_group.models';
 import { Group } from 'src/group/models/group.models';
 import { GroupType } from 'src/group/dto/group.dto';
+import { SubCategory } from 'src/subcategory/models/subcategory.models';
 
 interface CourseAttributes {
   title: string;
@@ -98,15 +99,15 @@ export class Course extends Model<Course, CourseAttributes> {
   user: User[];
 
 
-  @ForeignKey(() => Category)
+  @ForeignKey(() => SubCategory)
   @Column({
     type: DataType.INTEGER,
     onDelete: 'SET NULL',
   })
-  category_id: number;
+  subcategory_id: number;
 
-  @BelongsTo(() => Category)
-  category: Category[];
+  @BelongsTo(() => SubCategory)
+  subcategory: SubCategory[];
 
   @HasMany(() => Lesson, {
     onDelete: 'CASCADE',

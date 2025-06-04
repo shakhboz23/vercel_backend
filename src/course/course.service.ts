@@ -68,14 +68,14 @@ export class CourseService {
     }
   }
 
-  async getAll(category_id: number, user_id: number): Promise<object> {
+  async getAll(subcategory_id: number, user_id: number): Promise<object> {
     try {
-      let category: any = {}
-      if (+category_id) {
-        category = { where: { category_id } }
+      let subcategory: any = {}
+      if (+subcategory_id) {
+        subcategory = { where: { subcategory_id } }
       }
       const courses: any = await this.courseRepository.findAll({
-        ...category,
+        ...subcategory,
         attributes: {
           include: [
             [
@@ -127,22 +127,22 @@ export class CourseService {
     }
   }
 
-  async getByCourse(group_id: number, category_id: number, user_id: number): Promise<Object> {
+  async getByCourse(group_id: number, subcategory_id: number, user_id: number): Promise<Object> {
     try {
-      let category: any = {
+      let subcategory: any = {
         where: {
           group_id,
         }
       }
-      if (+category_id) {
-        category = {
+      if (+subcategory_id) {
+        subcategory = {
           where: {
-            category_id, group_id
+            subcategory_id, group_id
           }
         }
       }
       const courses: any = await this.courseRepository.findAll({
-        ...category,
+        ...subcategory,
         order: [['title', 'ASC']],
         include: [
           {

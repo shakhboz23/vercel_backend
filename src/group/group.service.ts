@@ -58,26 +58,19 @@ export class GroupService {
     }
   }
 
-  async getAll(category_id: number, user_id?: number, type?: string): Promise<object> {
+  async getAll(subcategory_id: number, user_id?: number, type?: string): Promise<object> {
     try {
-      // category_id = category_id == 0 ? undefined : +category_id
-      let category: any = {}
-      if (category_id != 0) {
-        category = { where: { category_id } }
+      let subcategory: any = {}
+      if (subcategory_id != 0) {
+        subcategory = { where: { subcategory_id } }
       }
       const filters: any = {
         order: [['title', 'ASC']],
         include: [{ model: User }, {
-          model: Course, attributes: [], ...category,
+          model: Course, attributes: [], ...subcategory,
         }],
         attributes: {
           include: [
-            // category_id != 0 ? [
-            //   Sequelize.literal(
-            //     `COALESCE((SELECT COUNT(*) FROM "course" WHERE "course"."category_id" = :category_id)::int, 0)`,
-            //   ),
-            //   'courses_by_category',
-            // ] : undefined,
             [
               Sequelize.literal(
                 `(SELECT COUNT(*) FROM "course" WHERE "course"."group_id" = "Group"."id")::int`,
@@ -119,7 +112,6 @@ export class GroupService {
             ],
           ],
         },
-        replacements: { category_id },
       };
 
       const groups = await this.groupRepository.findAll({
