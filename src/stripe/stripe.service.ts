@@ -39,15 +39,8 @@ export class StripeService {
     res: Response,
     signature: string,
   ) {
-    return res.status(200).send(req.body);
-    const buf = req.body as Buffer;
-    // const buf = await new Promise<Buffer>((resolve, reject) => {
-    //   const chunks: Uint8Array[] = [];
-    //   req.on('data', chunk => chunks.push(chunk));
-    //   req.on('end', () => resolve(Buffer.concat(chunks)));
-    //   req.on('error', err => reject(err));
-    // });
-
+    // return res.status(200).send(req.body);
+    const buf = req.body;
     let event: Stripe.Event;
 
     try {
@@ -60,17 +53,19 @@ export class StripeService {
       console.error('Webhook signature verification failed:', err.message);
       return res.status(400).send(`Webhook Error: ${err.message}`);
     }
-
+    let data: any;
     // Eventga ishlov berish
     switch (event.type) {
       case 'checkout.session.completed':
         const session = event.data.object as Stripe.Checkout.Session;
         console.log('✅ Payment success:', session.id);
+        data = '✅ Payment success:', session.id
         break;
       default:
         console.log(`Unhandled event type ${event.type}`);
+        data = `Unhandled event type ${event.type}`
     }
 
-    return res.status(200).send({ received: true });
+    return res.status(200).send({ received: true, data });
   }
 }
