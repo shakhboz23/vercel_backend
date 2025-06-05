@@ -41,12 +41,12 @@ export class StripeService {
     const signature = req.header('stripe-signature');
 
     // return res.status(200).send(req.body);
-    const buf = req.body as Buffer;
+    // const buf = req.body as Buffer;
     let event: Stripe.Event;
 
     try {
       event = this.stripe.webhooks.constructEvent(
-        buf,
+        payload,
         signature,
         this.endpointSecret,
       );
