@@ -72,7 +72,7 @@ export class StripeService {
         console.log(`Unhandled event type ${event.type}`);
     }
 
-    return { received: true };
+    return res.json({ received: true });
   }
 
   // Raw body olish uchun express body-parser'ni chetlab o'tish
