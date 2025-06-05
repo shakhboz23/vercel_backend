@@ -3,7 +3,7 @@ import { Controller, Post, Body, Req, Res, Headers, RawBodyRequest } from '@nest
 import { StripeService } from './stripe.service';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { StripeDto } from './dto/stripe.dto';
-import { Request, Response } from 'express';
+import { Request } from 'express';
 
 @ApiTags('Stripe')
 @Controller('stripe')
@@ -21,9 +21,7 @@ export class StripeController {
 
     @ApiOperation({ summary: 'Create a new checkoutSession' })
     @Post('/webhook/stripe')
-    async handleStripeWebhook(
-        @Req() req: RawBodyRequest<Request>,
-    ) {
+    async handleStripeWebhook(@Req() req: RawBodyRequest<Request>) {
         return this.stripeService.handleStripeWebhook(req);
     }
 }
