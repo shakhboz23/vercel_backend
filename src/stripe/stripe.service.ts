@@ -40,7 +40,7 @@ export class StripeService {
     signature: string,
   ) {
     // return res.status(200).send(req.body);
-    const buf = req.body;
+    const buf = req.body as Buffer;
     let event: Stripe.Event;
 
     try {
