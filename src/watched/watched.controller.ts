@@ -35,6 +35,15 @@ export class WatchedController {
 
   @ApiOperation({ summary: 'Get watcheds with pagination' })
   // @UseGuards(AuthGuard)
+  @Get('/getall')
+  getUserWatched(@Headers() headers: Record<string, string>) {
+    const user_id = extractUserIdFromToken(headers, this.jwtService, true)
+
+    return this.watchedService.getUserWatched(user_id);
+  }
+
+  @ApiOperation({ summary: 'Get watcheds with pagination' })
+  // @UseGuards(AuthGuard)
   @Get('/:type/:analytics_id')
   getAll(
     @Param('page') page: number, @Param('type') type: string, @Param('analytics_id') analytics_id: number,

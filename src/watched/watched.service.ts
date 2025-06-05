@@ -65,6 +65,21 @@ export class WatchedService {
     }
   }
 
+
+  async getUserWatched(user_id: number): Promise<object> {
+    try {
+      const watched = await this.watchedRepository.findAll({
+        where: {
+          user_id
+        },
+        include: [{ model: Lesson }, { model: Course }, { model: Group }]
+      });
+      return watched;
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
+  }
+
   async getAll(user_id: number, type: string, analytics_id: number): Promise<object> {
     try {
       let watched: any = await this.watchedRepository.findAll({
