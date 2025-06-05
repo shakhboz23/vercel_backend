@@ -16,7 +16,7 @@ export class WebhookController {
     // apiVersion: '2023-10-16',
   });
 
-  private endpointSecret = 'whsec_your_webhook_secret';
+  private endpointSecret = process.env.STRIPE_SIGNING_SECRET;
 
   @Post()
   @HttpCode(200)
