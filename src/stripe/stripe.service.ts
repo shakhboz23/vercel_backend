@@ -1,5 +1,5 @@
 // stripe/stripe.service.ts
-import { Headers, Injectable, RawBodyRequest, Req, Res } from '@nestjs/common';
+import { BadRequestException, Headers, Injectable, RawBodyRequest, Req, Res } from '@nestjs/common';
 import Stripe from 'stripe';
 import { StripeDto } from './dto/stripe.dto';
 import { Request, Response } from 'express';
@@ -36,9 +36,10 @@ export class StripeService {
 
   async handleStripeWebhook(req: RawBodyRequest<Request>) {
     try {
-      // return {req: req.body};
+      return {req: req.rawBody};
       const payload = req.body.toString('utf-8');
       const signature = req.header('stripe-signature');
+      return signature;
 
       // return res.status(200).send(req.body);
       // const buf = req.body as Buffer;
@@ -69,7 +70,7 @@ export class StripeService {
 
       return { received: true, data };
     } catch (error) {
-      return error;
+      throw new BadRequestException(error.message);
     }
   }
 }
