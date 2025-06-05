@@ -12,10 +12,13 @@ async function bootstrap() {
   try {
     const app = await NestFactory.create(AppModule);
     // Webhook uchun raw body qo‘shish
-    app.use(
-      '/api/webhook',
-      bodyParser.raw({ type: 'application/json' }),
-    );
+    // app.use(
+    //   '/api/webhook',
+    //   bodyParser.raw({ type: 'application/json' }),
+    // );
+
+    // 🔴 Faqat webhook URL uchun raw body ishlatamiz
+    app.use('/api/stripe/webhook/stripe', bodyParser.raw({ type: 'application/json' }));
 
     // Serve static files for Swagger UI
     app.use('/swagger-ui', express.static(join(__dirname, '../node_modules/swagger-ui-dist')));
