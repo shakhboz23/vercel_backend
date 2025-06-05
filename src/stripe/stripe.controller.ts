@@ -1,5 +1,5 @@
 // stripe/stripe.controller.ts
-import { Controller, Post, Body, Req, Res, Headers } from '@nestjs/common';
+import { Controller, Post, Body, Req, Res, Headers, RawBodyRequest } from '@nestjs/common';
 import { StripeService } from './stripe.service';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { StripeDto } from './dto/stripe.dto';
@@ -23,8 +23,7 @@ export class StripeController {
     @Post('/webhook/stripe')
     async handleStripeWebhook(
         @Req() req: RawBodyRequest<Request>,
-        @Headers('stripe-signature') signature: string,
     ) {
-        return this.stripeService.handleStripeWebhook(req, res, signature);
+        return this.stripeService.handleStripeWebhook(req);
     }
 }
