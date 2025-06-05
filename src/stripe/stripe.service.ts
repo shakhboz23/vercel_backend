@@ -1,5 +1,5 @@
 // stripe/stripe.service.ts
-import { Headers, Injectable, Req, Res } from '@nestjs/common';
+import { Headers, Injectable, RawBodyRequest, Req, Res } from '@nestjs/common';
 import Stripe from 'stripe';
 import { StripeDto } from './dto/stripe.dto';
 import { Request, Response } from 'express';
@@ -35,10 +35,11 @@ export class StripeService {
   }
 
   async handleStripeWebhook(
-    req: Request,
-    res: Response,
-    signature: string,
+    req: RawBodyRequest<Request>,
   ) {
+    const payload = req.rawBody.toString('utf-8');
+    const signature = req.header('stripe-signature');
+
     // return res.status(200).send(req.body);
     const buf = req.body as Buffer;
     let event: Stripe.Event;
@@ -51,7 +52,7 @@ export class StripeService {
       );
     } catch (err: any) {
       console.error('Webhook signature verification failed:', err.message);
-      return res.status(400).send(`Webhook Error: ${err.message}`);
+      return `Webhook Error: ${err.message}`;
     }
     let data: any;
     // Eventga ishlov berish
@@ -66,6 +67,6 @@ export class StripeService {
         data = `Unhandled event type ${event.type}`
     }
 
-    return res.status(200).send({ received: true, data });
+    return { received: true, data };
   }
 }

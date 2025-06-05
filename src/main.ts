@@ -18,7 +18,7 @@ async function bootstrap() {
     // );
 
     // 🔴 Faqat webhook URL uchun raw body ishlatamiz
-    app.use('/api/stripe/webhook/stripe', bodyParser.raw({ type: 'application/json' }));
+    // app.use('/api/stripe/webhook/stripe', bodyParser.raw({ type: 'application/json' }));
 
     // Serve static files for Swagger UI
     app.use('/swagger-ui', express.static(join(__dirname, '../node_modules/swagger-ui-dist')));
