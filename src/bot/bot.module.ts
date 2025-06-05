@@ -4,7 +4,7 @@ import { SequelizeModule } from '@nestjs/sequelize';
 import { Bot } from './models/bot.model';
 import { BotUpdate } from './bot.update';
 import { UserModule } from 'src/user/user.module';
-import { WebhookController } from './bot.controller';
+// import { WebhookController } from './bot.controller';
 import { ConfigService } from '@nestjs/config';
 import { TelegrafModule } from 'nestjs-telegraf';
 import { BOT_NAME } from 'src/app.constants';
@@ -26,7 +26,7 @@ import { BOT_NAME } from 'src/app.constants';
   //   inject: [ConfigService]
   // }),
   ],
-  controllers: [WebhookController],
+  // controllers: [WebhookController],
   providers: [BotService, BotUpdate],
   exports: [BotService]
 })

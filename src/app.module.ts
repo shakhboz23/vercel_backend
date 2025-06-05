@@ -59,6 +59,7 @@ import { Comment } from './comment/models/comment.models';
 import { CommentModule } from './comment/comment.module';
 import { SubCategory } from './subcategory/models/subcategory.models';
 import { SubCategoryModule } from './subcategory/subcategory.module';
+import { StripeModule } from './stripe/stripe.module';
 @Module({
   imports: [
     // TelegrafModule.forRootAsync({
@@ -199,6 +200,7 @@ import { SubCategoryModule } from './subcategory/subcategory.module';
     WatchedModule,
     CommentModule,
     // BotModule,
+    StripeModule,
   ],
   controllers: [],
   providers: [

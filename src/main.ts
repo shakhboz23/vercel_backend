@@ -4,29 +4,33 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { BadRequestException, ValidationPipe } from '@nestjs/common';
 import * as express from 'express';
 import { join } from 'path';
-
+import * as bodyParser from 'body-parser';
 // import * as cookieParser from 'cookie-parser';
 // import { ExpressPeerServer } from 'peer';
 
 async function bootstrap() {
   try {
     const app = await NestFactory.create(AppModule);
-
+    // Webhook uchun raw body qo‘shish
+    app.use(
+      '/webhook',
+      bodyParser.raw({ type: 'application/json' }),
+    );
 
     // Serve static files for Swagger UI
     app.use('/swagger-ui', express.static(join(__dirname, '../node_modules/swagger-ui-dist')));
 
     const PORT = process.env.PORT || 4200;
     app.enableCors();
-  //   app.enableCors({
-  //     origin: true,
-  //     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-  //     credentials: true,
-  // });
+    //   app.enableCors({
+    //     origin: true,
+    //     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    //     credentials: true,
+    // });
     app.setGlobalPrefix('api');
-    
+
     // app.use(cookieParser()); 
- 
+
     // const server = app.getHttpServer(); // Get the underlying HTTP server
     // const peerServer = ExpressPeerServer(server, { path: '/peerjs' }); // Create the PeerJS server with a custom path
     // const peerServer = ExpressPeerServer(server);
