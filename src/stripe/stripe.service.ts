@@ -35,37 +35,41 @@ export class StripeService {
   }
 
   async handleStripeWebhook(req: RawBodyRequest<Request>) {
-    // return {req: req.body};
-    const payload = req.body.toString('utf-8');
-    const signature = req.header('stripe-signature');
-
-    // return res.status(200).send(req.body);
-    // const buf = req.body as Buffer;
-    let event: Stripe.Event;
-
     try {
-      event = this.stripe.webhooks.constructEvent(
-        payload,
-        signature,
-        this.endpointSecret,
-      );
-    } catch (err: any) {
-      console.error('Webhook signature verification failed:', err.message);
-      return `Webhook Error: ${err.message}`;
-    }
-    let data: any;
-    // Eventga ishlov berish
-    switch (event.type) {
-      case 'checkout.session.completed':
-        const session = event.data.object as Stripe.Checkout.Session;
-        console.log('✅ Payment success:', session.id);
-        data = '✅ Payment success:', session.id
-        break;
-      default:
-        console.log(`Unhandled event type ${event.type}`);
-        data = `Unhandled event type ${event.type}`
-    }
+      // return {req: req.body};
+      const payload = req.body.toString('utf-8');
+      const signature = req.header('stripe-signature');
 
-    return { received: true, data };
+      // return res.status(200).send(req.body);
+      // const buf = req.body as Buffer;
+      let event: Stripe.Event;
+
+      try {
+        event = this.stripe.webhooks.constructEvent(
+          payload,
+          signature,
+          this.endpointSecret,
+        );
+      } catch (err: any) {
+        console.error('Webhook signature verification failed:', err.message);
+        return `Webhook Error: ${err.message}`;
+      }
+      let data: any;
+      // Eventga ishlov berish
+      switch (event.type) {
+        case 'checkout.session.completed':
+          const session = event.data.object as Stripe.Checkout.Session;
+          console.log('✅ Payment success:', session.id);
+          data = `✅ Payment success: ${session.id}`; // ✅ Now it's a plain string
+          break;
+        default:
+          console.log(`Unhandled event type ${event.type}`);
+          data = `Unhandled event type ${event.type}`
+      }
+
+      return { received: true, data };
+    } catch (error) {
+      return error;
+    }
   }
 }
