@@ -13,7 +13,7 @@ async function bootstrap() {
     const app = await NestFactory.create(AppModule);
     // Webhook uchun raw body qo‘shish
     app.use(
-      '/webhook',
+      '/api/webhook',
       bodyParser.raw({ type: 'application/json' }),
     );
 

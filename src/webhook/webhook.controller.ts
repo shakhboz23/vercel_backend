@@ -10,7 +10,7 @@ import {
 import { Request, Response } from 'express';
 import Stripe from 'stripe';
 
-@Controller('webhook')
+@Controller('/webhook')
 export class WebhookController {
   private stripe = new Stripe(process.env.STRIPE_API_KEY, {
     // apiVersion: '2023-10-16',
