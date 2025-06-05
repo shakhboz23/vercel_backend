@@ -39,6 +39,7 @@ export class StripeService {
     res: Response,
     signature: string,
   ) {
+    return res.status(200).send(req.body);
     const buf = req.body as Buffer;
     // const buf = await new Promise<Buffer>((resolve, reject) => {
     //   const chunks: Uint8Array[] = [];
