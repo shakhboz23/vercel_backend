@@ -28,6 +28,4 @@ export class StripeController {
     ) {
         return this.stripeService.handleStripeWebhook(req, res, signature);
     }
-
-    
 }

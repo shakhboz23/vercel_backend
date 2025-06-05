@@ -39,7 +39,12 @@ export class StripeService {
     @Res() res: Response,
     @Headers('stripe-signature') signature: string,
   ) {
-    const buf = await this.getRawBody(req);
+    const buf = await new Promise<Buffer>((resolve, reject) => {
+      const chunks: Uint8Array[] = [];
+      req.on('data', chunk => chunks.push(chunk));
+      req.on('end', () => resolve(Buffer.concat(chunks)));
+      req.on('error', err => reject(err));
+    });
 
     let event: Stripe.Event;
 
@@ -49,30 +54,21 @@ export class StripeService {
         signature,
         this.endpointSecret,
       );
-      console.log(event)
     } catch (err: any) {
       console.error('❌ Webhook signature verification failed:', err.message);
       return res.status(400).send(`Webhook Error: ${err.message}`);
     }
 
-    // Event turi bo'yicha ishlov
     switch (event.type) {
       case 'checkout.session.completed':
         const session = event.data.object as Stripe.Checkout.Session;
-
-        console.log('✅ Payment succeeded!');
-        console.log('Session ID:', session.id);
-        console.log('Email:', session.customer_email);
-        console.log('Amount:', session.amount_total);
-
-        // ➕ Bu yerda: kursga yozish, DB ga yozish, email yuborish va hokazo
+        console.log('✅ Payment succeeded:', session.id);
         break;
-
       default:
         console.log(`Unhandled event type ${event.type}`);
     }
 
-    return res.json({ received: true });
+    return res.status(200).send({ received: true });
   }
 
   // Raw body olish uchun express body-parser'ni chetlab o'tish
