@@ -12,7 +12,7 @@ import Stripe from 'stripe';
 
 @Controller('webhook')
 export class WebhookController {
-  private stripe = new Stripe('sk_test_your_stripe_secret_key', {
+  private stripe = new Stripe(process.env.STRIPE_API_KEY, {
     // apiVersion: '2023-10-16',
   });
 
