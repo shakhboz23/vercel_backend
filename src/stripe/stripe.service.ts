@@ -35,9 +35,9 @@ export class StripeService {
   }
 
   async handleStripeWebhook(
-    @Req() req: Request,
-    @Res() res: Response,
-    @Headers('stripe-signature') signature: string,
+    req: Request,
+    res: Response,
+    signature: string,
   ) {
     const buf = await new Promise<Buffer>((resolve, reject) => {
       const chunks: Uint8Array[] = [];
