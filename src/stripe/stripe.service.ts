@@ -34,43 +34,42 @@ export class StripeService {
     return { url: session.url };
   }
 
-  async handleStripeWebhook(req: RawBodyRequest<Request>) {
-    try {
-      return {req: req.rawBody};
-      const payload = req.body.toString('utf-8');
-      const signature = req.header('stripe-signature');
-      return signature;
-
-      // return res.status(200).send(req.body);
-      // const buf = req.body as Buffer;
-      let event: Stripe.Event;
-
+    async handleStripeWebhook(req: RawBodyRequest<Request>) {
       try {
-        event = this.stripe.webhooks.constructEvent(
-          payload,
-          signature,
-          this.endpointSecret,
-        );
-      } catch (err: any) {
-        console.error('Webhook signature verification failed:', err.message);
-        return `Webhook Error: ${err.message}`;
-      }
-      let data: any;
-      // Eventga ishlov berish
-      switch (event.type) {
-        case 'checkout.session.completed':
-          const session = event.data.object as Stripe.Checkout.Session;
-          console.log('✅ Payment success:', session.id);
-          data = `✅ Payment success: ${session.id}`; // ✅ Now it's a plain string
-          break;
-        default:
-          console.log(`Unhandled event type ${event.type}`);
-          data = `Unhandled event type ${event.type}`
-      }
+        // const payload = req.body.toString('utf-8');
+        const signature = req.header('stripe-signature');
+        return signature;
 
-      return { received: true, data };
-    } catch (error) {
-      throw new BadRequestException(error.message);
+        // return res.status(200).send(req.body);
+        // const buf = req.body as Buffer;
+        let event: Stripe.Event;
+
+        try {
+          event = this.stripe.webhooks.constructEvent(
+            req.body,
+            signature,
+            this.endpointSecret,
+          );
+        } catch (err: any) {
+          console.error('Webhook signature verification failed:', err.message);
+          return `Webhook Error: ${err.message}`;
+        }
+        let data: any;
+        // Eventga ishlov berish
+        switch (event.type) {
+          case 'checkout.session.completed':
+            const session = event.data.object as Stripe.Checkout.Session;
+            console.log('✅ Payment success:', session.id);
+            data = `✅ Payment success: ${session.id}`; // ✅ Now it's a plain string
+            break;
+          default:
+            console.log(`Unhandled event type ${event.type}`);
+            data = `Unhandled event type ${event.type}`
+        }
+
+        return { received: true, data };
+      } catch (error) {
+        throw new BadRequestException(error.message);
+      }
     }
-  }
 }
