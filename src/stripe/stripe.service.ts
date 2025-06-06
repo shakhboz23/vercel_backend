@@ -34,7 +34,7 @@ export class StripeService {
     return { url: session.url };
   }
 
-    async handleStripeWebhook(req: RawBodyRequest<Request>) {
+    async handleStripeWebhook(req: Request) {
       try {
         // const payload = req.body.toString('utf-8');
         const signature = req.header('stripe-signature');
