@@ -21,7 +21,7 @@ export class StripeController {
 
     @ApiOperation({ summary: 'Create a new checkoutSession' })
     @Post('/webhook/stripe')
-    async handleStripeWebhook(@Req() req: Request) {
+    async handleStripeWebhook(@Req() req: RawBodyRequest<Request>) {
         return this.stripeService.handleStripeWebhook(req);
     }
 }
