@@ -39,7 +39,7 @@ export class StripeService {
         // const payload = req.body.toString('utf-8');
         const payload = req.rawBody;
         const signature = req.header('stripe-signature');
-        return req.rawBody;
+        // return req.rawBody;
 
         // return res.status(200).send(req.body);
         // const buf = req.body as Buffer;
