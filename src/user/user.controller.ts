@@ -26,6 +26,7 @@ import { ImageValidationPipe } from 'src/pipes/image-validation.pipe';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { EmailUserDto } from './dto/email.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 
 @ApiTags('User')
 @Controller('user')
@@ -192,6 +193,17 @@ export class UserController {
     @Body() forgotPasswordDto: ForgotPasswordDto,
   ) {
     return this.userService.resetPassword(forgotPasswordDto);
+  }
+
+  @ApiOperation({ summary: 'Forgot password for user' })
+  // @UseGuards(AuthGuard)
+  @Post('change-password')
+  changePassword(
+    @Body() changePasswordDto: ChangePasswordDto,
+    @Headers() headers?: string
+  ) {
+    const user_id = extractUserIdFromToken(headers, this.jwtService, true);
+    return this.userService.changePassword(user_id, changePasswordDto);
   }
 
   // @ApiOperation({ summary: 'Update user profile by ID' })

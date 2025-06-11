@@ -34,6 +34,7 @@ import { Course } from 'src/course/models/course.models';
 import { FilesService } from 'src/files/files.service';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { EmailUserDto } from './dto/email.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 
 @Injectable()
 export class UserService {
@@ -726,6 +727,35 @@ export class UserService {
       );
       return {
         message: "Paroli o'zgartirildi",
+      };
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
+  }
+
+
+  async changePassword(
+    user_id: number,
+    changePasswordDto: ChangePasswordDto,
+  ): Promise<object> {
+    try {
+      const { old_password, new_password } =
+        changePasswordDto;
+      const user = await this.userRepository.findByPk(user_id);
+      const isMatchPass = await bcrypt.compare(
+        changePasswordDto.old_password,
+        user.hashed_password,
+      );
+      if (!isMatchPass) {
+        throw new BadRequestException('Password did not match!');
+      }
+      const hashed_password = await hash(new_password, 7);
+      await this.userRepository.update(
+        { hashed_password },
+        { where: { email: user.email }, returning: true },
+      );
+      return {
+        message: "Parolingiz o'zgartirildi",
       };
     } catch (error) {
       throw new BadRequestException(error.message);
