@@ -3,7 +3,7 @@ import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
 
 export class NewTokenDto {
   @ApiProperty({
-    example: 'rahmonberdivahabov@gmail.com',
+    example: 'example@gmail.com',
     description: 'Email for new token',
   })
   @IsNotEmpty()

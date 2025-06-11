@@ -11,19 +11,19 @@ export class OtpController {
   constructor(private readonly otpService: OtpService) {}
 
   @ApiOperation({ summary: 'Send OTP' })
-  @Post('sendOtp')
+  @Post('send-otp')
   sendOtp(@Body() phoneDto: PhoneDto) {
     return this.otpService.sendOTP(phoneDto);
   }
 
   @ApiOperation({ summary: 'Verify OTP' })
-  @Post('verifyOtp')
+  @Post('verify-otp')
   verifyOtp(@Body() verifyOtpDto: VerifyOtpDto) {
     return this.otpService.verifyOtp(verifyOtpDto);
   }
 
   @ApiOperation({ summary: 'Get new token for SMS service' })
-  @Post('getNewToken')
+  @Post('getinew-token')
   newToken() {
     return this.otpService.newToken();
   }

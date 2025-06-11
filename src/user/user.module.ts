@@ -9,6 +9,7 @@ import { MailModule } from '../mail/mail.module';
 import { ResetpasswordModule } from '../resetpassword/resetpassword.module';
 import { JwtModule } from '@nestjs/jwt';
 import { FilesModule } from 'src/files/files.module';
+import { OtpModule } from 'src/otp/otp.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { FilesModule } from 'src/files/files.module';
     ResetpasswordModule,
     JwtModule,
     FilesModule,
+    OtpModule,
   ],
   controllers: [UserController],
   providers: [UserService],

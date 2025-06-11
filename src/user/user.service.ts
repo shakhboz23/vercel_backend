@@ -35,6 +35,8 @@ import { FilesService } from 'src/files/files.service';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { EmailUserDto } from './dto/email.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { ChangeUserEmailDto } from './dto/change-email.dto';
+import { OtpService } from 'src/otp/otp.service';
 
 @Injectable()
 export class UserService {
@@ -45,6 +47,7 @@ export class UserService {
     private readonly mailService: MailService,
     private readonly resetpasswordService: ResetpasswordService,
     private readonly filesService: FilesService,
+    private readonly otpService: OtpService,
 
   ) { }
   async register(
@@ -637,11 +640,19 @@ export class UserService {
     }
   }
 
-  async updateEmail(oldemail: string, email: string): Promise<object> {
+  async changeEmail(user_id: number, changeUserEmailDto: ChangeUserEmailDto): Promise<object> {
     try {
+      const { email, password, code } = changeUserEmailDto;
+      const user = await this.userRepository.findByPk(user_id);
+      if (!user) {
+        throw new BadRequestException("User not found");
+      }
+      await this.otpService.verifyOtp({ email, code })
+
+      const hashed_password = await hash(password, 7);
       const updated_info = await this.userRepository.update(
-        { email },
-        { where: { email: oldemail }, returning: true },
+        { email, hashed_password },
+        { where: { email: user.email }, returning: true },
       );
       return updated_info[1][0]
     } catch (error) {

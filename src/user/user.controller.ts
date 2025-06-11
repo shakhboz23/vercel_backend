@@ -27,6 +27,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { EmailUserDto } from './dto/email.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { ChangeUserEmailDto } from './dto/change-email.dto';
 
 @ApiTags('User')
 @Controller('user')
@@ -204,6 +205,17 @@ export class UserController {
   ) {
     const user_id = extractUserIdFromToken(headers, this.jwtService, true);
     return this.userService.changePassword(user_id, changePasswordDto);
+  }
+
+  @ApiOperation({ summary: 'Change user email by ID' })
+  // @UseGuards(AuthGuard)
+  @Put('change-email')
+  changeEmail(
+    @Body() changeUserEmailDto: ChangeUserEmailDto,
+    @Headers() headers?: string
+  ) {
+    const user_id = extractUserIdFromToken(headers, this.jwtService, true);
+    return this.userService.changeEmail(user_id, changeUserEmailDto);
   }
 
   // @ApiOperation({ summary: 'Update user profile by ID' })

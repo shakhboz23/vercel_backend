@@ -21,6 +21,20 @@ export class MailService {
         console.log(data);
     };
 
+
+    async sendConfirmationCode(email: string, otp: string): Promise<void> {
+        const data = await this.mailerService.sendMail({
+            to: email,
+            subject: "Welcome to IlmNur App! Confirm your email!",
+            template: './otp',
+            context: {
+                otp,
+            },
+        });
+
+        console.log(data);
+    };
+
     async sendUserActivationLink(activation_link: string, email: string): Promise<void> {
         const url = `${process.env.API_HOST}/change-password?activation_link=${activation_link}`;
         const data = await this.mailerService.sendMail({

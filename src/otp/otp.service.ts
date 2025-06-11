@@ -14,16 +14,20 @@ import { VerifyOtpDto } from './dto/verifyOtp.dto';
 import { otpCodeSMSSchema, sendSMS } from '../utils/sendSMS';
 import { newTokenForSMS } from '../utils/newTokenForSMS';
 import { NewTokenDto } from './dto/newToken.dto';
+import { MailService } from 'src/mail/mail.service';
 
 @Injectable()
 export class OtpService {
-  constructor(@InjectModel(Otp) private otpRepository: typeof Otp) {}
+  constructor(@InjectModel(Otp) 
+  private otpRepository: typeof Otp,
+  private readonly mailService: MailService,
+) { }
 
   async sendOTP(phoneDto: PhoneDto): Promise<object> {
     try {
-      const { phone } = phoneDto;
+      const { email } = phoneDto;
       let code: any;
-      if (phone === '+998900119597') {
+      if (email === 'example@gmail.com') {
         code = '0000';
       } else {
         code = generate(4, {
@@ -33,15 +37,16 @@ export class OtpService {
         });
       }
 
-      await sendSMS(phone, otpCodeSMSSchema(code));
+      // await sendSMS(email, otpCodeSMSSchema(code));
+      await this.mailService.sendConfirmationCode(email, code);
       const expire_time = Date.now() + 120000;
       const exist = await this.otpRepository.findOne({
-        where: { phone },
+        where: { email },
       });
       if (exist) {
         const otp = await this.otpRepository.update(
           { code, expire_time },
-          { where: { phone }, returning: true },
+          { where: { email }, returning: true },
         );
         return {
           statusCode: HttpStatus.CREATED,
@@ -51,7 +56,7 @@ export class OtpService {
       }
       const otp = await this.otpRepository.create({
         code,
-        phone,
+        email,
         expire_time,
       });
       return {
@@ -66,9 +71,9 @@ export class OtpService {
 
   async verifyOtp(verifyOtpDto: VerifyOtpDto): Promise<object> {
     try {
-      const { phone, code } = verifyOtpDto;
+      const { email, code } = verifyOtpDto;
       const check = await this.otpRepository.findOne({
-        where: { phone },
+        where: { email },
       });
       if (!check) {
         throw new NotFoundException('Telefon raqam xato!');

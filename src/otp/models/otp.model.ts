@@ -2,7 +2,7 @@ import { Column, DataType, Model, Table } from 'sequelize-typescript';
 
 interface OtpAttributes {
   id: string;
-  phone: string;
+  email: string;
   code: string;
   expire_time: number;
 }
@@ -21,7 +21,7 @@ export class Otp extends Model<Otp, OtpAttributes> {
     allowNull: false,
     unique: true,
   })
-  phone: string;
+  email: string;
 
   @Column({
     type: DataType.STRING,
