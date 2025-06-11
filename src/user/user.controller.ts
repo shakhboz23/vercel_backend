@@ -24,6 +24,8 @@ import { extractUserIdFromToken } from 'src/utils/token';
 import { JwtService } from '@nestjs/jwt';
 import { ImageValidationPipe } from 'src/pipes/image-validation.pipe';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { EmailUserDto } from './dto/email.dto';
 
 @ApiTags('User')
 @Controller('user')
@@ -172,15 +174,25 @@ export class UserController {
     return this.userService.updateProfile(user_id, updateDto, image);
   }
 
-  // @ApiOperation({ summary: 'Forgot password for user' })
-  // // @UseGuards(AuthGuard)
-  // @Put('forgotPassword/:id')
-  // forgotPassword(
-  //   @Param('id') id: string,
-  //   @Body() forgotPasswordDto: ForgotPasswordDto,
-  // ) {
-  //   return this.userService.forgotPassword(id, forgotPasswordDto);
-  // }
+  @ApiOperation({ summary: 'Forgot password for user' })
+  // @UseGuards(AuthGuard)
+  @Post('forgot-password')
+  forgotPassword(
+    // @Param('id') id: string,
+    @Body() emailUserDto: EmailUserDto,
+  ) {
+    return this.userService.forgotPassword(emailUserDto);
+  }
+
+  @ApiOperation({ summary: 'Forgot password for user' })
+  // @UseGuards(AuthGuard)
+  @Post('reset-password')
+  resetPassword(
+    // @Param('id') id: string,
+    @Body() forgotPasswordDto: ForgotPasswordDto,
+  ) {
+    return this.userService.resetPassword(forgotPasswordDto);
+  }
 
   // @ApiOperation({ summary: 'Update user profile by ID' })
   // // @UseGuards(AuthGuard)

@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
+  IsEmail,
   IsNotEmpty,
   IsPhoneNumber,
   IsString,
@@ -9,34 +10,18 @@ import {
 
 export class ForgotPasswordDto {
   @ApiProperty({
-    example: '+998901234567',
-    description: 'The phone number for verification',
-  })
-  @IsNotEmpty()
-  @IsPhoneNumber()
-  phone: string;
-
-  @ApiProperty({
     example: '1122',
-    description: 'Code for verification',
+    description: 'Activation link for verification',
   })
   @IsNotEmpty()
   @IsString()
-  @Length(4)
-  code: string;
+  activation_link: string;
 
   @ApiProperty({
     example: 'Strong_pass123!',
     description: 'The new strong password of the user',
   })
   @IsNotEmpty()
-  @IsStrongPassword()
+  @IsString()
   new_password: string;
-
-  @ApiProperty({
-    example: 'Strong_pass123!',
-    description: 'The confirm new strong password of the student',
-  })
-  @IsNotEmpty()
-  confirm_new_password: string;
 }

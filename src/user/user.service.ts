@@ -32,6 +32,8 @@ import { Reyting } from 'src/reyting/models/reyting.models';
 import { Lesson } from 'src/lesson/models/lesson.models';
 import { Course } from 'src/course/models/course.models';
 import { FilesService } from 'src/files/files.service';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { EmailUserDto } from './dto/email.dto';
 
 @Injectable()
 export class UserService {
@@ -676,35 +678,59 @@ export class UserService {
   //     throw new BadRequestException(error.message);
   //   }
   // }
+  async forgotPassword(
+    // id: string,
+    emailUserDto: EmailUserDto,
+  ): Promise<object> {
+    try {
+      const { email } = emailUserDto;
+      const activation_link: string = uuid.v4();
 
-  // async forgotPassword(
-  //   id: string,
-  //   forgotPasswordDto: ForgotPasswordDto,
-  // ): Promise<object> {
-  //   try {
-  //     const { phone, code, new_password, confirm_new_password } =
-  //       forgotPasswordDto;
-  //     await this.otpService.verifyOtp({ phone, code });
-  //     await this.getById(id);
-  //     if (new_password != confirm_new_password) {
-  //       throw new ForbiddenException('Yangi parolni tasdiqlashda xatolik!');
-  //     }
-  //     const hashed_password = await hash(new_password, 7);
-  //     const updated_info = await this.userRepository.update(
-  //       { hashed_password },
-  //       { where: { id }, returning: true },
-  //     );
-  //     return {
-  //       statusCode: HttpStatus.OK,
-  //       message: "Paroli o'zgartirildi",
-  //       data: {
-  //         user: updated_info[1][0],
-  //       },
-  //     };
-  //   } catch (error) {
-  //     throw new BadRequestException(error.message);
-  //   }
-  // }
+      const updated_info = await this.userRepository.update(
+        { activation_link },
+        { where: { email }, returning: true },
+      );
+      await this.mailService.sendUserActivationLink(activation_link, email);
+
+      return {
+        statusCode: HttpStatus.OK,
+        message: "Emailingizga link yuborildi",
+        data: {
+          user: updated_info[1][0],
+        },
+      };
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
+  }
+
+  async resetPassword(
+    // id: string,
+    forgotPasswordDto: ForgotPasswordDto,
+  ): Promise<object> {
+    try {
+      const { activation_link, new_password } =
+        forgotPasswordDto;
+      // await this.otpService.verifyOtp({ phone, code });
+      // await this.getById(id);
+      // if (new_password != confirm_new_password) {
+      //   throw new ForbiddenException('Yangi parolni tasdiqlashda xatolik!');
+      // }
+      const user = await this.userRepository.findOne({
+        where: { activation_link }
+      })
+      const hashed_password = await hash(new_password, 7);
+      const updated_info = await this.userRepository.update(
+        { hashed_password },
+        { where: { email: user.email }, returning: true },
+      );
+      return {
+        message: "Paroli o'zgartirildi",
+      };
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
+  }
 
   async update(id: number, updateDto: UpdateDto): Promise<object> {
     try {
