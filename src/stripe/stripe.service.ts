@@ -1,17 +1,24 @@
 // stripe/stripe.service.ts
-import { BadRequestException, Headers, Injectable, RawBodyRequest, Req, Res } from '@nestjs/common';
+import { BadRequestException, Injectable, RawBodyRequest } from '@nestjs/common';
 import Stripe from 'stripe';
 import { StripeDto } from './dto/stripe.dto';
-import { Request, Response } from 'express';
+import { Request } from 'express';
+import { InjectModel } from '@nestjs/sequelize';
+import { PaymentStatus, StripePay } from './models/stripe.models';
 
 @Injectable()
 export class StripeService {
+  constructor(
+    @InjectModel(StripePay) private stripeRepository: typeof StripePay,
+    // private readonly jwtService: JwtService,
+  ) { }
+
   private stripe = new Stripe(process.env.STRIPE_API_KEY, {
     // apiVersion: '2023-10-16',
   });
   private endpointSecret = process.env.STRIPE_SIGNING_SECRET;
 
-  async createCheckoutSession(stripeDto: StripeDto) {
+  async createCheckoutSession(user_id: number, stripeDto: StripeDto) {
     const session = await this.stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [
@@ -27,50 +34,64 @@ export class StripeService {
         },
       ],
       mode: 'payment',
-      success_url: `https://yourdomain.com/payment-success?courseId=${stripeDto.course_id}`,
-      cancel_url: `https://yourdomain.com/payment-cancel`,
+      success_url: `https://ilmnur.online/course/${stripeDto.course_id}`,
+      cancel_url: `https://ilmnur.online/course/${stripeDto.course_id}`,
+    });
+
+    await this.stripeRepository.create({
+      user_id, ...stripeDto, status: PaymentStatus.pending, stripe_id: session.id,
     });
 
     return { url: session.url };
   }
 
-    async handleStripeWebhook(req: RawBodyRequest<Request>) {
+  async handleStripeWebhook(req: RawBodyRequest<Request>) {
+    try {
+      // const payload = req.body.toString('utf-8');
+      const payload = req.rawBody;
+      const signature = req.header('stripe-signature');
+      // return req.rawBody;
+
+      // return res.status(200).send(req.body);
+      // const buf = req.body as Buffer;
+      let event: Stripe.Event;
+
       try {
-        // const payload = req.body.toString('utf-8');
-        const payload = req.rawBody;
-        const signature = req.header('stripe-signature');
-        // return req.rawBody;
-
-        // return res.status(200).send(req.body);
-        // const buf = req.body as Buffer;
-        let event: Stripe.Event;
-
-        try {
-          event = this.stripe.webhooks.constructEvent(
-            payload,
-            signature,
-            this.endpointSecret,
-          );
-        } catch (err: any) {
-          console.error('Webhook signature verification failed:', err.message);
-          return `Webhook Error: ${err.message}`;
-        }
-        let data: any;
-        // Eventga ishlov berish
-        switch (event.type) {
-          case 'checkout.session.completed':
-            const session = event.data.object as Stripe.Checkout.Session;
-            console.log('✅ Payment success:', session.id);
-            data = `✅ Payment success: ${session.id}`; // ✅ Now it's a plain string
-            break;
-          default:
-            console.log(`Unhandled event type ${event.type}`);
-            data = `Unhandled event type ${event.type}`
-        }
-
-        return { received: true, data };
-      } catch (error) {
-        throw new BadRequestException(error.message);
+        event = this.stripe.webhooks.constructEvent(
+          payload,
+          signature,
+          this.endpointSecret,
+        );
+      } catch (err: any) {
+        console.error('Webhook signature verification failed:', err.message);
+        return `Webhook Error: ${err.message}`;
       }
+      let data: any;
+      // Eventga ishlov berish
+      switch (event.type) {
+        case 'checkout.session.completed':
+          const session = event.data.object as Stripe.Checkout.Session;
+          console.log('✅ Payment success:', session.id);
+          data = `✅ Payment success: ${session.id}`; // ✅ Now it's a plain string
+          const stripeData = await this.stripeRepository.findOne({
+            where: { stripe_id: session.id }
+          });
+
+          if (stripeData) {
+            await this.stripeRepository.update(
+              { ...stripeData, status: PaymentStatus.completed },
+              { where: { stripe_id: session.id }, returning: true },
+            );
+          }
+          break;
+        default:
+          console.log(`Unhandled event type ${event.type}`);
+          data = `Unhandled event type ${event.type}`
+      }
+
+      return { received: true, data };
+    } catch (error) {
+      throw new BadRequestException(error.message);
     }
+  }
 }
