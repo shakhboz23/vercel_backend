@@ -17,6 +17,7 @@ import { ChatGroup } from 'src/chat_group/models/chat_group.models';
 import { Group } from 'src/group/models/group.models';
 import { GroupType } from 'src/group/dto/group.dto';
 import { SubCategory } from 'src/subcategory/models/subcategory.models';
+// import { StripePay } from 'src/stripe/models/stripe.models';
 
 interface CourseAttributes {
   title: string;
@@ -138,6 +139,12 @@ export class Course extends Model<Course, CourseAttributes> {
     hooks: true,
   })
   lesson: Lesson[];
+
+  // @HasMany(() => StripePay, {
+  //   onDelete: 'CASCADE',
+  //   hooks: true,
+  // })
+  // payment: StripePay[];
 
   // @BelongsToMany(() => User, {
   // through: { model: () => Subscriptions }, // Use a function to specify the model type

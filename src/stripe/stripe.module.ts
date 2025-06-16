@@ -7,14 +7,16 @@ import { SequelizeModule } from '@nestjs/sequelize';
 import { JwtModule } from '@nestjs/jwt';
 
 @Module({
-   imports: [
-      SequelizeModule.forFeature([StripePay]),
-      JwtModule,
-    ],
+  imports: [
+    SequelizeModule.forFeature([StripePay]),
+    JwtModule,
+  ],
   controllers: [StripeController],
   providers: [StripeService],
+  exports: [StripeService],
+
 })
-export class StripeModule {}
+export class StripeModule { }
 
 // import { DynamicModule, Module } from '@nestjs/common';
 // import { ConfigModule, ConfigService } from '@nestjs/config';

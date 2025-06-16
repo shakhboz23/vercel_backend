@@ -289,6 +289,23 @@ export class CourseService {
         attributes: {
           include: [
             [
+              Sequelize.literal(`
+                (
+                  SELECT row_to_json(s) FROM (
+                    SELECT "id", "amount", "status", "createdAt"
+                    FROM "stripe"
+                    WHERE
+                      "stripe"."user_id" = :user_id AND
+                      "stripe"."course_id" = :id AND
+                      ("stripe"."createdAt" + interval '1 month') > NOW()
+                    ORDER BY "createdAt" DESC
+                    LIMIT 1
+                  ) s
+                )
+              `),
+              'stripe_payment'
+            ],
+            [
               Sequelize.literal(
                 `(SELECT "group"."user_id" FROM "group" WHERE "group"."id" = "Course"."group_id" AND "Course"."id" = :id)::int`,
               ),
