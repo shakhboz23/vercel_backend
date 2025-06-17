@@ -303,7 +303,7 @@ export class CourseService {
                   ) s
                 )
               `),
-              'stripe_payment'
+              'payment'
             ],
             [
               Sequelize.literal(
