@@ -90,7 +90,7 @@ export class UserController {
 
   @ApiOperation({ summary: 'Get user reytings' })
   @Get('/reyting/:group_id/:course_id')
-  getReyting(@Param() { group_id, course_id }: { group_id: number | null, course_id: number }) {
+  getReyting(@Param() { group_id, course_id }: { group_id: number, course_id: number }) {
     return this.userService.getReyting(group_id, course_id);
   }
 
