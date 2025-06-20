@@ -5,11 +5,13 @@ import { StripeController } from './stripe.controller';
 import { StripePay } from './models/stripe.models';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { JwtModule } from '@nestjs/jwt';
+import { CourseModule } from 'src/course/course.module';
 
 @Module({
   imports: [
     SequelizeModule.forFeature([StripePay]),
     JwtModule,
+    CourseModule,
   ],
   controllers: [StripeController],
   providers: [StripeService],
@@ -22,7 +24,7 @@ export class StripeModule { }
 // import { ConfigModule, ConfigService } from '@nestjs/config';
 // import { StripeController } from './stripe.controller'; 
 // import { StripeService } from './stripe.service';
-
+ 
 // @Module({})
 // export class StripeModule {
 

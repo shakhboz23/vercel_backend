@@ -18,6 +18,7 @@ import { Course } from 'src/course/models/course.models';
 import { Category } from 'src/category/models/category.models';
 import { FilesService } from 'src/files/files.service';
 import { Test_settings } from 'src/test_settings/models/test_settings.models';
+import { SubCategory } from 'src/subcategory/models/subcategory.models';
 
 @Injectable()
 export class TestsService {
@@ -176,7 +177,7 @@ export class TestsService {
         where: {
           lesson_id,
         },
-        include: [{ model: Lesson, include: [{ model: Course, include: [{ model: Category }] }] }]
+        include: [{ model: Lesson, include: [{ model: Course, include: [{ model: SubCategory }] }] }]
       });
 
       if (!tests) {
@@ -188,7 +189,7 @@ export class TestsService {
         where: {
           lesson_id,
         },
-        include: [{ model: Lesson, attributes: ['course_id', 'id'], include: [{ model: Course, attributes: ['category_id'], include: [{ model: Category, attributes: ['id'] }] }] }]
+        include: [{ model: Lesson, attributes: ['course_id', 'id'], include: [{ model: Course, attributes: ['subcategory_id'], include: [{ model: SubCategory, attributes: ['id'] }] }] }]
       });
       const test_settings: any = await this.test_settingsService.getByLessonId(lesson_id);
       let randomizedVariants: any;
@@ -204,7 +205,7 @@ export class TestsService {
         });
       }
       return {
-        user_id: lesson?.course.get('user_id'),
+        user_id: lesson?.course.user_id,
         category_id: category?.lesson?.course?.category?.id,
         lesson_id: category?.lesson?.id,
         test: randomizedVariants || tests,

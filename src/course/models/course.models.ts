@@ -26,7 +26,7 @@ interface CourseAttributes {
   discount: number;
   cover: string;
   group_id: number;
-  category_id: number;
+  subcategory_id: number;
   user_id: number
   group_type: string;
 }

@@ -5,11 +5,13 @@ import { StripeDto } from './dto/stripe.dto';
 import { Request } from 'express';
 import { InjectModel } from '@nestjs/sequelize';
 import { PaymentStatus, StripePay } from './models/stripe.models';
+import { CourseService } from 'src/course/course.service';
 
 @Injectable()
 export class StripeService {
   constructor(
     @InjectModel(StripePay) private stripeRepository: typeof StripePay,
+    private readonly courseService: CourseService,
     // private readonly jwtService: JwtService,
   ) { }
 
@@ -19,30 +21,39 @@ export class StripeService {
   private endpointSecret = process.env.STRIPE_SIGNING_SECRET;
 
   async createCheckoutSession(user_id: number, stripeDto: StripeDto) {
-    const session = await this.stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
-      line_items: [
-        {
-          price_data: {
-            currency: 'usd',
-            product_data: {
-              name: `Course #${stripeDto.course_id}`,
+    const course: any = await this.courseService.getById(stripeDto.course_id, user_id);
+    let session: any = { id: "" };
+    if (course.price) {
+      session = await this.stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        line_items: [
+          {
+            price_data: {
+              currency: 'usd',
+              product_data: {
+                name: `Course #${stripeDto.course_id}`,
+              },
+              unit_amount: stripeDto.amount * 100, // dollar to cent
             },
-            unit_amount: stripeDto.amount * 100, // dollar to cent
+            quantity: 1,
           },
-          quantity: 1,
-        },
-      ],
-      mode: 'payment',
-      success_url: `https://ilmnur.online/course/${stripeDto.course_id}`,
-      cancel_url: `https://ilmnur.online/course/${stripeDto.course_id}`,
-    });
+        ],
+        mode: 'payment',
+        success_url: `https://ilmnur.online/course/${stripeDto.course_id}`,
+        cancel_url: `https://ilmnur.online/course/${stripeDto.course_id}`,
+      });
+    }
 
     await this.stripeRepository.create({
-      user_id, ...stripeDto, status: PaymentStatus.pending, stripe_id: session.id,
+      user_id, ...stripeDto, status: course.price ? PaymentStatus.pending : PaymentStatus.completed, stripe_id: session.id,
     });
-
-    return { url: session.url };
+    if (course.price) {
+      return { url: session.url };
+    } else {
+      return {
+        message: "Successfully joined!",
+      }
+    }
   }
 
   async handleStripeWebhook(req: RawBodyRequest<Request>) {
