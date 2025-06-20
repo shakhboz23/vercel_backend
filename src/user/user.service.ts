@@ -347,6 +347,19 @@ export class UserService {
     console.log(+course_id)
     course_id = +course_id;
     try {
+      const whereConditions: string[] = [];
+      const replacements: Record<string, any> = {};
+
+      if (group_id != 0) {
+        whereConditions.push(`"Course"."group_id" = :group_id`);
+        replacements.group_id = group_id;
+      }
+
+      if (course_id) {
+        whereConditions.push(`"Course"."id" = :course_id`);
+        replacements.course_id = course_id;
+      }
+
       const users = await this.userRepository.findAll({
         where: {
           id: {
@@ -355,7 +368,7 @@ export class UserService {
               FROM "reyting" AS "Reyting"
               INNER JOIN "lesson" AS "Lesson" ON "Lesson"."id" = "Reyting"."lesson_id"
               INNER JOIN "course" AS "Course" ON "Course"."id" = "Lesson"."course_id"
-              WHERE "Course"."group_id" = :group_id ${course_id ? 'AND "Course"."id" = :course_id' : ''}
+              ${whereConditions.length ? `WHERE ${whereConditions.join(' AND ')}` : ''}            
             )`),
           },
         },
@@ -367,8 +380,10 @@ export class UserService {
                 FROM "reyting"
                 INNER JOIN "lesson" ON "lesson"."id" = "reyting"."lesson_id"
                 INNER JOIN "course" ON "course"."id" = "lesson"."course_id"
-                INNER JOIN "group" ON "group"."id" = "course"."group_id"
-                WHERE "group"."id" = :group_id AND "reyting"."user_id" = "User"."id" ${course_id ? 'AND "course"."id" = :course_id' : ''}
+                ${group_id == 0 ? 'INNER JOIN "group" ON "group"."id" = "course"."group_id"' : ''}
+                WHERE "reyting"."user_id" = "User"."id"
+                ${group_id == 0 ? ' AND "group"."id" = :group_id' : ''}
+                ${course_id ? ' AND "course"."id" = :course_id' : ''}         
               )::int`),
               'totalReyting',
             ],
