@@ -153,7 +153,7 @@ import { StripeModule } from './stripe/stripe.module';
         ],
         autoLoadModels: true,
         logging: true,
-        synchronize: true,
+        // synchronize: true,
         // sync: { alter: true },
         dialectOptions:
           process.env.NODE_ENV === 'production'

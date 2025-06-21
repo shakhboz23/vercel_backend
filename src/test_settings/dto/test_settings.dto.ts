@@ -3,6 +3,14 @@ import { IsDate, IsNumber, IsOptional } from 'class-validator';
 
 export class Test_settingsDto {
   @ApiProperty({
+    example: 'Vocabulary',
+    description: 'Test, Vocabulary, IELTS',
+  })
+  @IsOptional()
+  // @IsDate()
+  test_type: string;
+
+  @ApiProperty({
     example: 'Atomlar haqida',
     description: 'Test_settings Title',
   })

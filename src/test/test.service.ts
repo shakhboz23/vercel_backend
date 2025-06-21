@@ -33,6 +33,7 @@ export class TestsService {
   async create(testsDto: TestsDto, user_id: number): Promise<object> {
     try {
       const {
+        test_type,
         test,
         lesson_id,
         start_date,
@@ -48,6 +49,7 @@ export class TestsService {
       let variants: string[];
       if (start_date || end_date || sort_level || period) {
         await this.test_settingsService.create({
+          test_type,
           lesson_id,
           start_date,
           end_date,
@@ -193,16 +195,39 @@ export class TestsService {
       });
       const test_settings: any = await this.test_settingsService.getByLessonId(lesson_id);
       let randomizedVariants: any;
-      console.log(lesson.course?.user_id, user_id)
       if (lesson.course.user_id != user_id) {
-        randomizedVariants = this.shuffle(tests).map((variant) => {
-          const randomizedOptions = this.shuffle(variant.get('variants'));
-          return {
-            ...variant.toJSON(),
-            question: this.maskMentions(variant.question),
-            variants: randomizedOptions,
-          };
-        });
+        if (test_settings.test_type != 'vocabulary') {
+          randomizedVariants = this.shuffle(tests).map((variant) => {
+            const randomizedOptions = this.shuffle(variant.get('variants'));
+            return {
+              ...variant.toJSON(),
+              question: this.maskMentions(variant.question),
+              variants: randomizedOptions,
+            };
+          });
+        } else {
+          randomizedVariants = this.shuffle(tests).map((variant) => {
+            const testL: number = tests.length || 2;
+            const randomVariants = [];
+            const currentVariant = variant.get('variants')[0];
+
+            while (randomVariants.length < 3) {
+              const r = Math.floor(Math.random() * testL);
+              const candidate = tests[r].variants[0];
+
+              // Faqat bir xil bo'lmagan va takrorlanmagan variantlar qo'shiladi
+              if (candidate !== currentVariant && !randomVariants.includes(candidate)) {
+                randomVariants.push(candidate);
+              }
+            }
+            const randomizedOptions = this.shuffle([...randomVariants, variant.get('variants')[0]]);
+            return {
+              ...variant.toJSON(),
+              question: this.maskMentions(variant.question),
+              variants: randomizedOptions,
+            };
+          });
+        }
       }
       return {
         user_id: lesson?.course.user_id,

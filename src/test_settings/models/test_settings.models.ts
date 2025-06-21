@@ -9,6 +9,7 @@ import {
 import { Lesson } from '../../lesson/models/lesson.models';
 
 interface Test_settingsAttributes {
+  test_type: string,
   start_date: Date;
   end_date: Date;
   sort_level: any[];
@@ -28,6 +29,11 @@ export class Test_settings extends Model<
     primaryKey: true,
   })
   id: number;
+
+   @Column({
+    type: DataType.STRING,
+  })
+  test_type: string;
 
   @Column({
     type: DataType.DATE,
