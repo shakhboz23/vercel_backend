@@ -313,6 +313,30 @@ export class CourseService {
             ],
             [
               Sequelize.literal(
+                `(SELECT COALESCE(SUM("lesson"."duration"), 0) FROM "lesson" WHERE "lesson"."course_id" = :id)::int`
+              ),
+              'total_duration',
+            ],
+            [
+              Sequelize.literal(`
+                (
+                  SELECT COUNT(*) FROM "likes"
+                  WHERE "likes"."lesson_id" = :id
+                )
+              `),
+              'likes_count',
+            ],
+            [
+              Sequelize.literal(`
+                (
+                  SELECT COUNT(*) FROM "subscriptions"
+                  WHERE "subscriptions"."course_id" = :id
+                )
+              `),
+              'subscriptions_count',
+            ],
+            [
+              Sequelize.literal(
                 `(SELECT COUNT(*) FROM "lesson" WHERE "lesson"."course_id" = :id AND "lesson"."type" = 'lesson')::int`,
               ),
               'lessons_count',
