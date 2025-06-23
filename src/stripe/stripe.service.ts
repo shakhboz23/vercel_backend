@@ -6,12 +6,15 @@ import { Request } from 'express';
 import { InjectModel } from '@nestjs/sequelize';
 import { PaymentStatus, StripePay } from './models/stripe.models';
 import { CourseService } from 'src/course/course.service';
+import { SubscriptionsService } from 'src/subscriptions/subscriptions.service';
+import { RoleName } from 'src/activity/models/activity.models';
 
 @Injectable()
 export class StripeService {
   constructor(
     @InjectModel(StripePay) private stripeRepository: typeof StripePay,
     private readonly courseService: CourseService,
+    private readonly subscriptionsService: SubscriptionsService,
     // private readonly jwtService: JwtService,
   ) { }
 
@@ -47,6 +50,8 @@ export class StripeService {
     await this.stripeRepository.create({
       user_id, ...stripeDto, status: course.price ? PaymentStatus.pending : PaymentStatus.completed, stripe_id: session.id,
     });
+    await this.subscriptionsService.create({ role: RoleName.student, course_id: stripeDto.course_id }, user_id)
+
     if (course.price) {
       return { url: session.url };
     } else {
@@ -93,6 +98,7 @@ export class StripeService {
               { ...stripeData, status: PaymentStatus.completed },
               { where: { stripe_id: session.id }, returning: true },
             );
+            await this.subscriptionsService.create({ role: RoleName.student, course_id: stripeData.course_id }, stripeData.user_id)
           }
           break;
         default:

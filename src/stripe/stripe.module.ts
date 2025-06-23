@@ -6,12 +6,14 @@ import { StripePay } from './models/stripe.models';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { JwtModule } from '@nestjs/jwt';
 import { CourseModule } from 'src/course/course.module';
+import { SubscriptionsModule } from 'src/subscriptions/subscriptions.module';
 
 @Module({
   imports: [
     SequelizeModule.forFeature([StripePay]),
     JwtModule,
     CourseModule,
+    SubscriptionsModule,
   ],
   controllers: [StripeController],
   providers: [StripeService],

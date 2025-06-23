@@ -100,7 +100,7 @@ export class UserService {
           data: {
             user: user_data,
           },
-          // token: access_token,
+          token: type == 'googleauth' ? access_token : '',
         };
       } else {
         user = await this.userRepository.create({
@@ -153,6 +153,7 @@ export class UserService {
           data: {
             user: user_data,
           },
+          token: type == 'googleauth' ? access_token : '',
         };
       }
     } catch (error) {

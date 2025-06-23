@@ -10,5 +10,6 @@ import { UploadedModule } from '../uploaded/uploaded.module';
   imports: [SequelizeModule.forFeature([Subscriptions]), UserModule, UploadedModule],
   controllers: [SubscriptionsController],
   providers: [SubscriptionsService],
+  exports: [SubscriptionsService],
 })
 export class SubscriptionsModule {}

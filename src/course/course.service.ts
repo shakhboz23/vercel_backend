@@ -321,7 +321,9 @@ export class CourseService {
               Sequelize.literal(`
                 (
                   SELECT COUNT(*) FROM "likes"
-                  WHERE "likes"."lesson_id" = :id
+                  WHERE "likes"."lesson_id" IN (
+                    SELECT "id" FROM "lesson" WHERE "lesson"."course_id" = :id
+                  )
                 )
               `),
               'likes_count',
