@@ -25,14 +25,11 @@ export class ReytingService {
           lesson_id: reytingDto.lesson_id,
         },
       });
-      console.log(!is_reyting);
       if (!is_reyting) {
-        console.log(is_reyting);
         const reyting = await this.reytingRepository.create({
           ...reytingDto,
           user_id,
         });
-        console.log(reyting);
         return {
           statusCode: HttpStatus.OK,
           message: 'Successfully added!',
