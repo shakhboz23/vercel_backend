@@ -3,7 +3,6 @@ import {
   Column,
   DataType,
   ForeignKey,
-  HasMany,
   Model,
   Table,
 } from 'sequelize-typescript';
@@ -25,7 +24,7 @@ export enum PaymentStatus {
 }
 
 @Table({ tableName: 'stripe' })
-export class StripePay extends Model<StripePay, StripeAttributes> {
+export class PaymentStripe extends Model<PaymentStripe, StripeAttributes> {
   @Column({
     type: DataType.INTEGER,
     autoIncrement: true,
@@ -33,7 +32,7 @@ export class StripePay extends Model<StripePay, StripeAttributes> {
   })
   id: number;
 
-   @Column({
+  @Column({
     type: DataType.STRING,
     defaultValue: 0,
   })
@@ -60,7 +59,7 @@ export class StripePay extends Model<StripePay, StripeAttributes> {
 
   @BelongsTo(() => User)
   user: User[];
-  
+
   @ForeignKey(() => Course)
   @Column({
     type: DataType.INTEGER,

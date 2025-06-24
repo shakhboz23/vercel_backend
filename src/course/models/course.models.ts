@@ -4,20 +4,18 @@ import {
   DataType,
   ForeignKey,
   HasMany,
-  HasOne,
   Model,
   Table,
 } from 'sequelize-typescript';
 import { Lesson } from 'src/lesson/models/lesson.models';
 import { Subscriptions } from 'src/subscriptions/models/subscriptions.models';
-import { Category } from 'src/category/models/category.models';
 import { User } from 'src/user/models/user.models';
 import { SubscriptionActivity } from 'src/subscription_activity/models/subscription_activity.models';
 import { ChatGroup } from 'src/chat_group/models/chat_group.models';
 import { Group } from 'src/group/models/group.models';
 import { GroupType } from 'src/group/dto/group.dto';
 import { SubCategory } from 'src/subcategory/models/subcategory.models';
-// import { StripePay } from 'src/stripe/models/stripe.models';
+import { PaymentStripe } from 'src/stripe/models/stripe.models';
 
 interface CourseAttributes {
   title: string;
@@ -140,15 +138,14 @@ export class Course extends Model<Course, CourseAttributes> {
   })
   lesson: Lesson[];
 
-  // @HasMany(() => StripePay, {
-  //   onDelete: 'CASCADE',
-  //   hooks: true,
-  // })
-  // payment: StripePay[];
-
-  // @BelongsToMany(() => User, {
-  // through: { model: () => Subscriptions }, // Use a function to specify the model type
-  // foreignKey: 'course_id'
-  // })
-  // users: User[];
+  //   @HasMany(() => PaymentStripe, {
+  //     onDelete: 'CASCADE',
+  //     hooks: true,
+  //   })
+  //   paymentStripe: PaymentStripe[];
+  @HasMany(() => PaymentStripe, {
+    onDelete: 'CASCADE',
+    hooks: true,
+  })
+  payments: PaymentStripe[];
 }

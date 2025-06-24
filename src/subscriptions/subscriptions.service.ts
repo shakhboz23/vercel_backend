@@ -39,6 +39,7 @@ export class SubscriptionsService {
       } 
       return this.subscriptionsRepository.create({ course_id, user_id, is_active: SubscribeActive.requested });
     } catch (error) {
+      console.log(error);
       throw new BadRequestException(error.message);
     }
   }

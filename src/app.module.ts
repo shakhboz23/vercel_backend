@@ -60,6 +60,7 @@ import { CommentModule } from './comment/comment.module';
 import { SubCategory } from './subcategory/models/subcategory.models';
 import { SubCategoryModule } from './subcategory/subcategory.module';
 import { StripeModule } from './stripe/stripe.module';
+import { PaymentStripe } from './stripe/models/stripe.models';
 @Module({
   imports: [
     // TelegrafModule.forRootAsync({
@@ -110,6 +111,7 @@ import { StripeModule } from './stripe/stripe.module';
           VideoChat,
           Comment,
           SubCategory,
+          PaymentStripe,
         ],
         autoLoadModels: true,
         logging: true,
@@ -150,6 +152,7 @@ import { StripeModule } from './stripe/stripe.module';
           VideoChat,
           Comment,
           SubCategory,
+          PaymentStripe,
         ],
         autoLoadModels: true,
         logging: true,
@@ -209,7 +212,7 @@ import { StripeModule } from './stripe/stripe.module';
   exports: []
 })
 export class AppModule implements OnApplicationBootstrap {
-
+  
   constructor(
     private readonly userService: UserService,
   ) { }

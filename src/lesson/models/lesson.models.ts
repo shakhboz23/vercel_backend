@@ -8,7 +8,6 @@ import {
   Table,
 } from 'sequelize-typescript';
 import { Course } from '../../course/models/course.models';
-import { Group } from '../../group/models/group.models';
 import { Like } from 'src/likes/models/like.models';
 import { Comment } from 'src/comment/models/comment.models';
 

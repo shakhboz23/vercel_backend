@@ -1,18 +1,19 @@
 // stripe/stripe.service.ts
-import { BadRequestException, Injectable, RawBodyRequest } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, RawBodyRequest } from '@nestjs/common';
 import Stripe from 'stripe';
 import { StripeDto } from './dto/stripe.dto';
 import { Request } from 'express';
 import { InjectModel } from '@nestjs/sequelize';
-import { PaymentStatus, StripePay } from './models/stripe.models';
+import { PaymentStatus, PaymentStripe } from './models/stripe.models';
 import { CourseService } from 'src/course/course.service';
 import { SubscriptionsService } from 'src/subscriptions/subscriptions.service';
 import { RoleName } from 'src/activity/models/activity.models';
-
+import { Op } from 'sequelize';
+import { Course } from 'src/course/models/course.models';
 @Injectable()
 export class StripeService {
   constructor(
-    @InjectModel(StripePay) private stripeRepository: typeof StripePay,
+    @InjectModel(PaymentStripe) private stripeRepository: typeof PaymentStripe,
     private readonly courseService: CourseService,
     private readonly subscriptionsService: SubscriptionsService,
     // private readonly jwtService: JwtService,
@@ -24,6 +25,16 @@ export class StripeService {
   private endpointSecret = process.env.STRIPE_SIGNING_SECRET;
 
   async createCheckoutSession(user_id: number, stripeDto: StripeDto) {
+    const isPaid = await this.stripeRepository.findOne({
+      where: {
+        course_id: stripeDto.course_id,
+        user_id,
+      }
+    })
+
+    if (isPaid) {
+      throw new BadRequestException("You already subscribed to this course");
+    }
     const course: any = await this.courseService.getById(stripeDto.course_id, user_id);
     let session: any = { id: "" };
     if (course.price) {
@@ -36,7 +47,7 @@ export class StripeService {
               product_data: {
                 name: `Course #${stripeDto.course_id}`,
               },
-              unit_amount: stripeDto.amount * 100, // dollar to cent
+              unit_amount: course.price * 100, // dollar to cent
             },
             quantity: 1,
           },
@@ -48,7 +59,7 @@ export class StripeService {
     }
 
     await this.stripeRepository.create({
-      user_id, ...stripeDto, status: course.price ? PaymentStatus.pending : PaymentStatus.completed, stripe_id: session.id,
+      user_id, ...stripeDto, amount: course.price, status: course.price ? PaymentStatus.pending : PaymentStatus.completed, stripe_id: session.id,
     });
     await this.subscriptionsService.create({ role: RoleName.student, course_id: stripeDto.course_id }, user_id)
 
@@ -95,7 +106,7 @@ export class StripeService {
 
           if (stripeData) {
             await this.stripeRepository.update(
-              { ...stripeData, status: PaymentStatus.completed },
+              { status: PaymentStatus.completed },
               { where: { stripe_id: session.id }, returning: true },
             );
             await this.subscriptionsService.create({ role: RoleName.student, course_id: stripeData.course_id }, stripeData.user_id)
@@ -107,6 +118,26 @@ export class StripeService {
       }
 
       return { received: true, data };
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
+  }
+
+
+  async getUserPaymentHistory(user_id: number) {
+    try {
+      const paymentHistory: any = await this.stripeRepository.findAll({
+        where: {
+          user_id,
+          amount: { [Op.gt]: 0 },
+        },
+        include: [{model: Course}],
+        order: [['createdAt', 'ASC']],
+      });
+      if (!paymentHistory.length) {
+        throw new NotFoundException('Payment history not found');
+      }
+      return paymentHistory;
     } catch (error) {
       throw new BadRequestException(error.message);
     }

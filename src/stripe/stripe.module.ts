@@ -2,7 +2,7 @@
 import { Module } from '@nestjs/common';
 import { StripeService } from './stripe.service';
 import { StripeController } from './stripe.controller';
-import { StripePay } from './models/stripe.models';
+import { PaymentStripe } from './models/stripe.models';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { JwtModule } from '@nestjs/jwt';
 import { CourseModule } from 'src/course/course.module';
@@ -10,7 +10,7 @@ import { SubscriptionsModule } from 'src/subscriptions/subscriptions.module';
 
 @Module({
   imports: [
-    SequelizeModule.forFeature([StripePay]),
+    SequelizeModule.forFeature([PaymentStripe]),
     JwtModule,
     CourseModule,
     SubscriptionsModule,

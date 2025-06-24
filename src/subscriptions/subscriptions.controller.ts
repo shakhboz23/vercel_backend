@@ -53,7 +53,7 @@ export class SubscriptionsController {
       user_id,
     );
   }
-  
+
   @ApiOperation({ summary: 'Get subscriptions by ID' })
   // @UseGuards(AuthGuard)
   @Get('/getById/:id')

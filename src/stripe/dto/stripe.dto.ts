@@ -14,12 +14,4 @@ export class StripeDto {
   @IsNotEmpty()
   @IsNumber()
   course_id: number;
-
-  @ApiProperty({
-    example: 2,
-    description: 'Amount',
-  })
-  @IsNotEmpty()
-  @IsNumber()
-  amount: number;
 }

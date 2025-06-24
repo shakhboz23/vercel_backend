@@ -1,5 +1,5 @@
 // stripe/stripe.controller.ts
-import { Controller, Post, Body, Req, Res, Headers, RawBodyRequest } from '@nestjs/common';
+import { Controller, Post, Body, Req, Res, Headers, RawBodyRequest, Get } from '@nestjs/common';
 import { StripeService } from './stripe.service';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { StripeDto } from './dto/stripe.dto';
@@ -30,5 +30,13 @@ export class StripeController {
     @Post('/webhook/stripe')
     async handleStripeWebhook(@Req() req: RawBodyRequest<Request>) {
         return this.stripeService.handleStripeWebhook(req);
+    }
+
+    @ApiOperation({ summary: 'Get subscriptions by ID' })
+    // @UseGuards(AuthGuard)
+    @Get('/get-user-payment-history')
+    getUserPaymentHistory(@Headers() headers?: string) {
+        const user_id = extractUserIdFromToken(headers, this.jwtService, true);
+        return this.stripeService.getUserPaymentHistory(user_id);
     }
 }
