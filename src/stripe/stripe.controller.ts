@@ -1,5 +1,5 @@
 // stripe/stripe.controller.ts
-import { Controller, Post, Body, Req, Res, Headers, RawBodyRequest, Get } from '@nestjs/common';
+import { Controller, Post, Body, Req, Res, Headers, RawBodyRequest, Get, Query } from '@nestjs/common';
 import { StripeService } from './stripe.service';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { StripeDto } from './dto/stripe.dto';
@@ -35,24 +35,24 @@ export class StripeController {
     @ApiOperation({ summary: 'Get subscriptions by ID' })
     // @UseGuards(AuthGuard)
     @Get('/get-user-payment-history')
-    getUserPaymentHistory(@Headers() headers?: string) {
+    getUserPaymentHistory(@Headers() headers?: string, @Query('group_id') group_id?: number) {
         const user_id = extractUserIdFromToken(headers, this.jwtService, true);
-        return this.stripeService.getUserPaymentHistory(user_id);
+        return this.stripeService.getUserPaymentHistory(user_id, +group_id);
     }
 
     @ApiOperation({ summary: 'Get subscriptions by ID' })
     // @UseGuards(AuthGuard)
     @Get('/get-user-group-payment-history')
-    getUserGroupPaymentHistory(@Headers() headers?: string) {
+    getUserGroupPaymentHistory(@Headers() headers?: string, @Query('group_id') group_id?: number) {
         const user_id = extractUserIdFromToken(headers, this.jwtService, true);
-        return this.stripeService.getUserGroupPaymentHistory(user_id);
+        return this.stripeService.getUserGroupPaymentHistory(user_id, +group_id);
     }
 
     @ApiOperation({ summary: 'Get subscriptions by ID' })
     // @UseGuards(AuthGuard)
     @Get('/get-group-payment-history')
-    getGroupPaymentHistory(@Headers() headers?: string) {
+    getGroupPaymentHistory(@Headers() headers?: string, @Query('group_id') group_id?: number) {
         const user_id = extractUserIdFromToken(headers, this.jwtService, true);
-        return this.stripeService.getGroupPaymentHistory(user_id);
+        return this.stripeService.getGroupPaymentHistory(user_id, +group_id);
     }
 }

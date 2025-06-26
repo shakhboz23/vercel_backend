@@ -129,64 +129,106 @@ export class StripeService {
   }
 
 
-  async getUserPaymentHistory(user_id: number) {
+  async getUserPaymentHistory(user_id: number, group_id?: number) {
     try {
+      const whereClause: any = {
+        user_id,
+        amount: { [Op.gt]: 0 },
+      }
+
+      const courseInclude: any = {
+        model: Course,
+        required: true,
+      };
+
+      if (group_id) {
+        delete whereClause.user_id;
+        courseInclude.where = { group_id };
+      }
+
       const payment: any = await this.stripeRepository.findAll({
-        where: {
-          user_id,
-          amount: { [Op.gt]: 0 },
-        },
-        include: [{ model: Course }],
+        where: whereClause,
+        include: [courseInclude],
         order: [['createdAt', 'ASC']],
       });
 
-      // 2. Umumiy to‘lovni olish
-      const total = await this.stripeRepository.findOne({
-        where: {
-          user_id,
-          amount: { [Op.gt]: 0 },
-        },
-        attributes: [
-          [
-            Sequelize.fn('SUM', Sequelize.col('amount')),
-            'total_payment'
-          ],
-          [
-            Sequelize.literal(`
+      if (group_id) {
+        // You need to join with the course table to filter by group_id
+        const [total] = await this.sequelize.query(
+          `
+        SELECT 
+          SUM(s.amount) AS total_payment,
+          SUM(CASE 
+            WHEN s."createdAt" >= DATE_TRUNC('month', NOW()) 
+            THEN s.amount ELSE 0 
+          END) AS total_monthly_payment,
+          COUNT(DISTINCT s.course_id) AS purchased_courses_count
+        FROM stripe s
+        INNER JOIN course c ON c.id = s.course_id
+        WHERE s.user_id = :user_id AND s.amount > 0 AND c.group_id = :group_id
+        `,
+          {
+            replacements: { user_id, group_id },
+            type: QueryTypes.SELECT,
+          }
+        );
+
+        if (!payment.length) {
+          throw new NotFoundException('Payment history not found');
+        }
+
+        return { payment, total };
+      } else {
+        const total = await this.stripeRepository.findOne({
+          where: whereClause,
+          attributes: [
+            [Sequelize.fn('SUM', Sequelize.col('amount')), 'total_payment'],
+            [
+              Sequelize.literal(`
               SUM(CASE 
                 WHEN "createdAt" >= DATE_TRUNC('month', NOW()) 
                 THEN "amount" 
                 ELSE 0 
               END)
             `),
-            'total_monthly_payment'
+              'total_monthly_payment',
+            ],
+            [
+              Sequelize.fn('COUNT', Sequelize.fn('DISTINCT', Sequelize.col('course_id'))),
+              'purchased_courses_count',
+            ],
           ],
+          raw: true,
+        });
 
-          // Kurslar soni
-          [Sequelize.fn('COUNT', Sequelize.fn('DISTINCT', Sequelize.col('course_id'))), 'purchased_courses_count']
-        ],
-        raw: true,
-      });
+        if (!payment.length) {
+          throw new NotFoundException('Payment history not found');
+        }
 
-
-      if (!payment.length) {
-        throw new NotFoundException('Payment history not found');
+        return { payment, total };
       }
-      return { payment, total };
     } catch (error) {
       throw new BadRequestException(error.message);
     }
   }
 
-  async getUserGroupPaymentHistory(user_id: number) {
+
+  async getUserGroupPaymentHistory(user_id: number, group_id?: number) {
     try {
+      const groupWhere: any = { user_id };
+      if (group_id) {
+        groupWhere.id = group_id;
+      }
+
       const payment: any = await this.stripeRepository.findAll({
         where: {
           amount: { [Op.gt]: 0 },
         },
         include: [{
-          model: Course, include: [{
-            model: Group, where: { user_id },
+          model: Course,
+          include: [{
+            model: Group,
+            where: groupWhere,
             required: true,
           }],
           required: true,
@@ -194,7 +236,14 @@ export class StripeService {
         order: [['createdAt', 'ASC']],
       });
 
-      // 2. Umumiy to‘lovni olish
+      const queryParams: any = { user_id };
+      let groupFilterSQL = '';
+
+      if (group_id) {
+        groupFilterSQL = ` AND g.id = :group_id`;
+        queryParams.group_id = group_id;
+      }
+
       const [total] = await this.sequelize.query(`
           SELECT 
             SUM(s.amount) AS total_payment,
@@ -206,22 +255,29 @@ export class StripeService {
           INNER JOIN "course" c ON c.id = s.course_id
           INNER JOIN "group" g ON g.id = c.group_id
           WHERE s.amount > 0 AND g.user_id = :user_id
+          ${groupFilterSQL}
         `, {
-        replacements: { user_id },
+        replacements: queryParams,
         type: QueryTypes.SELECT,
       });
 
       if (!payment.length) {
         throw new NotFoundException('Payment history not found');
       }
+
       return { payment, total };
     } catch (error) {
       throw new BadRequestException(error.message);
     }
   }
 
-  async getGroupPaymentHistory(user_id: number) {
+
+  async getGroupPaymentHistory(user_id: number, group_id?: number) {
     try {
+      const groupWhere: any = { user_id };
+      if (group_id) groupWhere.id = group_id;
+
+      // 1. Course-based group payment breakdown
       const courseBreakdown = await this.stripeRepository.findAll({
         attributes: [
           [Sequelize.col('course.group_id'), 'group_id'],
@@ -232,8 +288,8 @@ export class StripeService {
           attributes: [],
           include: [{
             model: Group,
-            where: { user_id },
-            attributes: ['title', 'user_id'], // agar title kerak bo‘lsa: ['title']
+            where: groupWhere,
+            attributes: ['title', 'user_id'],
             required: true,
           }],
           required: true,
@@ -242,104 +298,104 @@ export class StripeService {
         raw: true,
       });
 
-      // 1. Umumiy to‘lovni olish
+      const groupFilterSQL = group_id ? `AND c.group_id = :groupId` : '';
+
+      // 2. Total payments
       const [payment] = await this.sequelize.query(`
-        SELECT 
-          SUM(CASE 
-            WHEN sp."createdAt" >= DATE_TRUNC('month', NOW()) 
-            THEN sp.amount 
-            ELSE 0 
-          END) AS total_current_month_payment,
-          SUM(CASE
-            WHEN sp."createdAt" >= DATE_TRUNC('month', NOW() - INTERVAL '1 month') 
-                AND sp."createdAt" < DATE_TRUNC('month', NOW()) 
-            THEN sp.amount 
-            ELSE 0 
-          END) AS total_previous_month_payment
-        FROM "stripe" sp
-        JOIN "course" c ON c.id = sp.course_id
-        WHERE c.user_id = :userId AND sp.amount > 0
-      `, {
-        replacements: { userId: user_id },
-        type: QueryTypes.SELECT
+      SELECT 
+        SUM(CASE 
+          WHEN sp."createdAt" >= DATE_TRUNC('month', NOW()) THEN sp.amount ELSE 0 
+        END) AS total_current_month_payment,
+        SUM(CASE 
+          WHEN sp."createdAt" >= DATE_TRUNC('month', NOW() - INTERVAL '1 month') 
+               AND sp."createdAt" < DATE_TRUNC('month', NOW()) 
+          THEN sp.amount ELSE 0 
+        END) AS total_previous_month_payment
+      FROM "stripe" sp
+      JOIN "course" c ON c.id = sp.course_id
+      WHERE c.user_id = :userId AND sp.amount > 0
+      ${groupFilterSQL}
+    `, {
+        replacements: { userId: user_id, groupId: group_id },
+        type: QueryTypes.SELECT,
       });
 
-      // 2. Umumiy likelarni olish
+      // 3. Likes
       const [likes] = await this.sequelize.query(`
-        SELECT 
-          SUM(CASE 
-            WHEN l."createdAt" >= DATE_TRUNC('month', NOW()) 
-            THEN 1
-            ELSE 0 
-          END) AS total_current_month_like,
-          SUM(CASE
-            WHEN l."createdAt" >= DATE_TRUNC('month', NOW() - INTERVAL '1 month') 
-                AND l."createdAt" < DATE_TRUNC('month', NOW()) 
-            THEN 1
-            ELSE 0 
-          END) AS total_previous_month_like
-        FROM "likes" l
-        JOIN "lesson" lesson ON lesson.id = l.lesson_id
-        JOIN "course" c ON c.id = lesson.course_id
-        WHERE c.user_id = :userId
-      `, {
-        replacements: { userId: user_id },
-        type: QueryTypes.SELECT
+      SELECT 
+        SUM(CASE 
+          WHEN l."createdAt" >= DATE_TRUNC('month', NOW()) THEN 1 ELSE 0 
+        END) AS total_current_month_like,
+        SUM(CASE 
+          WHEN l."createdAt" >= DATE_TRUNC('month', NOW() - INTERVAL '1 month') 
+               AND l."createdAt" < DATE_TRUNC('month', NOW()) 
+          THEN 1 ELSE 0 
+        END) AS total_previous_month_like
+      FROM "likes" l
+      JOIN "lesson" lesson ON lesson.id = l.lesson_id
+      JOIN "course" c ON c.id = lesson.course_id
+      WHERE c.user_id = :userId
+      ${groupFilterSQL}
+    `, {
+        replacements: { userId: user_id, groupId: group_id },
+        type: QueryTypes.SELECT,
       });
 
-      // 3. Umumiy Watchedlarni olish
+      // 4. Watched
       const [watched] = await this.sequelize.query(`
-        SELECT 
-          SUM(CASE 
-            WHEN w."createdAt" >= DATE_TRUNC('month', NOW()) 
-            THEN 1
-            ELSE 0 
-          END) AS total_current_month_watched,
-          SUM(CASE
-            WHEN w."createdAt" >= DATE_TRUNC('month', NOW() - INTERVAL '1 month') 
-                AND w."createdAt" < DATE_TRUNC('month', NOW()) 
-            THEN 1
-            ELSE 0 
-          END) AS total_previous_month_watched
-        FROM "watched" w
-        JOIN "lesson" lesson ON lesson.id = w.lesson_id
-        JOIN "course" c ON c.id = lesson.course_id
-        WHERE c.user_id = :userId
-      `, {
-        replacements: { userId: user_id },
-        type: QueryTypes.SELECT
+      SELECT 
+        SUM(CASE 
+          WHEN w."createdAt" >= DATE_TRUNC('month', NOW()) THEN 1 ELSE 0 
+        END) AS total_current_month_watched,
+        SUM(CASE 
+          WHEN w."createdAt" >= DATE_TRUNC('month', NOW() - INTERVAL '1 month') 
+               AND w."createdAt" < DATE_TRUNC('month', NOW()) 
+          THEN 1 ELSE 0 
+        END) AS total_previous_month_watched
+      FROM "watched" w
+      JOIN "lesson" lesson ON lesson.id = w.lesson_id
+      JOIN "course" c ON c.id = lesson.course_id
+      WHERE c.user_id = :userId
+      ${groupFilterSQL}
+    `, {
+        replacements: { userId: user_id, groupId: group_id },
+        type: QueryTypes.SELECT,
       });
 
-      // 3. Umumiy Watchedlarni olish
+      // 5. Subscribers
       const [subscribers] = await this.sequelize.query(`
-        SELECT 
-          SUM(CASE 
-            WHEN s."createdAt" >= DATE_TRUNC('month', NOW()) 
-            THEN 1
-            ELSE 0 
-          END) AS total_current_month_subscribers,
-          SUM(CASE
-            WHEN s."createdAt" >= DATE_TRUNC('month', NOW() - INTERVAL '1 month') 
-                AND s."createdAt" < DATE_TRUNC('month', NOW()) 
-            THEN 1
-            ELSE 0 
-          END) AS total_previous_month_subscribers
-        FROM "subscriptions" s
-        JOIN "course" c ON c.id = s.course_id
-        WHERE c.user_id = :userId
-      `, {
-        replacements: { userId: user_id },
-        type: QueryTypes.SELECT
+      SELECT 
+        SUM(CASE 
+          WHEN s."createdAt" >= DATE_TRUNC('month', NOW()) THEN 1 ELSE 0 
+        END) AS total_current_month_subscribers,
+        SUM(CASE 
+          WHEN s."createdAt" >= DATE_TRUNC('month', NOW() - INTERVAL '1 month') 
+               AND s."createdAt" < DATE_TRUNC('month', NOW()) 
+          THEN 1 ELSE 0 
+        END) AS total_previous_month_subscribers
+      FROM "subscriptions" s
+      JOIN "course" c ON c.id = s.course_id
+      WHERE c.user_id = :userId
+      ${groupFilterSQL}
+    `, {
+        replacements: { userId: user_id, groupId: group_id },
+        type: QueryTypes.SELECT,
       });
-
-
 
       if (!payment) {
         throw new NotFoundException('Payment history not found');
       }
-      return { ...payment, ...likes, ...watched, ...subscribers, courseBreakdown };
+
+      return {
+        ...payment,
+        ...likes,
+        ...watched,
+        ...subscribers,
+        courseBreakdown,
+      };
     } catch (error) {
       throw new BadRequestException(error.message);
     }
   }
+
 }
