@@ -39,4 +39,20 @@ export class StripeController {
         const user_id = extractUserIdFromToken(headers, this.jwtService, true);
         return this.stripeService.getUserPaymentHistory(user_id);
     }
+
+    @ApiOperation({ summary: 'Get subscriptions by ID' })
+    // @UseGuards(AuthGuard)
+    @Get('/get-user-group-payment-history')
+    getUserGroupPaymentHistory(@Headers() headers?: string) {
+        const user_id = extractUserIdFromToken(headers, this.jwtService, true);
+        return this.stripeService.getUserGroupPaymentHistory(user_id);
+    }
+
+    @ApiOperation({ summary: 'Get subscriptions by ID' })
+    // @UseGuards(AuthGuard)
+    @Get('/get-group-payment-history')
+    getGroupPaymentHistory(@Headers() headers?: string) {
+        const user_id = extractUserIdFromToken(headers, this.jwtService, true);
+        return this.stripeService.getGroupPaymentHistory(user_id);
+    }
 }
