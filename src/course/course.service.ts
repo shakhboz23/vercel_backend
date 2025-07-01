@@ -23,6 +23,8 @@ import { ChatGroupType } from 'src/chat_group/dto/chat_group.dto';
 import { WatchedService } from 'src/watched/watched.service';
 import { FilesService } from 'src/files/files.service';
 import { lessonType } from 'src/lesson/models/lesson.models';
+import { SubCategory } from 'src/subcategory/models/subcategory.models';
+import { Category } from 'src/category/models/category.models';
 
 @Injectable()
 export class CourseService {
@@ -68,14 +70,40 @@ export class CourseService {
     }
   }
 
-  async getAll(subcategory_id: number, user_id: number): Promise<object> {
+  async getAll(subcategory_id: string, user_id: number, category_id: number): Promise<object> {
     try {
-      let subcategory: any = {}
-      if (+subcategory_id) {
-        subcategory = { where: { subcategory_id } }
+      if (!category_id) {
+        subcategory_id = JSON.parse(subcategory_id);
+      }
+      let subcategory: any = {};
+      let categoryInclude: any = {};
+      if (+category_id) {
+        categoryInclude = {
+          include: [{
+            model: SubCategory,
+            include: [{
+              model: Category,
+              where: {
+                id: category_id
+              },
+              required: true,
+            },
+            ],
+            required: true,
+          }]
+        }
+      } else if (subcategory_id?.length) {
+        subcategory = {
+          where: {
+            subcategory_id: {
+              [Op.in]: subcategory_id
+            }
+          }
+        }
       }
       const courses: any = await this.courseRepository.findAll({
         ...subcategory,
+        ...categoryInclude,
         attributes: {
           include: [
             [

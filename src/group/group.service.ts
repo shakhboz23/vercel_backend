@@ -15,6 +15,10 @@ import { Course } from 'src/course/models/course.models';
 import { WatchedService } from 'src/watched/watched.service';
 import { Lesson } from 'src/lesson/models/lesson.models';
 import { FilesService } from 'src/files/files.service';
+import { GroupSearchDto } from './dto/search.dto';
+import { Op } from 'sequelize';
+import { SubCategory } from 'src/subcategory/models/subcategory.models';
+import { Category } from 'src/category/models/category.models';
 
 @Injectable()
 export class GroupService {
@@ -58,16 +62,79 @@ export class GroupService {
     }
   }
 
-  async getAll(subcategory_id: number, user_id?: number, type?: string): Promise<object> {
+  async getAll({ groupSearchDto, user_id, type }: { groupSearchDto?: GroupSearchDto, user_id?: number, type?: string }): Promise<object> {
     try {
-      let subcategory: any = {}
-      if (subcategory_id != 0) {
-        subcategory = { where: { subcategory_id } }
+      let { title, subcategory_id, category_id, createdAt, price } = groupSearchDto || {};
+      let subcategories: any = JSON.parse(subcategory_id || "[]");
+      let createdAtDates: any = JSON.parse(createdAt || "[]");
+      price = JSON.parse(price || "[]");
+
+      let whereClause: any = {};
+
+      // 1. Title yoki description bilan filter
+      if (title) {
+        whereClause[Op.or] = [
+          { title: { [Op.iLike]: `%${title}%` } },
+          { description: { [Op.iLike]: `%${title}%` } }
+        ];
       }
+
+      // 2. subcategory_id (IN)
+      let subcategoryInclude: any = {};
+      let categoryInclude: any = {};
+
+      if (+category_id) {
+        categoryInclude = {
+          include: [{
+            model: SubCategory,
+            include: [{
+              model: Category,
+              where: {
+                id: category_id
+              },
+              required: true,
+            },
+            ],
+            required: true,
+          }]
+        }
+      } else if (Array.isArray(subcategories) && subcategories.length > 0) {
+        subcategoryInclude = {
+          where: {
+            subcategory_id: {
+              [Op.in]: subcategories
+            }
+          }
+        };
+      }
+
+      // 3. createdAt: Date[] = [start, end]
+      if (Array.isArray(createdAtDates) && createdAtDates.length === 2) {
+        whereClause.createdAt = {
+          [Op.between]: [new Date(createdAtDates[0]), new Date(createdAtDates[1])]
+        };
+      }
+
+      // 4. price: number[] = [min, max]
+      console.log(price)
+      if (Array.isArray(price) && price.length === 2) {
+        subcategoryInclude.where = subcategoryInclude.where ? subcategoryInclude.where : {};
+        subcategoryInclude.where.price = {
+          [Op.between]: [price[0], price[1]]
+        };
+      }
+
+      console.log(subcategoryInclude, 22223);
+
+
       const filters: any = {
+        where: whereClause,
         order: [['title', 'ASC']],
         include: [{ model: User }, {
-          model: Course, attributes: [], ...subcategory,
+          model: Course, attributes: [],
+          ...subcategoryInclude,
+          ...categoryInclude,
+          required: true,
         }],
         attributes: {
           include: [

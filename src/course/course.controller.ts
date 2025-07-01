@@ -97,13 +97,14 @@ export class CourseController {
 
   @ApiOperation({ summary: 'Get all lessons' })
   // @UseGuards(AuthGuard)
-  @Get('/:category_id')
+  @Get('/')
   getAll(
-    @Param('category_id') category_id: number,
+    @Query('subcategory_id') subcategory_id: string,
+    @Query('category_id') category_id: number,
     @Headers() headers: string,
   ) {
     const user_id = extractUserIdFromToken(headers, this.jwtService, true);
-    return this.courseService.getAll(category_id, user_id);
+    return this.courseService.getAll(subcategory_id, user_id, category_id);
   }
 
 

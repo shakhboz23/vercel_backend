@@ -9,6 +9,7 @@ import {
   Headers,
   UploadedFile,
   UseInterceptors,
+  Query,
 } from '@nestjs/common';
 import { LessonService } from './lesson.service';
 import { ApiBody, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -76,18 +77,9 @@ export class LessonController {
 
   @ApiOperation({ summary: 'Get all lessons' })
   // @UseGuards(AuthGuard)
-  @Get('/:category_id')
-  getAll(@Param('category_id') category_id: number) {
-    // const auth_header = headers['authorization'];
-    // const token = auth_header?.split(' ')[1];
-    // console.log(token, 'token2303');
-    // const user = token
-    //   ? this.jwtService.verify(token, { secret: process.env.ACCESS_TOKEN_KEY })
-    //   : null;
-    // const user_id = user?.id;
-    // console.log(user_id, '565456');
-
-    return this.lessonService.getAll(category_id);
+  @Get('/')
+  getAll(@Query('subcategory') subcategory: string, @Query('category_id') category_id: number) {
+    return this.lessonService.getAll(subcategory, category_id);
   }
 
   @ApiOperation({ summary: 'Get all lessons' })

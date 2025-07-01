@@ -18,6 +18,9 @@ import { Reyting } from 'src/reyting/models/reyting.models';
 import { Comment } from 'src/comment/models/comment.models';
 import { User } from 'src/user/models/user.models';
 import { CommentService } from 'src/comment/comment.service';
+import { Op } from 'sequelize';
+import { SubCategory } from 'src/subcategory/models/subcategory.models';
+import { Category } from 'src/category/models/category.models';
 
 @Injectable()
 export class LessonService {
@@ -81,20 +84,41 @@ export class LessonService {
     }
   }
 
-  async getAll(category_id: number): Promise<object> {
+  async getAll(subcategory: string, category_id: number): Promise<object> {
     try {
-      // const user_data: any = await this.userService.getById(user_id);
-      // if (!user_data) {
-      //   new BadRequestException('User not found!');
-      // }
+      subcategory = JSON.parse(subcategory || "[]");
       let category: any = {}
+      let categoryInclude: any = {};
+
       if (+category_id) {
-        category = { where: { category_id } }
+        categoryInclude = {
+          include: [{
+            model: SubCategory,
+            include: [{
+              model: Category,
+              where: {
+                id: category_id
+              },
+              required: true,
+            },
+            ],
+            required: true,
+          }]
+        }
+      } else if (subcategory?.length) {
+        category = {
+          where: {
+            subcategory_id: {
+              [Op.in]: subcategory
+            }
+          }
+        }
       }
+
       const lessons: any = await this.lessonRepository.findAll({
         where: { type: 'lesson' },
         include: [{ model: Lesson }, {
-          model: Course, attributes: [], ...category,
+          model: Course, attributes: [], ...category, ...categoryInclude, required: true
         }],
         attributes: {
           include: [

@@ -10,6 +10,7 @@ import {
   UploadedFile,
   UseInterceptors,
   Headers,
+  Query,
 } from '@nestjs/common';
 import { GroupService } from './group.service';
 import {
@@ -31,6 +32,7 @@ import { ImageValidationPipe } from '../pipes/image-validation.pipe';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { extractUserIdFromToken } from '../utils/token';
 import { JwtService } from '@nestjs/jwt';
+import { GroupSearchDto } from './dto/search.dto';
 
 @ApiTags('Group')
 @WebSocketGateway({ cors: { origin: '*', credentials: true } }) // cors
@@ -86,11 +88,10 @@ export class GroupController {
   @ApiOperation({ summary: 'Get all groups' })
   // @UseGuards(AuthGuard)
   // @ApiBearerAuth()
-  @Get('/:category_id')
-  getAll(@Param('category_id') category_id: number, @Headers() headers: string) {
-    console.log(headers);
+  @Get('/')
+  getAll(@Headers() headers: string, @Query() groupSearchDto: GroupSearchDto) {
     const user_id = extractUserIdFromToken(headers, this.jwtService, true);
-    return this.groupService.getAll(category_id, user_id);
+    return this.groupService.getAll({groupSearchDto, user_id});
   }
 
   @ApiOperation({ summary: 'Get all groups' })
@@ -109,7 +110,7 @@ export class GroupController {
   @Get()
   getMyGroup(@Headers() headers: string) {
     const user_id = extractUserIdFromToken(headers, this.jwtService, true);
-    return this.groupService.getAll(0, user_id, 'my_groups');
+    return this.groupService.getAll({user_id, type: 'my_groups'});
   }
 
   @ApiOperation({ summary: 'Get groups with pagination' })
