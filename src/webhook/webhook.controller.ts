@@ -6,17 +6,30 @@ import {
   Headers,
   HttpCode,
   Inject,
+  Body,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
+import { BotService } from 'src/bot/bot.service';
 import Stripe from 'stripe';
 
 @Controller('/webhook')
 export class WebhookController {
   private stripe = new Stripe(process.env.STRIPE_API_KEY, {
     // apiVersion: '2023-10-16',
-  });
+  },
+  );
+
+  constructor(
+    private readonly botService: BotService,
+  ) { }
 
   private endpointSecret = process.env.STRIPE_SIGNING_SECRET;
+  @Post('bot')
+  async handleWebhook(@Body() update: any) {
+    // console.log('Telegramdan yangi xabar:', req.body);
+    await this.botService.handleUpdate(update);
+    return { status: 'ok' };
+  }
 
   @Post()
   @HttpCode(200)

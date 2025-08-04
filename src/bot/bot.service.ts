@@ -36,6 +36,17 @@ export class BotService {
   //   }
   // }
 
+  // Handle incoming updates
+  async handleUpdate(update: any): Promise<void> {
+    try {
+      console.log(update);
+      await this.bot.handleUpdate(update);
+    } catch (error) {
+      console.error('Error handling update:', error);
+      throw new Error(`Failed to process update: ${error.message}`);
+    }
+  }
+
   commands() {
     return {
       parse_mode: 'HTML',

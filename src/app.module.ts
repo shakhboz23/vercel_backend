@@ -82,8 +82,8 @@ import { Bot } from './bot/models/bot.model';
           // includes: [BotModule],
           launchOptions: {
             webhook: {
-              domain: 'https://vercelbackend-production.up.railway.app',
-              hookPath: '/api/webhook',
+              domain: 'https://vercel-backend-bay.vercel.app',
+              hookPath: '/api/webhook/bot',
             }
           }
         }
