@@ -61,113 +61,82 @@ import { SubCategory } from './subcategory/models/subcategory.models';
 import { SubCategoryModule } from './subcategory/subcategory.module';
 import { StripeModule } from './stripe/stripe.module';
 import { PaymentStripe } from './stripe/models/stripe.models';
+import { BOT_NAME } from './app.constants';
+import { Bot } from './bot/models/bot.model';
 @Module({
   imports: [
-    // TelegrafModule.forRootAsync({
-    //   botName: BOT_NAME,
-    //   useFactory: () => ({
-    //     token: process.env.BOT_TOKEN,
-    //     includes: [BotModule],
-    //     // launchOptions: {
-    //     //   webhook: {
-    //     //     domain: 'https://vercelbackend-production.up.railway.app',
-    //     //     hookPath: '/api/webhook',
-    //     //   }
-    //     // }
-    //   }), 
-    // }),
+    TelegrafModule.forRootAsync({
+      botName: BOT_NAME,
+      useFactory: () => {
+        return process.env.NODE_ENV !== 'production' ? {
+          token: process.env.BOT_TOKEN,
+          includes: [BotModule],
+          // launchOptions: {
+          //   webhook: {
+          //     domain: 'https://vercelbackend-production.up.railway.app',
+          //     hookPath: '/api/webhook',
+          //   }
+          // }
+        } : {
+          token: process.env.BOT_TOKEN,
+          // includes: [BotModule],
+          launchOptions: {
+            webhook: {
+              domain: 'https://vercelbackend-production.up.railway.app',
+              hookPath: '/api/webhook',
+            }
+          }
+        }
+      },
+    }),
     ScheduleModule.forRoot(),
     ConfigModule.forRoot({
       envFilePath: '.env',
       isGlobal: true,
     }),
-    process.env.NODE_ENV === 'production'
-      ? SequelizeModule.forRoot({
-        dialect: 'postgres',
-        host: process.env.PGHOST,
-        // port: Number(process.env.PG_PORT),
-        username: process.env.PGUSER,
-        password: String(process.env.PGPASSWORD),
-        database: process.env.PGDATABASE,
-        models: [
-          Category,
-          Group,
-          Course,
-          Lesson,
-          Like,
-          Chat,
-          Tests,
-          User,
-          ChatGroup,
-          Uploaded,
-          Notification,
-          Activity,
-          Role,
-          Reyting,
-          News,
-          UserStep,
-          Subscriptions,
-          SubscriptionActivity,
-          VideoChat,
-          Comment,
-          SubCategory,
-          PaymentStripe,
-        ],
-        autoLoadModels: true,
-        logging: true,
-        // synchronize: true,
-        // sync: { alter: true },
-        dialectOptions: {
-          ssl: {
-            require: true,
-            rejectUnauthorized: false,
-          },
+    SequelizeModule.forRoot({
+      dialect: 'postgres',
+      host: process.env.PGHOST,
+      // port: Number(process.env.PG_PORT),
+      username: process.env.PGUSER,
+      password: String(process.env.PGPASSWORD),
+      database: process.env.PGDATABASE,
+      models: [
+        Category,
+        Group,
+        Course,
+        Lesson,
+        Like,
+        Chat,
+        Tests,
+        User,
+        ChatGroup,
+        Uploaded,
+        Notification,
+        Activity,
+        Role,
+        Reyting,
+        News,
+        UserStep,
+        Subscriptions,
+        SubscriptionActivity,
+        VideoChat,
+        Comment,
+        SubCategory,
+        PaymentStripe,
+        Bot,
+      ],
+      // autoLoadModels: true,
+      logging: true,
+      // synchronize: true,
+      // sync: { alter: true },
+      dialectOptions: {
+        ssl: {
+          require: true,
+          rejectUnauthorized: false,
         },
-      }) : SequelizeModule.forRoot({
-        dialect: 'postgres',
-        host: process.env.PG_HOST,
-        port: Number(process.env.PG_PORT),
-        username: process.env.PG_USER,
-        password: String(process.env.PG_PASS),
-        database: process.env.PG_DB,
-        models: [
-          Category,
-          Group,
-          Course,
-          Lesson,
-          Like,
-          Chat,
-          Tests,
-          User,
-          ChatGroup,
-          Uploaded,
-          Notification,
-          Activity,
-          Role,
-          Reyting,
-          News,
-          UserStep,
-          Subscriptions,
-          SubscriptionActivity,
-          VideoChat,
-          Comment,
-          SubCategory,
-          PaymentStripe,
-        ],
-        autoLoadModels: true,
-        logging: true,
-        // synchronize: true,
-        // sync: { alter: true },
-        dialectOptions:
-          process.env.NODE_ENV === 'production'
-            ? {
-              ssl: {
-                require: true,
-                rejectUnauthorized: false,
-              },
-            }
-            : {},
-      }),
+      },
+    }),
     ServeStaticModule.forRoot({
       rootPath: resolve(__dirname, '..', 'static'),
       serveRoot: '/static',
@@ -202,7 +171,7 @@ import { PaymentStripe } from './stripe/models/stripe.models';
     VideoChatModule,
     WatchedModule,
     CommentModule,
-    // BotModule,
+    BotModule,
     StripeModule,
   ],
   controllers: [],
@@ -212,7 +181,7 @@ import { PaymentStripe } from './stripe/models/stripe.models';
   exports: []
 })
 export class AppModule implements OnApplicationBootstrap {
-  
+
   constructor(
     private readonly userService: UserService,
   ) { }
