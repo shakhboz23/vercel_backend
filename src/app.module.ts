@@ -63,6 +63,8 @@ import { StripeModule } from './stripe/stripe.module';
 import { PaymentStripe } from './stripe/models/stripe.models';
 import { BOT_NAME } from './app.constants';
 import { Bot } from './bot/models/bot.model';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
 @Module({
   imports: [
     TelegrafModule.forRootAsync({
@@ -174,8 +176,9 @@ import { Bot } from './bot/models/bot.model';
     BotModule,
     StripeModule,
   ],
-  controllers: [],
+  controllers: [AppController],
   providers: [
+    AppService,
     MyService,
   ],
   exports: []
