@@ -33,6 +33,7 @@ export class BotService {
         { command: 'reyting', description: 'Test reytingi' },
         { command: 'help', description: 'Yordam ko‘rsatish' },
       ]);
+      
       // const webhookInfo = await this.bot.telegram.getWebhookInfo();
       // console.log('Webhook Info:', webhookInfo);
       // const webhookUrl = `https://jellyfish-app-9syay.ondigitalocean.app/bot`; // Replace SERVER_URL with your public server URL

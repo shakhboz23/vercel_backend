@@ -65,6 +65,7 @@ import { BOT_NAME } from './app.constants';
 import { Bot } from './bot/models/bot.model';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { Watched } from './watched/models/watched.models';
 @Module({
   imports: [
     TelegrafModule.forRootAsync({
@@ -127,11 +128,12 @@ import { AppService } from './app.service';
         SubCategory,
         PaymentStripe,
         Bot,
+        Watched,
       ],
-      // autoLoadModels: true,
+      autoLoadModels: true,
       logging: true,
-      // synchronize: true,
-      // sync: { alter: true },
+      synchronize: true,
+      sync: { alter: true },
       dialectOptions: {
         ssl: {
           require: true,
