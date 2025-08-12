@@ -24,17 +24,24 @@ export class BotService {
     private readonly userService: UserService,
   ) { }
 
-  // async onModuleInit() {
-  //   try {
-  //     // const webhookInfo = await this.bot.telegram.getWebhookInfo();
-  //     // console.log('Webhook Info:', webhookInfo);
-  //     // const webhookUrl = `https://jellyfish-app-9syay.ondigitalocean.app/bot`; // Replace SERVER_URL with your public server URL
-  //     // console.log(`Webhook registered at: ${webhookUrl}`);
-  //     // await this.bot.telegram.setWebhook(webhookUrl);
-  //   } catch (error) {
-  //     console.log(error)
-  //   }
-  // }
+  async onModuleInit() {
+    try {
+      await this.bot.telegram.setMyCommands([
+        { command: 'start', description: 'Botni boshlash' },
+        { command: 'my_tests', description: 'Mening testlarim' },
+        { command: 'new_test', description: 'Yangi test yaratish' },
+        { command: 'reyting', description: 'Test reytingi' },
+        { command: 'help', description: 'Yordam ko‘rsatish' },
+      ]);
+      // const webhookInfo = await this.bot.telegram.getWebhookInfo();
+      // console.log('Webhook Info:', webhookInfo);
+      // const webhookUrl = `https://jellyfish-app-9syay.ondigitalocean.app/bot`; // Replace SERVER_URL with your public server URL
+      // console.log(`Webhook registered at: ${webhookUrl}`);
+      // await this.bot.telegram.setWebhook(webhookUrl);
+    } catch (error) {
+      console.log(error)
+    }
+  }
 
   // Handle incoming updates
   async handleUpdate(update: any): Promise<void> {
