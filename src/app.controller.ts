@@ -6,7 +6,7 @@ import { BotService } from './bot/bot.service';
 export class AppController {
   constructor(
     private readonly appService: AppService,
-    // private readonly botService: BotService,
+    private readonly botService: BotService,
   ) { }
 
   @Get()
@@ -23,7 +23,7 @@ export class AppController {
   @Post('webhook/bot')
   async handleWebhook(@Body() update: any) {
     // console.log('Telegramdan yangi xabar:', req.body);
-    // await this.botService.handleUpdate(update);
+    await this.botService.handleUpdate(update);
     return { status: 'ok' };
   }
 }
