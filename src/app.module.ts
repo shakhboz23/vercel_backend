@@ -66,6 +66,8 @@ import { Bot } from './bot/models/bot.model';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { Watched } from './watched/models/watched.models';
+import pg from "pg"
+
 @Module({
   imports: [
     TelegrafModule.forRootAsync({
@@ -134,6 +136,7 @@ import { Watched } from './watched/models/watched.models';
       logging: false,
       // synchronize: true,
       // sync: { alter: true },
+      dialectModule: pg,
       dialectOptions: {
         ssl: {
           require: true,
