@@ -157,7 +157,6 @@ import pg from "pg"
     CourseModule,
     LessonModule,
     LikeModule,
-    // ChatGateway,
     ChatModule,
     TestsModule,
     UserModule,
