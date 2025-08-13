@@ -67,6 +67,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { Watched } from './watched/models/watched.models';
 import pg from "pg"
+import { Test_settings } from './test_settings/models/test_settings.models';
 
 @Module({
   imports: [
@@ -131,6 +132,7 @@ import pg from "pg"
         PaymentStripe,
         // Bot,
         Watched,
+        Test_settings,
       ],
       // autoLoadModels: true,
       logging: false,
