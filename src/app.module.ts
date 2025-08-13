@@ -130,10 +130,10 @@ import { Watched } from './watched/models/watched.models';
         Bot,
         Watched,
       ],
-      autoLoadModels: true,
-      logging: true,
-      synchronize: true,
-      sync: { alter: true },
+      // autoLoadModels: true,
+      logging: false,
+      // synchronize: true,
+      // sync: { alter: true },
       dialectOptions: {
         ssl: {
           require: true,
