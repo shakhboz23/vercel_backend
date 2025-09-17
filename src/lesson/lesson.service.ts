@@ -124,10 +124,10 @@ export class LessonService {
           include: [
             [
               Sequelize.literal(`
-                (
+                COALESCE((
                   SELECT COUNT(*) FROM "likes"
                   WHERE "likes"."lesson_id" = "Lesson"."id"
-                )
+                )::int, 0)
               `),
               'likes_count',
             ],
@@ -256,8 +256,8 @@ export class LessonService {
                 ],
                 [
                   Sequelize.literal(
-                    `(SELECT COUNT(*) FROM "lesson" WHERE "lesson"."course_id" = "Lesson"."course_id" 
-                     AND "lesson"."type" = 'lesson')::int`,
+                    `COALESCE((SELECT COUNT(*) FROM "lesson" WHERE "lesson"."course_id" = "Lesson"."course_id" 
+                     AND "lesson"."type" = 'lesson')::int, 0)`,
                   ),
                   'lesson_count',
                 ],
@@ -270,14 +270,14 @@ export class LessonService {
                 // ],
                 [
                   Sequelize.literal(
-                    `(SELECT COUNT(*) FROM "lesson" WHERE "lesson"."course_id" = "Lesson"."course_id" 
-                     AND LENGTH("lesson"."content") > 0)::int`,
+                    `COALESCE((SELECT COUNT(*) FROM "lesson" WHERE "lesson"."course_id" = "Lesson"."course_id" 
+                     AND LENGTH("lesson"."content") > 0)::int, 0)`,
                   ),
                   'lecture_count',
                 ],
                 [
                   Sequelize.literal(
-                    `(SELECT COALESCE(SUM("lesson"."duration"), 0) FROM "lesson" WHERE "lesson"."course_id" = "Lesson"."course_id")::int`
+                    `COALESCE((SELECT COALESCE(SUM("lesson"."duration"), 0) FROM "lesson" WHERE "lesson"."course_id" = "Lesson"."course_id")::int, 0)`
                   ),
                   'total_duration',
                 ],
@@ -289,25 +289,25 @@ export class LessonService {
                 ],
                 [
                   Sequelize.literal(
-                    `(SELECT COUNT(*) FROM "tests" WHERE "tests"."lesson_id" = "Lesson"."id")::int`,
+                    `COALESCE((SELECT COUNT(*) FROM "tests" WHERE "tests"."lesson_id" = "Lesson"."id")::int, 0)`,
                   ),
                   'test_count',
                 ],
                 [
                   Sequelize.literal(`
-                    (
+                    COALESCE((
                       SELECT COUNT(*) FROM "likes"
                       WHERE "likes"."lesson_id" = "Lesson"."id"
-                    )
+                    )::int, 0)
                   `),
                   'likes_count',
                 ],
                 [
                   Sequelize.literal(`
-                    (
+                    COALESCE((
                       SELECT COUNT(*) FROM "subscriptions"
                       WHERE "subscriptions"."course_id" = "Lesson"."course_id"
-                    )
+                    )::int, 0)
                   `),
                   'subscriptions_count',
                 ]

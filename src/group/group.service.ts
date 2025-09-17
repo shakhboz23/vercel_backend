@@ -140,13 +140,13 @@ export class GroupService {
           include: [
             [
               Sequelize.literal(
-                `(SELECT COUNT(*) FROM "course" WHERE "course"."group_id" = "Group"."id")::int`,
+                `COALESCE((SELECT COUNT(*) FROM "course" WHERE "course"."group_id" = "Group"."id")::int, 0)`,
               ),
               'courses_count',
             ],
             [
               Sequelize.literal(
-                `(SELECT COUNT(*) FROM "subscriptions" WHERE "course"."group_id" = "Group"."id" AND "course"."id" = "subscriptions"."course_id")::int`,
+                `COALESCE((SELECT COUNT(*) FROM "subscriptions" WHERE "course"."group_id" = "Group"."id" AND "course"."id" = "subscriptions"."course_id")::int, 0)`,
               ),
               'users_count',
             ],
@@ -164,7 +164,7 @@ export class GroupService {
             ],
             [
               Sequelize.literal(`
-                (
+                COALESCE((
                   SELECT COUNT(*) FROM "likes"
                   WHERE "likes"."lesson_id" IN (
                     SELECT "id" FROM "lesson"
@@ -173,7 +173,7 @@ export class GroupService {
                       WHERE "course"."group_id" = "Group"."id"
                     )
                   )
-                )
+                )::int, 0)
               `),
               'likes_count',
             ],
@@ -219,23 +219,23 @@ export class GroupService {
           include: [
             [
               Sequelize.literal(
-                `(SELECT COUNT(*) FROM "watched" WHERE "watched"."group_id" = "Group"."id")::int`,
+                `COALESCE((SELECT COUNT(*) FROM "watched" WHERE "watched"."group_id" = "Group"."id")::int, 0)`,
               ),
               'watched_count',
             ],
             [
               Sequelize.literal(
-                `(SELECT COUNT(*) FROM "likes"
+                `COALESCE((SELECT COUNT(*) FROM "likes"
                   JOIN "lesson" AS "l" ON "likes"."lesson_id" = "l"."id"
                   JOIN "course" AS "c" ON "l"."course_id" = "c"."id"
                   JOIN "group" AS "g" ON "c"."group_id" = "g"."id"
-                  WHERE g."user_id" = :user_id)::int`
+                  WHERE g."user_id" = :user_id)::int, 0)`
               ),
               'likes_count',
             ],
             [
               Sequelize.literal(
-                `(SELECT COUNT(*) FROM "subscriptions" WHERE "course"."group_id" = "Group"."id" AND "course"."id" = "subscriptions"."course_id")::int`,
+                `COALESCE((SELECT COUNT(*) FROM "subscriptions" WHERE "course"."group_id" = "Group"."id" AND "course"."id" = "subscriptions"."course_id")::int, 0)`,
               ),
               'users_count',
             ],
@@ -259,23 +259,23 @@ export class GroupService {
           include: [
             [
               Sequelize.literal(
-                `(SELECT COUNT(*) FROM "watched" WHERE "watched"."group_id" = "Group"."id" AND "Group"."user_id" = :user_id)::int`
+                `COALESCE((SELECT COUNT(*) FROM "watched" WHERE "watched"."group_id" = "Group"."id" AND "Group"."user_id" = :user_id)::int, 0)`
               ),
               'watched_count',
             ],
             [
               Sequelize.literal(
-                `(SELECT COUNT(*) FROM "likes"
+                `COALESCE((SELECT COUNT(*) FROM "likes"
                   JOIN "lesson" AS "l" ON "likes"."lesson_id" = "l"."id"
                   JOIN "course" AS "c" ON "l"."course_id" = "c"."id"
                   JOIN "group" AS "g" ON "c"."group_id" = "g"."id"
-                  WHERE g."user_id" = :user_id)::int`
+                  WHERE g."user_id" = :user_id)::int, 0)`
               ),
               'likes_count',
             ],
             [
               Sequelize.literal(
-                `(SELECT COUNT(*) FROM "subscriptions" WHERE "course"."group_id" = "Group"."id" AND "course"."id" = "subscriptions"."course_id")::int`,
+                `COALESCE((SELECT COUNT(*) FROM "subscriptions" WHERE "course"."group_id" = "Group"."id" AND "course"."id" = "subscriptions"."course_id")::int, 0)`,
               ),
               'users_count',
             ],

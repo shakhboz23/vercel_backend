@@ -108,7 +108,7 @@ export class CourseService {
           include: [
             [
               Sequelize.literal(`
-                (
+                COALESCE((
                   SELECT COUNT(*) FROM "reyting"
                   WHERE
                     "reyting"."lesson_id" IN (
@@ -118,27 +118,27 @@ export class CourseService {
                     AND "reyting"."ball" > (
                       SELECT COUNT(*) * 0.7 FROM "tests" WHERE "tests"."lesson_id" = "reyting"."lesson_id"
                     )
-                )::int
+                )::int, 0)
               `),
               'finished_count',
             ],
             [
               Sequelize.literal(`
-                (
+                COALESCE((
                   SELECT COUNT(*) FROM "lesson"
                   WHERE "lesson"."course_id" = "Course"."id" and "lesson"."type" = '${lessonType.lesson}'
-                )
+                )::int, 0)
               `),
               'lessons_count',
             ],
             [
               Sequelize.literal(`
-                (
+                COALESCE((
                   SELECT COUNT(*) FROM "likes"
                   WHERE "likes"."lesson_id" IN (
                     SELECT "id" FROM "lesson" WHERE "lesson"."course_id" = "Course"."id"
                   )
-                )
+                )::int, 0)
               `),
               'likes_count',
             ],
@@ -183,7 +183,7 @@ export class CourseService {
           include: [
             [
               Sequelize.literal(`
-                (
+                COALESCE((
                   SELECT COUNT(*) FROM "reyting"
                   WHERE
                     "reyting"."lesson_id" IN (
@@ -193,27 +193,27 @@ export class CourseService {
                     AND "reyting"."ball" > (
                       SELECT COUNT(*) * 0.7 FROM "tests" WHERE "tests"."lesson_id" = "reyting"."lesson_id"
                     )
-                )::int
+                )::int, 0)
               `),
               'finished_count',
             ],
             [
               Sequelize.literal(`
-                (
+                COALESCE((
                   SELECT COUNT(*) FROM "lesson"
                   WHERE "lesson"."course_id" = "Course"."id" and "lesson"."type" = '${lessonType.lesson}'
-                )
+                )::int, 0)
               `),
               'lessons_count',
             ],
             [
               Sequelize.literal(`
-                (
+                COALESCE((
                   SELECT COUNT(*) FROM "likes"
                   WHERE "likes"."lesson_id" IN (
                     SELECT "id" FROM "lesson" WHERE "lesson"."course_id" = "Course"."id"
                   )
-                )
+                )::int, 0)
               `),
               'likes_count',
             ],
@@ -341,39 +341,39 @@ export class CourseService {
             ],
             [
               Sequelize.literal(
-                `(SELECT COALESCE(SUM("lesson"."duration"), 0) FROM "lesson" WHERE "lesson"."course_id" = :id)::int`
+                `COALESCE((SELECT COALESCE(SUM("lesson"."duration"), 0) FROM "lesson" WHERE "lesson"."course_id" = :id)::int, 0)`
               ),
               'total_duration',
             ],
             [
               Sequelize.literal(`
-                (
+                COALESCE((
                   SELECT COUNT(*) FROM "likes"
                   WHERE "likes"."lesson_id" IN (
                     SELECT "id" FROM "lesson" WHERE "lesson"."course_id" = :id
                   )
-                )
+                )::int, 0)
               `),
               'likes_count',
             ],
             [
               Sequelize.literal(`
-                (
+                COALESCE((
                   SELECT COUNT(*) FROM "subscriptions"
                   WHERE "subscriptions"."course_id" = :id
-                )
+                )::int, 0)
               `),
               'subscriptions_count',
             ],
             [
               Sequelize.literal(
-                `(SELECT COUNT(*) FROM "lesson" WHERE "lesson"."course_id" = :id AND "lesson"."type" = 'lesson')::int`,
+                `COALESCE((SELECT COUNT(*) FROM "lesson" WHERE "lesson"."course_id" = :id AND "lesson"."type" = 'lesson')::int, 0)`,
               ),
               'lessons_count',
             ],
             [
               Sequelize.literal(`
-                (
+                COALESCE((
                   SELECT COUNT(*) FROM "reyting"
                   WHERE
                     "reyting"."lesson_id" IN (
@@ -383,7 +383,7 @@ export class CourseService {
                     AND "reyting"."ball" > (
                       SELECT COUNT(*) * 0.7 FROM "tests" WHERE "tests"."lesson_id" = "reyting"."lesson_id"
                     )
-                )::int
+                )::int, 0)
               `),
               'finished_count',
             ],
