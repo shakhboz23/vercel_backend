@@ -46,6 +46,17 @@ export class ReytingController {
 
   @ApiOperation({ summary: 'Get all reytings' })
   // @UseGuards(AuthGuard)
+  @Post('/markAsRead/:lesson_id')
+  markAsRead(
+    @Param('lesson_id') lesson_id: number,
+    @Headers() headers: Record<string, string>,
+  ) {
+    const user_id = extractUserIdFromToken(headers, this.jwtService, true);
+    return this.reytingService.markAsRead(user_id, lesson_id);
+  }
+
+  @ApiOperation({ summary: 'Get all reytings' })
+  // @UseGuards(AuthGuard)
   @Get('/getLessonReyting/:lesson_id')
   getLessonsReyting(
     @Param('lesson_id') lesson_id: number,

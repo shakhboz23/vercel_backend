@@ -135,9 +135,9 @@ import { Test_settings } from './test_settings/models/test_settings.models';
         Test_settings,
       ],
       // autoLoadModels: true,
-      logging: false,
       // synchronize: true,
       // sync: { alter: true },
+      // logging: true,
       dialectModule: pg,
       dialectOptions: {
         ssl: {

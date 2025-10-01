@@ -138,6 +138,17 @@ export class TestsService {
     }
   }
 
+  async getLessonTestsCount(lesson_id: number): Promise<number> {
+    try {
+      const tests_count = await this.testsRepository.count({
+        where: { lesson_id }
+      });
+      return tests_count;
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
+  }
+
   async getTests(): Promise<object> {
     try {
       const testss = await this.testsRepository.findAll();

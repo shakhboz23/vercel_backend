@@ -9,6 +9,13 @@ interface ReytingAttributes {
   ball: number;
   lesson_id: number;
   step: number;
+  is_finished: boolean;
+  finished_type: FinishedType;
+}
+
+export enum FinishedType {
+  manual = 'manual',
+  test = 'test',
 }
 
 @Table({ tableName: 'reyting' })
@@ -31,6 +38,18 @@ export class Reyting extends Model<Reyting, ReytingAttributes> {
     defaultValue: 0,
   })
   step: number;
+
+  @Column({
+    type: DataType.BOOLEAN,
+  })
+  is_finished: boolean;
+
+  @Column(
+    DataType.ENUM({
+      values: Object.keys(FinishedType),
+    }),
+  )
+  finished_type: FinishedType;
 
   @ForeignKey(() => User)
   @Column({

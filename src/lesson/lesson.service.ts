@@ -170,7 +170,7 @@ export class LessonService {
               include: [
                 [
                   Sequelize.literal(
-                    `(CASE WHEN EXISTS (SELECT 1 FROM "reyting" WHERE "reyting"."lesson_id" = "Lesson"."id" AND "reyting"."user_id" = :user_id AND "reyting"."ball" >= (SELECT COUNT(*) FROM "tests" WHERE "lesson_id" = "Lesson"."id") * 70 / 100) THEN true ELSE false END)`,
+                    `(CASE WHEN EXISTS (SELECT 1 FROM "reyting" WHERE "reyting"."lesson_id" = "Lesson"."id" AND "reyting"."user_id" = :user_id AND "reyting"."is_finished" = true THEN true ELSE false END)`,
                   ),
                   'is_finished',
                 ],
@@ -183,7 +183,7 @@ export class LessonService {
           include: [
             [
               Sequelize.literal(
-                `(CASE WHEN EXISTS (SELECT 1 FROM "reyting" WHERE "reyting"."lesson_id" = "Lesson"."id" AND "reyting"."user_id" = :user_id AND "reyting"."ball" >= (SELECT COUNT(*) FROM "tests" WHERE "tests"."lesson_id" = "Lesson"."id") * 70 / 100) THEN true ELSE false END)`,
+                `(CASE WHEN EXISTS (SELECT 1 FROM "reyting" WHERE "reyting"."lesson_id" = "Lesson"."id" AND "reyting"."user_id" = :user_id AND "reyting"."is_finished" = true THEN true ELSE false END)`,
               ),
               'is_finished',
             ],
@@ -310,9 +310,13 @@ export class LessonService {
                     )::int, 0)
                   `),
                   'subscriptions_count',
-                ]
-
-
+                ],
+                [
+                  Sequelize.literal(
+                    `(CASE WHEN EXISTS (SELECT 1 FROM "reyting" WHERE "reyting"."lesson_id" = "Lesson"."id" AND "reyting"."user_id" = :user_id AND "reyting"."is_finished" = true THEN true ELSE false END)`,
+                  ),
+                  'is_finished',
+                ],
               ],
             },
           },

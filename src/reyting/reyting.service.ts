@@ -1,20 +1,25 @@
 import {
   BadRequestException,
+  forwardRef,
   HttpStatus,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Reyting } from './models/reyting.models';
+import { FinishedType, Reyting } from './models/reyting.models';
 import { InjectModel } from '@nestjs/sequelize';
 import { Op } from 'sequelize';
 import { ReytingDto } from './dto/reyting.dto';
 import { Sequelize } from 'sequelize-typescript';
 import { User } from 'src/user/models/user.models';
+import { TestsService } from 'src/test/test.service';
 
 @Injectable()
 export class ReytingService {
   constructor(
     @InjectModel(Reyting) private reytingRepository: typeof Reyting,
+    @Inject(forwardRef(() => TestsService))
+    private readonly testsService: TestsService,
   ) { }
 
   async create(reytingDto: ReytingDto, user_id: number): Promise<object> {
@@ -29,6 +34,7 @@ export class ReytingService {
         const reyting = await this.reytingRepository.create({
           ...reytingDto,
           user_id,
+          is_finished: true,
         });
         return {
           statusCode: HttpStatus.OK,
@@ -58,22 +64,23 @@ export class ReytingService {
     }
   }
 
-  // async login(loginReytingDto: LoginReytingDto): Promise<object> {
-  //   try {
-  //     const { phone, password } = loginReytingDto;
-  //     const reyting = await this.reytingRepository.findOne({ where: { phone } });
-  //     if (!reyting) {
-  //       throw new NotFoundException('Telefon raqam yoki parol xato!');
-  //     }
-  //     const is_match_pass = await compare(password, reyting.hashed_password);
-  //     if (!is_match_pass) {
-  //       throw new ForbiddenException('Login yoki parol xato!');
-  //     }
-  //     // return this.otpService.sendOTP({ phone });
-  //   } catch (error) {
-  //     throw new BadRequestException(error.message);
-  //   }
-  // }
+  async markAsRead(user_id: number, lesson_id: number) {
+    const testsCount = await this.testsService.getLessonTestsCount(lesson_id);
+
+    if (testsCount > 0) {
+      throw new BadRequestException('Bu darsda test bor, faqat test orqali tugatish mumkin.');
+    }
+
+    const reyting = await this.reytingRepository.update({
+      is_finished: true,
+      finished_type: FinishedType.manual,
+    }, {
+      where: { lesson_id, user_id },
+      returning: true,
+    });
+
+    return reyting[1][0];
+  }
 
   async getAll(
     subject_id: number,
