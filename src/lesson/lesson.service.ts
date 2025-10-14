@@ -84,13 +84,13 @@ export class LessonService {
     }
   }
 
-  async getAll(subcategory: string, category_id: number): Promise<object> {
+  async getAll(subcategory_id: string, category_id: number): Promise<object> {
     try {
-      subcategory = JSON.parse(subcategory || "[]");
+      subcategory_id = JSON.parse(subcategory_id || "[]");
       let category: any = {}
       let categoryInclude: any = {};
 
-      if (+category_id) {
+      if (!subcategory_id?.length && +category_id) {
         categoryInclude = {
           include: [{
             model: SubCategory,
@@ -105,11 +105,11 @@ export class LessonService {
             required: true,
           }]
         }
-      } else if (subcategory?.length) {
+      } else if (subcategory_id?.length) {
         category = {
           where: {
             subcategory_id: {
-              [Op.in]: subcategory
+              [Op.in]: subcategory_id
             }
           }
         }

@@ -78,8 +78,8 @@ export class LessonController {
   @ApiOperation({ summary: 'Get all lessons' })
   // @UseGuards(AuthGuard)
   @Get('/')
-  getAll(@Query('subcategory') subcategory: string, @Query('category_id') category_id: number) {
-    return this.lessonService.getAll(subcategory, category_id);
+  getAll(@Query('subcategory_id') subcategory_id: string, @Query('category_id') category_id: number) {
+    return this.lessonService.getAll(subcategory_id, category_id);
   }
 
   @ApiOperation({ summary: 'Get all lessons' })
