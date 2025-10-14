@@ -65,12 +65,13 @@ export class GroupService {
   async getAll({ groupSearchDto, user_id, type }: { groupSearchDto?: GroupSearchDto, user_id?: number, type?: string }): Promise<object> {
     try {
       let { title, subcategory_id, category_id, createdAt, price } = groupSearchDto || {};
+      
       let subcategories: any = JSON.parse(subcategory_id || "[]");
       let createdAtDates: any = JSON.parse(createdAt || "[]");
       price = JSON.parse(price || "[]");
-
+      
       let whereClause: any = {};
-
+      
       // 1. Title yoki description bilan filter
       if (title) {
         whereClause[Op.or] = [
@@ -82,8 +83,10 @@ export class GroupService {
       // 2. subcategory_id (IN)
       let subcategoryInclude: any = {};
       let categoryInclude: any = {};
+      console.log(groupSearchDto);
+        console.log(subcategories, 23030303);
 
-      if (+category_id) {
+      if (!subcategories?.length && +category_id) {
         categoryInclude = {
           include: [{
             model: SubCategory,
@@ -98,7 +101,7 @@ export class GroupService {
             required: true,
           }]
         }
-      } else if (Array.isArray(subcategories) && subcategories.length > 0) {
+      } else if (Array.isArray(subcategories) && subcategories.length) {        
         subcategoryInclude = {
           where: {
             subcategory_id: {

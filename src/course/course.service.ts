@@ -72,12 +72,10 @@ export class CourseService {
 
   async getAll(subcategory_id: string, user_id: number, category_id: number): Promise<object> {
     try {
-      if (!category_id) {
-        subcategory_id = JSON.parse(subcategory_id);
-      }
+      subcategory_id = JSON.parse(subcategory_id || "[]");
       let subcategory: any = {};
       let categoryInclude: any = {};
-      if (+category_id) {
+      if (!subcategory_id?.length && +category_id) {
         categoryInclude = {
           include: [{
             model: SubCategory,
