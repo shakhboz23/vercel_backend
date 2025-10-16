@@ -65,13 +65,13 @@ export class GroupService {
   async getAll({ groupSearchDto, user_id, type }: { groupSearchDto?: GroupSearchDto, user_id?: number, type?: string }): Promise<object> {
     try {
       let { title, subcategory_id, category_id, createdAt, price } = groupSearchDto || {};
-      
+
       let subcategories: any = JSON.parse(subcategory_id || "[]");
       let createdAtDates: any = JSON.parse(createdAt || "[]");
       price = JSON.parse(price || "[]");
-      
+
       let whereClause: any = {};
-      
+
       // 1. Title yoki description bilan filter
       if (title) {
         whereClause[Op.or] = [
@@ -83,8 +83,6 @@ export class GroupService {
       // 2. subcategory_id (IN)
       let subcategoryInclude: any = {};
       let categoryInclude: any = {};
-      console.log(groupSearchDto);
-        console.log(subcategories, 23030303);
 
       if (!subcategories?.length && +category_id) {
         categoryInclude = {
@@ -101,7 +99,7 @@ export class GroupService {
             required: true,
           }]
         }
-      } else if (Array.isArray(subcategories) && subcategories.length) {        
+      } else if (Array.isArray(subcategories) && subcategories.length) {
         subcategoryInclude = {
           where: {
             subcategory_id: {
@@ -118,8 +116,6 @@ export class GroupService {
         };
       }
 
-      // 4. price: number[] = [min, max]
-      console.log(price)
       if (Array.isArray(price) && price.length === 2) {
         subcategoryInclude.where = subcategoryInclude.where ? subcategoryInclude.where : {};
         subcategoryInclude.where.price = {
@@ -127,46 +123,44 @@ export class GroupService {
         };
       }
 
-      console.log(subcategoryInclude, 22223);
-
-
-      const filters: any = {
-        where: whereClause,
-        order: [['title', 'ASC']],
-        include: [{ model: User }, {
-          model: Course, attributes: [],
-          ...subcategoryInclude,
-          ...categoryInclude,
-          required: true,
-        }],
-        attributes: {
-          include: [
-            [
-              Sequelize.literal(
-                `COALESCE((SELECT COUNT(*) FROM "course" WHERE "course"."group_id" = "Group"."id")::int, 0)`,
-              ),
-              'courses_count',
-            ],
-            [
-              Sequelize.literal(
-                `COALESCE((SELECT COUNT(*) FROM "subscriptions" WHERE "course"."group_id" = "Group"."id" AND "course"."id" = "subscriptions"."course_id")::int, 0)`,
-              ),
-              'users_count',
-            ],
-            [
-              Sequelize.literal(
-                `COALESCE((SELECT MIN("course"."price") FROM "course" WHERE "course"."group_id" = "Group"."id")::int, 0)`,
-              ),
-              'low_price',
-            ],
-            [
-              Sequelize.literal(
-                `COALESCE((SELECT MAX("course"."price") FROM "course" WHERE "course"."group_id" = "Group"."id")::int, 0)`,
-              ),
-              'high_price',
-            ],
-            [
-              Sequelize.literal(`
+      function filters(type?: string): Object {
+        return {
+          where: whereClause,
+          order: [['title', 'ASC']],
+          include: [{ model: User }, {
+            model: Course, attributes: [],
+            ...subcategoryInclude,
+            ...categoryInclude,
+            required: type == 'my_groups' ? false : true,
+          }],
+          attributes: {
+            include: [
+              [
+                Sequelize.literal(
+                  `COALESCE((SELECT COUNT(*) FROM "course" WHERE "course"."group_id" = "Group"."id")::int, 0)`,
+                ),
+                'courses_count',
+              ],
+              [
+                Sequelize.literal(
+                  `COALESCE((SELECT COUNT(*) FROM "subscriptions" WHERE "course"."group_id" = "Group"."id" AND "course"."id" = "subscriptions"."course_id")::int, 0)`,
+                ),
+                'users_count',
+              ],
+              [
+                Sequelize.literal(
+                  `COALESCE((SELECT MIN("course"."price") FROM "course" WHERE "course"."group_id" = "Group"."id")::int, 0)`,
+                ),
+                'low_price',
+              ],
+              [
+                Sequelize.literal(
+                  `COALESCE((SELECT MAX("course"."price") FROM "course" WHERE "course"."group_id" = "Group"."id")::int, 0)`,
+                ),
+                'high_price',
+              ],
+              [
+                Sequelize.literal(`
                 COALESCE((
                   SELECT COUNT(*) FROM "likes"
                   WHERE "likes"."lesson_id" IN (
@@ -178,20 +172,19 @@ export class GroupService {
                   )
                 )::int, 0)
               `),
-              'likes_count',
+                'likes_count',
+              ],
             ],
-          ],
-        },
+          },
+        }
       };
 
-      const groups = await this.groupRepository.findAll({
-        ...filters,
-      });
+      const groups = await this.groupRepository.findAll(filters());
       let my_groups = [];
       if (user_id) {
         my_groups = await this.groupRepository.findAll({
-          where: { user_id },
-          ...filters,
+          ...filters('my_groups'),
+          where: { user_id, ...whereClause },
         });
       }
 

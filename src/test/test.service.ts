@@ -242,6 +242,7 @@ export class TestsService {
       }
       return {
         user_id: lesson?.course.user_id,
+        lesson,
         category_id: category?.lesson?.course?.category?.id,
         lesson_id: category?.lesson?.id,
         test: randomizedVariants || tests,
