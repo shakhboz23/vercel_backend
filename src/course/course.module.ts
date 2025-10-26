@@ -8,11 +8,12 @@ import { UploadedModule } from '../uploaded/uploaded.module';
 import { ChatGroupModule } from 'src/chat_group/chat_group.module';
 import { WatchedModule } from 'src/watched/watched.module';
 import { FilesModule } from 'src/files/files.module';
+import { GroupModule } from 'src/group/group.module';
 
 @Module({
   imports: [
     SequelizeModule.forFeature([Course]),
-    UserModule, UploadedModule, ChatGroupModule, WatchedModule, FilesModule,
+    UserModule, UploadedModule, ChatGroupModule, WatchedModule, FilesModule, GroupModule,
   ],
   controllers: [CourseController],
   providers: [CourseService],

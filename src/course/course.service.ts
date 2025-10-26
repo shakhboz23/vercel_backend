@@ -25,12 +25,15 @@ import { FilesService } from 'src/files/files.service';
 import { lessonType } from 'src/lesson/models/lesson.models';
 import { SubCategory } from 'src/subcategory/models/subcategory.models';
 import { Category } from 'src/category/models/category.models';
+import { GroupService } from 'src/group/group.service';
+import { group } from 'console';
 
 @Injectable()
 export class CourseService {
   constructor(
     @InjectModel(Course) private courseRepository: typeof Course,
     private readonly userService: UserService,
+    private readonly groupService: GroupService,
     private readonly chatGroupService: ChatGroupService,
     private readonly uploadedService: UploadedService,
     private readonly watchedService: WatchedService,
@@ -167,6 +170,9 @@ export class CourseService {
           }
         }
       }
+
+      const group: any = await this.groupService.getById(group_id, user_id);
+
       const courses: any = await this.courseRepository.findAll({
         ...subcategory,
         order: [['title', 'ASC']],
@@ -225,7 +231,7 @@ export class CourseService {
       // if (!courses.length) {
       //   throw new NotFoundException('Courses not found');
       // }
-      return courses;
+      return { courses, group };
     } catch (error) {
       throw new BadRequestException(error.message);
     }
