@@ -156,20 +156,26 @@ export class CourseService {
     }
   }
 
-  async getByCourse(group_id: number, subcategory_id: number, user_id: number): Promise<Object> {
+  async getByCourse(group_id: number, subcategory_id: string, user_id: number): Promise<Object> {
     try {
+      subcategory_id = JSON.parse(subcategory_id || "[]");
+
       let subcategory: any = {
         where: {
           group_id,
         }
       }
-      if (+subcategory_id) {
-        subcategory = {
-          where: {
-            subcategory_id, group_id
-          }
+
+      console.log(subcategory_id, 2303);
+      
+      if (subcategory_id?.length) {
+        subcategory.where.subcategory_id = {
+          [Op.in]: subcategory_id
         }
       }
+
+      console.log(subcategory);
+      
 
       const group: any = await this.groupService.getById(group_id, user_id);
 
