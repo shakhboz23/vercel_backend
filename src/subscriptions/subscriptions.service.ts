@@ -36,7 +36,7 @@ export class SubscriptionsService {
       if (exist) {
         return this.delete(user_id, subscriptionsDto.course_id);
         // throw new BadRequestException('Already created');
-      } 
+      }
       return this.subscriptionsRepository.create({ course_id, user_id, is_active: SubscribeActive.requested });
     } catch (error) {
       console.log(error);
@@ -49,24 +49,50 @@ export class SubscriptionsService {
     user_id: number,
   ): Promise<object> {
     try {
-      const user: any = await this.userService.register(
-        { ...creaetSubscriptionsDto, role: 'student' },
-      );
-      console.log(user);
+      // const user: any = await this.userService.register(
+      //   { ...creaetSubscriptionsDto, role: 'student' },
+      // );
+      // console.log(user);
       const { course_ids, role } = creaetSubscriptionsDto;
-      user_id = user.data?.user.id;
-      // const exist = await this.subscriptionsRepository.findOne({
-      //   where: { user_id, course_ids },
-      // });
+      user_id = creaetSubscriptionsDto?.user_id;
       // if (exist) {
       //   throw new BadRequestException('Already created');
       // }
       let subcription: any;
       let i: any;
       for (i of course_ids) {
+        const exist = await this.subscriptionsRepository.findOne({
+          where: { user_id, course_id: i },
+        });
+        if (exist) {
+          await this.deleteSubscription(exist.id, i, user_id)
+        }
         subcription = await this.subscriptionsRepository.create({ course_id: i, user_id, role, is_active: SubscribeActive.pending });
       }
       return subcription;
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
+  }
+
+  async deleteSubscription(
+    id: number,
+    course_id: number,
+    user_id: number,
+  ): Promise<object> {
+    try {
+      const exist = await this.subscriptionsRepository.findOne({
+        where: { user_id, course_id },
+      });
+      if (!exist) {
+        throw new BadRequestException('User not found');
+      }
+
+      await exist.destroy()
+      return {
+        statusCode: HttpStatus.OK,
+        message: 'Deleted successfully',
+      };
     } catch (error) {
       throw new BadRequestException(error.message);
     }
@@ -186,7 +212,7 @@ export class SubscriptionsService {
       if (!subscriptions) {
         throw new NotFoundException('Subscriptions not found');
       }
-      subscriptions.destroy();
+      await subscriptions.destroy();
       return {
         statusCode: HttpStatus.OK,
         message: 'Deleted successfully',

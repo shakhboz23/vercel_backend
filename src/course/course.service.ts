@@ -167,7 +167,7 @@ export class CourseService {
       }
 
       console.log(subcategory_id, 2303);
-      
+
       if (subcategory_id?.length) {
         subcategory.where.subcategory_id = {
           [Op.in]: subcategory_id
@@ -175,7 +175,7 @@ export class CourseService {
       }
 
       console.log(subcategory);
-      
+
 
       const group: any = await this.groupService.getById(group_id, user_id);
 
@@ -254,67 +254,66 @@ export class CourseService {
       const startOfDay = new Date(targetDate.setHours(0, 0, 0, 0)); // Kun boshidan
       const endOfDay = new Date(targetDate.setHours(23, 59, 59, 999)); // Kun oxirigacha
       console.log(startOfDay, endOfDay);
-      let users: any = await this.courseRepository.findAll({
-        where: { group_id },
-        include: [{
-          model: Subscriptions, include: [{ model: User }, {
-            model: SubscriptionActivity, where: {
-              course_id,
-              createdAt: {
-                [Op.between]: [startOfDay, endOfDay], // Sana oralig'i
-              },
-            },
-            required: false
-          }, { model: Course, where: { ...id } }]
-        }],
-        order: [[{ model: Subscriptions, as: 'subscriptions' }, { model: User, as: 'user' }, 'name', 'ASC']],
-      });
-      console.log(users, '23033')
+      // let users: any = await this.courseRepository.findAll({
+      //   where: { group_id },
+      //   include: [{
+      //     model: Subscriptions, include: [{ model: User }, {
+      //       model: SubscriptionActivity, where: {
+      //         course_id,
+      //         createdAt: {
+      //           [Op.between]: [startOfDay, endOfDay], // Sana oralig'i
+      //         },
+      //       },
+      //       required: false
+      //     },
+      //     { model: Course, where: { ...id } }
+      //     ]
+      //   }],
+      //   order: [[{ model: Subscriptions, as: 'subscriptions' }, { model: User, as: 'user' }, 'name', 'ASC']],
+      // });
       let user: any = await this.courseRepository.findAll({
         where: { group_id },
         include: [{
-          model: Subscriptions, where: { user_id }
-        }, //{ model: Group, where: { user_id }, required: false }
-        ],
+          model: Subscriptions, include: [{ model: User }, { model: Course }]
+        }],
       });
-      console.log(user, '2222');
-      if (!users) {
-        throw new NotFoundException('Users not found');
-      }
-      if (page == 'activity') {
-        users = users.reduce((acc, item) => acc.concat(item.subscriptions), []);
-      } else {
+      // if (!users) {
+      //   throw new NotFoundException('Users not found');
+      // }
+      // if (page == 'activity') {
+      //   users = users.reduce((acc, item) => acc.concat(item.subscriptions), []);
+      // } else {
 
-        const groupedUsers = users.reduce((acc: any, courseItem: any) => {
-          courseItem.subscriptions.forEach((subscription: any) => {
-            const userId = subscription.user_id;
+      //   const groupedUsers = users.reduce((acc: any, courseItem: any) => {
+      //     courseItem.subscriptions.forEach((subscription: any) => {
+      //       const userId = subscription.user_id;
 
-            if (!acc[userId]) {
-              acc[userId] = {
-                user: subscription.user,
-                courses: [],
-              };
-            }
+      //       if (!acc[userId]) {
+      //         acc[userId] = {
+      //           user: subscription.user,
+      //           courses: [],
+      //         };
+      //       }
 
-            acc[userId].courses.push({
-              course: subscription.course,
-              subscription: {
-                id: subscription.id,
-                role: subscription.role,
-                is_active: subscription.is_active,
-                createdAt: subscription.createdAt,
-                updatedAt: subscription.updatedAt,
-              },
-            });
-          });
-          return acc;
-        }, {});
+      //       acc[userId].courses.push({
+      //         course: subscription.course,
+      //         subscription: {
+      //           id: subscription.id,
+      //           role: subscription.role,
+      //           is_active: subscription.is_active,
+      //           createdAt: subscription.createdAt,
+      //           updatedAt: subscription.updatedAt,
+      //         },
+      //       });
+      //     });
+      //     return acc;
+      //   }, {});
 
-        // Objectni massivga aylantirish
-        users = Object.values(groupedUsers);
-      }
+      //   // Objectni massivga aylantirish
+      //   users = Object.values(groupedUsers);
+      // }
 
-      return { users, user };
+      return user;
     } catch (error) {
       throw new BadRequestException(error.message);
     }
@@ -453,7 +452,9 @@ export class CourseService {
       }
       const file_type: string = 'image';
       if (cover) {
-        await this.filesService.deleteFile(course.cover);
+        if (course.cover) {
+          await this.filesService.deleteFile(course.cover);
+        }
         cover = await this.uploadedService.create(cover, file_type);
         console.log(cover)
       }

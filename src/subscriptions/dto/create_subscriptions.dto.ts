@@ -3,7 +3,15 @@ import { IsArray, IsEnum, IsNotEmpty, IsNumber, IsOptional } from 'class-validat
 import { RoleName } from 'src/activity/models/activity.models';
 import { RegisterUserDto } from 'src/user/dto/register.dto';
 
-export class CreateSubscriptionsDto extends RegisterUserDto {
+export class CreateSubscriptionsDto {
+  @ApiProperty({
+    example: 'student',
+    description: 'role name',
+  })
+  @IsNotEmpty()
+  @IsNumber()
+  user_id: number;
+
   @ApiProperty({
     example: 'student',
     description: 'role name',

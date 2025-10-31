@@ -116,7 +116,7 @@ export class UserController {
 
   @ApiOperation({ summary: 'Get users with pagination' })
   // @UseGuards(AuthGuard)
-  @Get('searchusers/:search/:page')
+  @Get('search/:search/:page')
   searchUsers(@Param('page') page: number, @Param('search') search: string) {
     return this.userService.searchUsers(page, search);
   }

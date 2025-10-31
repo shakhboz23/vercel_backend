@@ -493,6 +493,7 @@ export class UserService {
           [Op.or]: [
             { name: { [Op.iLike]: `%${search}%` } },
             { surname: { [Op.iLike]: `%${search}%` } },
+            { email: { [Op.iLike]: `%${search}%` } },
           ],
         },
         include: { model: Role, where: { role: 'student' } },
