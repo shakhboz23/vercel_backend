@@ -31,25 +31,42 @@ import { UserService } from '../user/user.service';
 import { RoleService } from '../role/role.service';
 import { extractUserIdFromToken } from 'src/utils/token';
 import { JwtService } from '@nestjs/jwt';
+import { ChatGateway } from 'src/gateway/gateway';
 
 @ApiTags('chat')
 @WebSocketGateway({ cors: { origin: '*', credentials: true } }) // cors
 @Controller('chat')
 export class ChatController
   implements OnGatewayConnection, OnGatewayDisconnect {
-  @WebSocketServer() server: Server;
+  // @WebSocketServer() server: Server;
 
   constructor(
     private readonly chatService: ChatService,
     private readonly roleService: RoleService,
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
+    private readonly chatGateway: ChatGateway,
   ) { }
+
+  // Foydalanuvchini chat xonasiga qo‘shish
+  @SubscribeMessage('joinChat')
+  handleJoin(@MessageBody() chatId: string, @ConnectedSocket() client: Socket) {
+    console.log("hi22222222222222");
+
+    client.join(chatId);
+    client.emit('joined', `Joined to chat 2303 ${chatId}`);
+  }
+
+  @SubscribeMessage('leaveChat')
+  handleLeave(@MessageBody() chatId: string, @ConnectedSocket() client: Socket) {
+    client.leave(chatId);
+    console.log(`User ${client.id} left chat ${chatId}`);
+  }
 
   async handleConnection(client: Socket) {
     // Handle connection
     try {
-      this.server.on('connection', async (socket) => {
+      this.chatGateway.server.on('connection', async (socket) => {
         const id: number = +socket.handshake.query.id;
         console.log(id, 'connection');
         // const user: any = await this.userService.getById(id);
@@ -59,7 +76,7 @@ export class ChatController
         //     true,
         //     user.data.current_role,
         //   );
-        //   this.server.emit('connected', data);
+        //   this.chatGateway.server.emit('connected', data);
         // }
       });
     } catch (_) { }
@@ -75,7 +92,7 @@ export class ChatController
       //   false,
       //   user.data.current_role,
       // );
-      // this.server.emit('disconnected', data);
+      // this.chatGateway.server.emit('disconnected', data);
     } catch (_) { }
   }
 
@@ -121,15 +138,15 @@ export class ChatController
   // @UseGuards(AuthGuard)
   @Post('/create')
   @UseInterceptors(FileInterceptor('image'))
-  create(
+  async create(
     @Body() chatDto: ChatDto,
     @UploadedFile(new ImageValidationPipe()) file: Express.Multer.File,
     @ConnectedSocket() client: Socket,
     @Headers() headers: string,
   ) {
     const user_id = extractUserIdFromToken(headers, this.jwtService, true);
-    const chat = this.chatService.create(chatDto,  file, user_id);
-    // client.emit('getAll/created');
+    const chat: any = await this.chatService.create(chatDto, file, user_id);
+    this.chatGateway.server.to(String(chatDto.chatgroup_id)).emit('receiveMessage', chat);
     return chat;
   }
 
@@ -139,7 +156,7 @@ export class ChatController
   async created(@MessageBody() { chatgroup_id, page }: { chatgroup_id: number, page: number }) {
     console.log(chatgroup_id, page, '2303')
     const chats = await this.chatService.findAll(page, chatgroup_id);
-    this.server.emit('chats', chats);
+    this.chatGateway.server.emit('chats', chats);
   }
 
   @ApiOperation({ summary: 'Get all chats' })
@@ -151,10 +168,10 @@ export class ChatController
   ) {
     client.join(roomId);
     // client.to(roomId).broadcast.emit("user-connected", userId);
-    this.server.emit('user-connected', userId);
+    this.chatGateway.server.emit('user-connected', userId);
 
     // const chats = await this.chatService.findAll(page);
-    // this.server.emit('chats', chats);
+    // this.chatGateway.server.emit('chats', chats);
   }
 
   @ApiOperation({ summary: 'Get all chats' })
@@ -166,11 +183,11 @@ export class ChatController
   ) {
     // client.join(roomId);
     // client.to(roomId).broadcast.emit("user-connected", userId);
-    // this.server.emit("user-connected", userId);
-    this.server.emit('createMessage', message);
+    // this.chatGateway.server.emit("user-connected", userId);
+    this.chatGateway.server.emit('createMessage', message);
 
     // const chats = await this.chatService.findAll(page);
-    // this.server.emit('chats', chats);
+    // this.chatGateway.server.emit('chats', chats);
   }
 
   @ApiOperation({ summary: 'Get all chats' })
@@ -212,7 +229,7 @@ export class ChatController
   //   const updated_chat = await this.chatService.update(id, chat);
   //   client.emit('updated', updated_chat);
   //   if (updated_chat.status !== 404) {
-  //     this.server.emit('listener');
+  //     this.chatGateway.server.emit('listener');
   //   }
   // }
 
@@ -243,9 +260,9 @@ export class ChatController
   // @SubscribeMessage('delete/chats')
   // async delete(@MessageBody() id: string, @ConnectedSocket() client: Socket) {
   //   const deleted_chat = await this.chatService.delete(id);
-  //   this.server.emit('deleted', deleted_chat);
+  //   this.chatGateway.server.emit('deleted', deleted_chat);
   //   if (deleted_chat.status !== 404) {
-  //     this.server.emit('listener');
+  //     this.chatGateway.server.emit('listener');
   //   }
   // }
 

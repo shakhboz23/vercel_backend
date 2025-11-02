@@ -7,6 +7,7 @@ import { FilesModule } from '../files/files.module';
 import { RoleModule } from '../role/role.module';
 import { UserModule } from '../user/user.module';
 import { JwtModule } from '@nestjs/jwt';
+import { ChatGatewayModule } from 'src/gateway/gateway.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { JwtModule } from '@nestjs/jwt';
     UserModule,
     FilesModule,
     JwtModule,
+    ChatGatewayModule,
   ],
   controllers: [ChatController],
   providers: [ChatService, ChatController],
