@@ -31,7 +31,7 @@ import { UserService } from '../user/user.service';
 import { RoleService } from '../role/role.service';
 import { extractUserIdFromToken } from 'src/utils/token';
 import { JwtService } from '@nestjs/jwt';
-import { ChatGateway } from 'src/gateway/gateway';
+import { ChatGateway } from '../gateway/gateway';
 
 @ApiTags('chat')
 @WebSocketGateway({ cors: { origin: '*', credentials: true } }) // cors
