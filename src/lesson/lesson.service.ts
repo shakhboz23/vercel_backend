@@ -74,6 +74,7 @@ export class LessonService {
           title: lessonDto.title,
           published: lessonDto.published,
           course_id: lessonDto.course_id,
+          lesson_id: lessonDto.lesson_id,
           type: lessonDto.type,
         });
         return lesson;
@@ -166,6 +167,32 @@ export class LessonService {
         include: [
           {
             model: Lesson,
+            include: [{
+              model: Lesson,
+              include: [{
+                model: Lesson,
+                attributes: {
+                  include: [
+                    [
+                      Sequelize.literal(
+                        `(CASE WHEN EXISTS (SELECT 1 FROM "reyting" WHERE "reyting"."lesson_id" = "Lesson"."id" AND "reyting"."user_id" = :user_id AND "reyting"."is_finished" = true) THEN true ELSE false END)`,
+                      ),
+                      'is_finished',
+                    ],
+                  ],
+                },
+              }],
+              attributes: {
+                include: [
+                  [
+                    Sequelize.literal(
+                      `(CASE WHEN EXISTS (SELECT 1 FROM "reyting" WHERE "reyting"."lesson_id" = "Lesson"."id" AND "reyting"."user_id" = :user_id AND "reyting"."is_finished" = true) THEN true ELSE false END)`,
+                    ),
+                    'is_finished',
+                  ],
+                ],
+              },
+            }],
             attributes: {
               include: [
                 [
@@ -451,8 +478,10 @@ export class LessonService {
       if (!lesson) {
         throw new NotFoundException('Lesson not found');
       }
-      await this.filesService.deleteFile(lesson.video);
-      lesson.destroy();
+      if (lesson.video) {
+        await this.filesService.deleteFile(lesson.video);
+      }
+      await lesson.destroy();
       return {
         statusCode: HttpStatus.OK,
         message: 'Deleted successfully',
