@@ -272,8 +272,8 @@ export class UserController {
   // @UseGuards(AuthGuard)
   @Post('/auth/google')
   googleAuth(
-    @Body() { credential }: { credential: string },
+    @Body() { credential, type }: { credential: string, type?: string },
   ) {
-    return this.userService.googleAuth(credential);
+    return this.userService.googleAuth(credential, type);
   }
 }

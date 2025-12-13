@@ -97,9 +97,7 @@ export class UserService {
         return {
           statusCode: HttpStatus.OK,
           message: 'Successfully registered1!',
-          data: {
-            user: user_data,
-          },
+          data: user_data,
           token: type == 'googleauth' ? access_token : '',
         };
       } else {
@@ -150,9 +148,7 @@ export class UserService {
         return {
           statusCode: HttpStatus.OK,
           message: 'Verification code sended successfully',
-          data: {
-            user: user_data,
-          },
+          data: user_data,
           token: type == 'googleauth' ? access_token : '',
         };
       }
@@ -877,23 +873,29 @@ export class UserService {
     }
   }
 
-  async verify(token: string) {
-    const client = new OAuth2Client(process.env.CLIENT_ID);
-    const ticket = await client.verifyIdToken({
-      idToken: token,
-      audience: process.env.CLIENT_ID,
-    });
+  async verify(token: string, type?: string) {
+    let ticket: any;
+    if (type == 'mobile') {
+      const client = new OAuth2Client(process.env.FLUTTER_CLIENT_ID);
+      ticket = await client.verifyIdToken({
+        idToken: token,
+        audience: process.env.FLUTTER_CLIENT_ID,
+      });
+    } else {
+      const client = new OAuth2Client(process.env.CLIENT_ID);
+      ticket = await client.verifyIdToken({
+        idToken: token,
+        audience: process.env.CLIENT_ID,
+      });
+    }
     const payload: any = ticket.getPayload();
-    // If request specified a G Suite domain:
-    // const domain = payload['hd'];
-
     return payload;
   }
 
-  async googleAuth(credential: string) {
+  async googleAuth(credential: string, type?: string) {
     console.log(credential, 'credential');
     try {
-      const payload: any = await this.verify(credential);
+      const payload: any = await this.verify(credential, type);
       console.log(payload);
       const data: any = {
         name: payload.given_name,
