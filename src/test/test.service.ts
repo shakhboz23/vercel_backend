@@ -378,13 +378,9 @@ export class TestsService {
     const { answers } = checkDto;
     let message: string;
     try {
-      let student: any;
       const ball: number = +answers?.filter(item => item != null)?.reduce((total: number) => +total + 1, 0);
       const percentage = ball / answers?.length * 100;
-      console.log(percentage);
-      // if (percentage >= 70) {
       const data: ReytingDto = {
-        // role_id,
         ball,
         lesson_id,
       };
@@ -394,11 +390,11 @@ export class TestsService {
       );
       // await this.userStepService.create({ lesson_id, role_id });
       message = 'Your reyting has been created!'
+      
       if (reyting_data.message == 'Already added!') {
         message = 'Already added!';
       }
-      // }
-
+      
       return [percentage, ball];
     } catch (error) {
       throw new BadRequestException(error.message);
