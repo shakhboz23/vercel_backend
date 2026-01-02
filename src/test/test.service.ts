@@ -209,17 +209,28 @@ export class TestsService {
       if (lesson.course.user_id != user_id) {
         if (test_settings.test_type != 'vocabulary') {
           randomizedVariants = this.shuffle(tests).map((variant) => {
-            const randomizedOptions = this.shuffle(variant.get('variants'));
+            let variants = variant.get('variants');
+            const withIndex = variants.map((item, index) => ({
+              value: item,
+              originalIndex: index,
+            }));
+            const randomizedOptions = this.shuffle(withIndex);
+            const newIndex = randomizedOptions.findIndex(
+              item => item.originalIndex === 0
+            );
+            variants = randomizedOptions.map(item => item.value);
+
             return {
               ...variant.toJSON(),
               question: this.maskMentions(variant.question),
-              variants: randomizedOptions,
+              variants,
+              true_answer: [newIndex],
             };
           });
         } else {
           randomizedVariants = this.shuffle(tests).map((variant) => {
             const testL: number = tests.length || 2;
-            const randomVariants = [];
+            const randomVariants = [variant.get('variants')[0]];
             const currentVariant = variant.get('variants')[0];
 
             while (randomVariants.length < 3) {
@@ -231,11 +242,22 @@ export class TestsService {
                 randomVariants.push(candidate);
               }
             }
-            const randomizedOptions = this.shuffle([...randomVariants, variant.get('variants')[0]]);
+
+            const withIndex = randomVariants.map((item, index) => ({
+              value: item,
+              originalIndex: index,
+            }));
+            const randomizedOptions = this.shuffle(withIndex);
+            const newIndex = randomizedOptions.findIndex(
+              item => item.originalIndex === 0
+            );
+            const variants = randomizedOptions.map(item => item.value);
+
             return {
               ...variant.toJSON(),
               question: this.maskMentions(variant.question),
-              variants: randomizedOptions,
+              variants,
+              true_answer: [newIndex],
             };
           });
         }
@@ -348,6 +370,44 @@ export class TestsService {
     }
   }
 
+  async setAnswers(
+    user_id: number,
+    lesson_id: number,
+    checkDto: CheckDto,
+  ): Promise<object> {
+    const { answers } = checkDto;
+    let message: string;
+    try {
+      let student: any;
+      const ball: number = +answers?.filter(item => item != null)?.reduce((total: number) => +total + 1, 0);
+      const percentage = ball / answers?.length * 100;
+      console.log(percentage);
+      // if (percentage >= 70) {
+      const data: ReytingDto = {
+        // role_id,
+        ball,
+        lesson_id,
+      };
+      const reyting_data: any = await this.reytingService.create(
+        data,
+        user_id,
+      );
+      // await this.userStepService.create({ lesson_id, role_id });
+      message = 'Your reyting has been created!'
+      if (reyting_data.message == 'Already added!') {
+        message = 'Already added!';
+      }
+      // }
+
+      return {
+        ball: [percentage, ball],
+        message,
+      };
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
+  }
+
   // async getByTitle(title: string): Promise<object> {
   //   try {
   //     const tests = await this.testsRepository.findOne({
@@ -430,7 +490,6 @@ export class TestsService {
   // Function to shuffle an array
   private shuffle(array: any[]): any[] {
     const shuffledArray = [...array];
-    const data = [];
     for (let i = shuffledArray.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [shuffledArray[i], shuffledArray[j]] = [

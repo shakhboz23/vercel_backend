@@ -8,7 +8,7 @@ export class CheckDto {
   })
   @IsNotEmpty()
   @IsArray()
-  answers: string[];
+  answers: string[] | number[] | any[];
 
   // @ApiProperty({
   //   example: 1,

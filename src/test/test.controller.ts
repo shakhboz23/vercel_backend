@@ -128,4 +128,17 @@ export class TestsController {
   deleteTests(@Param('id') id: number) {
     return this.testsService.delete(id);
   }
+
+  // mobile
+  @ApiOperation({ summary: 'checkById all tests' })
+  // @UseGuards(AuthGuard)
+  @Post('/set_answers/:lesson_id')
+  setAnswers(
+    @Param('lesson_id') lesson_id: number,
+    @Body() answers: CheckDto,
+    @Headers() headers: Record<string, string>,
+  ) {
+    const user_id = extractUserIdFromToken(headers, this.jwtService, true);
+    return this.testsService.setAnswers(user_id, lesson_id, answers);
+  }
 }
