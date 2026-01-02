@@ -399,10 +399,7 @@ export class TestsService {
       }
       // }
 
-      return {
-        ball: [percentage, ball],
-        message,
-      };
+      return [percentage, ball];
     } catch (error) {
       throw new BadRequestException(error.message);
     }
