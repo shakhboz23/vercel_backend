@@ -4,12 +4,14 @@ import {
   DataType,
   ForeignKey,
   HasMany,
+  HasOne,
   Model,
   Table,
 } from 'sequelize-typescript';
 import { Course } from '../../course/models/course.models';
 import { Like } from 'src/likes/models/like.models';
 import { Comment } from 'src/comment/models/comment.models';
+import { Reyting } from 'src/reyting/models/reyting.models';
 
 interface LessonAttributes {
   title: string;
@@ -112,4 +114,10 @@ export class Lesson extends Model<Lesson, LessonAttributes> {
     hooks: true,
   })
   comments: Comment[];
+
+  @HasOne(() => Reyting, {
+    onDelete: 'CASCADE',
+    hooks: true,
+  })
+  reyting: Reyting;
 }

@@ -163,7 +163,7 @@ export class TestsService {
 
   async getById(lesson_id: number, user_id: number): Promise<object> {
     console.log(user_id);
-    const lesson: any = this.lessonService.getById(lesson_id);
+    // const lesson: any = this.lessonService.getById(lesson_id);
 
     try {
       // const test_settings: any =
@@ -190,7 +190,7 @@ export class TestsService {
         where: {
           lesson_id,
         },
-        include: [{ model: Lesson, include: [{ model: Course, include: [{ model: SubCategory }] }] }]
+        // include: [{ model: Lesson, include: [{ model: Course, include: [{ model: SubCategory }] }] }]
       });
 
       if (!tests) {
@@ -378,8 +378,8 @@ export class TestsService {
     const { answers } = checkDto;
     let message: string;
     try {
-      const ball: number = +answers?.filter(item => item != null)?.reduce((total: number) => +total + 1, 0);
-      const percentage = ball / answers?.length * 100;
+      const ball: number = +answers?.filter(item => item.isTrue === true)?.reduce((total: number) => +total + 1, 0);
+      const percentage = Math.round(ball / answers?.length * 100);
       const data: ReytingDto = {
         ball,
         lesson_id,

@@ -111,7 +111,6 @@ export class TestsController {
   create_url(
     @UploadedFile(new ImageValidationPipe()) file: Express.Multer.File,
   ) {
-    console.log('object');
     return this.testsService.create_url(file);
   }
 

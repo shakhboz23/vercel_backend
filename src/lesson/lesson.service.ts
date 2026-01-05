@@ -267,10 +267,9 @@ export class LessonService {
       let lesson: any = await this.lessonRepository.findOne({
         where: { id },
         include: [
-          // {
-          //   model: Comment,
-          //   include: [{ model: User }],
-          // },
+          {
+            model: Reyting,
+          },
           {
             model: Course,
             attributes: {
@@ -287,32 +286,6 @@ export class LessonService {
                      AND "lesson"."type" = 'lesson')::int, 0)`,
                   ),
                   'lesson_count',
-                ],
-                // [
-                //   Sequelize.literal(
-                //     `(SELECT * FROM "lesson" WHERE "lesson"."course_id" = "Lesson"."course_id" 
-                //      AND "lesson"."type" = 'lesson')::int`,
-                //   ),
-                //   'is_liked',
-                // ],
-                [
-                  Sequelize.literal(
-                    `COALESCE((SELECT COUNT(*) FROM "lesson" WHERE "lesson"."course_id" = "Lesson"."course_id" 
-                     AND LENGTH("lesson"."content") > 0)::int, 0)`,
-                  ),
-                  'lecture_count',
-                ],
-                [
-                  Sequelize.literal(
-                    `COALESCE((SELECT COALESCE(SUM("lesson"."duration"), 0) FROM "lesson" WHERE "lesson"."course_id" = "Lesson"."course_id")::int, 0)`
-                  ),
-                  'total_duration',
-                ],
-                [
-                  Sequelize.literal(
-                    `(CASE WHEN EXISTS (SELECT 1 FROM "subscriptions" WHERE "subscriptions"."course_id" = "Lesson"."course_id" AND "subscriptions"."user_id" = :user_id) THEN true ELSE false END)`,
-                  ),
-                  'is_subscribed',
                 ],
                 [
                   Sequelize.literal(
@@ -338,12 +311,6 @@ export class LessonService {
                   `),
                   'subscriptions_count',
                 ],
-                [
-                  Sequelize.literal(
-                    `(CASE WHEN EXISTS (SELECT 1 FROM "reyting" WHERE "reyting"."lesson_id" = "Lesson"."id" AND "reyting"."user_id" = :user_id AND "reyting"."is_finished" = true) THEN true ELSE false END)`,
-                  ),
-                  'is_finished',
-                ],
               ],
             },
           },
@@ -363,6 +330,37 @@ export class LessonService {
               ),
               'is_liked',
             ],
+            [
+              Sequelize.literal(
+                `COALESCE((SELECT COUNT(*) FROM "tests" WHERE "tests"."lesson_id" = "Lesson"."id" )::int, 0)`,
+              ),
+              'tests_count',
+            ],
+            [
+              Sequelize.literal(
+                `(CASE WHEN EXISTS (SELECT 1 FROM "reyting" WHERE "reyting"."lesson_id" = "Lesson"."id" AND "reyting"."user_id" = :user_id AND "reyting"."is_finished" IS TRUE) THEN true ELSE false END)`,
+              ),
+              'is_finished',
+            ],
+            [
+              Sequelize.literal(
+                `COALESCE((SELECT COUNT(*) FROM "lesson" WHERE "lesson"."course_id" = "Lesson"."course_id" 
+                     AND LENGTH("lesson"."content") > 0)::int, 0)`,
+              ),
+              'lecture_count',
+            ],
+            [
+              Sequelize.literal(
+                `COALESCE((SELECT COALESCE(SUM("lesson"."duration"), 0) FROM "lesson" WHERE "lesson"."course_id" = "Lesson"."course_id")::int, 0)`
+              ),
+              'total_duration',
+            ],
+            [
+              Sequelize.literal(
+                `(CASE WHEN EXISTS (SELECT 1 FROM "subscriptions" WHERE "subscriptions"."course_id" = "Lesson"."course_id" AND "subscriptions"."user_id" = :user_id) THEN true ELSE false END)`,
+              ),
+              'is_subscribed',
+            ],
           ]
         },
         replacements: { user_id },
@@ -374,6 +372,7 @@ export class LessonService {
         throw new NotFoundException('Lesson not found');
       }
       await this.watchedService.create({ lesson_id: id }, user_id);
+
       return lesson;
     } catch (error) {
       throw new BadRequestException(error.message);

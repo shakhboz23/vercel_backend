@@ -72,6 +72,8 @@ export class LessonController {
   @Get('/getById/:id')
   getById(@Param('id') id: number, @Headers() headers?: string) {
     const user_id = extractUserIdFromToken(headers, this.jwtService, true);
+    console.log(user_id);
+    
     return this.lessonService.getById(id, user_id);
   }
 
