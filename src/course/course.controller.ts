@@ -10,6 +10,7 @@ import {
   UploadedFile,
   UseInterceptors,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { CourseService } from './course.service';
 import {
@@ -24,6 +25,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ImageValidationPipe } from '../pipes/image-validation.pipe';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { extractUserIdFromToken } from '../utils/token';
+import { AuthGuard } from '@nestjs/passport';
 
 @ApiTags('Course')
 @Controller('course')
@@ -123,7 +125,7 @@ export class CourseController {
   // }
 
   @ApiOperation({ summary: 'Get all courses' })
-  // @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard)
   @Get('/getByCourse/:id/:subcategory_id')
   getByCourse(@Param() { id, subcategory_id }: { id: number, subcategory_id: string }, @Headers() headers: string) {
     const user_id = extractUserIdFromToken(headers, this.jwtService, true);
