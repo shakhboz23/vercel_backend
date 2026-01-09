@@ -25,7 +25,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ImageValidationPipe } from '../pipes/image-validation.pipe';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { extractUserIdFromToken } from '../utils/token';
-import { AuthGuard } from '@nestjs/passport';
+import { AuthGuard } from 'src/guard/auth.guard';
 
 @ApiTags('Course')
 @Controller('course')
