@@ -29,7 +29,7 @@ export class RoleController {
     private readonly roleService: RoleService,
     // private readonly chatGateway: ChatGateway,ChatGateway
     private readonly jwtService: JwtService,
-  ) {}
+  ) { }
 
   @ApiOperation({ summary: 'Registration a new role' })
   @Post('/create')
@@ -171,6 +171,7 @@ export class RoleController {
     if (!user?.id) {
       throw new UnauthorizedException({
         message: 'Token topilmadi!',
+        statusCode: 401,
       });
     }
     const user_id = user?.id;

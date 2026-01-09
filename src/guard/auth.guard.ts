@@ -15,6 +15,7 @@ export class AuthGuard implements CanActivate {
     if (!auth_header) {
       throw new UnauthorizedException({
         message: 'Token topilmadi!',
+        statusCode: 401,
       });
     }
     const bearer = auth_header.split(' ')[0];
@@ -22,6 +23,7 @@ export class AuthGuard implements CanActivate {
     if (bearer !== 'Bearer' || !token) {
       throw new UnauthorizedException({
         message: 'Token topilmadi!',
+        statusCode: 401,
       });
     }
     let user: any;
@@ -39,6 +41,7 @@ export class AuthGuard implements CanActivate {
         if (date_now >= user.exp) {
           throw new UnauthorizedException({
             message: 'Token vaqti tugagan!',
+        statusCode: 401,
           });
         } else {
           const jwt_payload = { id: req.user.id };
@@ -51,6 +54,7 @@ export class AuthGuard implements CanActivate {
     } catch (error) {
       throw new UnauthorizedException({
         message: 'Token vaqti tugagan!',
+        statusCode: 401,
       });
     }
     return true;
