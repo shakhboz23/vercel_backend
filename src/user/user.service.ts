@@ -881,6 +881,12 @@ export class UserService {
         idToken: token,
         audience: process.env.FLUTTER_CLIENT_ID,
       });
+    } else if (type == 'desktop') {
+      const client = new OAuth2Client(process.env.DESKTOP_CLIENT_ID)
+      ticket = await client.verifyIdToken({
+        idToken: token,
+        audience: process.env.DESKTOP_CLIENT_ID,
+      });
     } else {
       const client = new OAuth2Client(process.env.CLIENT_ID);
       ticket = await client.verifyIdToken({
