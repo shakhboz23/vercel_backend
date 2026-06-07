@@ -40,11 +40,11 @@ export class LessonService {
       if (lessonDto.type == 'lesson') {
         let file_type: string;
         let file_data: any;
-        if (!content) {
-          throw new BadRequestException(
-            'Please enter a content',
-          );
-        }
+        // if (!content) {
+        //   throw new BadRequestException(
+        //     'Please enter a content',
+        //   );
+        // }
         if (youtube && youtube != undefined) {
           duration = await this.uploadedService.getVideoDuration(youtube);
           video = youtube;
