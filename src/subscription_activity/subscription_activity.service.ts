@@ -1,31 +1,12 @@
-import { ResetpasswordService } from '../resetpassword/resetpassword.service';
 import {
   BadRequestException,
   HttpStatus,
   Injectable,
   NotFoundException,
-  Res,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { JwtService } from '@nestjs/jwt';
-import { Response } from 'express';
-import { generateToken, writeToCookie } from '../utils/token';
 import { Op } from 'sequelize';
-import { NotificationService } from '../notification/notification.service';
-import { NotificationDto } from '../notification/dto/notification.dto';
-import { RoleService } from '../role/role.service';
-import { RoleDto } from '../role/dto/role.dto';
-import { Role } from '../role/models/role.models';
-import { CheckDto } from '../role/dto/check.dto';
-import { MailService } from '../mail/mail.service';
-import { compareSync, hash } from 'bcryptjs';
-import * as uuid from 'uuid';
-import { Sequelize } from 'sequelize-typescript';
-import * as bcrypt from 'bcrypt';
-import { OAuth2Client } from 'google-auth-library';
-import { UpdateDto } from './dto/update.dto';
-import { Reyting } from 'src/reyting/models/reyting.models';
-import { Lesson } from 'src/lesson/models/lesson.models';
 import { Course } from 'src/course/models/course.models';
 import { SubscriptionActivity, SubscriptionActivityStatus } from './models/subscription_activity.models';
 import { SubscriptionActivityDto } from './dto/subscription_activity.dto';

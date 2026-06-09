@@ -14,8 +14,6 @@ import {
 import { Context, Telegraf, Markup } from 'telegraf';
 import { Message } from 'telegraf/typings/core/types/typegram';
 import { UserService } from 'src/user/user.service';
-import { hash } from 'bcryptjs';
-import { RoleName } from 'src/activity/models/activity.models';
 @Injectable()
 export class BotService {
   constructor(

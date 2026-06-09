@@ -6,7 +6,6 @@ import {
   Param,
   Delete,
   Headers,
-  Put,
 } from '@nestjs/common';
 import { WatchedService } from './watched.service';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';

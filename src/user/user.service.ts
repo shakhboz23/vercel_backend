@@ -21,7 +21,7 @@ import { RoleDto } from '../role/dto/role.dto';
 import { Role } from '../role/models/role.models';
 import { CheckDto } from '../role/dto/check.dto';
 import { MailService } from '../mail/mail.service';
-import { compareSync, hash } from 'bcryptjs';
+import { compareSync, hash } from 'bcrypt';
 import * as uuid from 'uuid';
 import { Sequelize } from 'sequelize-typescript';
 import * as bcrypt from 'bcrypt';
