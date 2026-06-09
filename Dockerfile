@@ -39,4 +39,4 @@ COPY --from=build /app /app
 
 # Start the server by default, this can be overwritten at runtime
 EXPOSE 3001
-CMD ["node", "dist/main.js"]
+CMD ["npm", "run", "start:prod"]
