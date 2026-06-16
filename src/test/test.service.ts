@@ -207,7 +207,7 @@ export class TestsService {
       const test_settings: any = await this.test_settingsService.getByLessonId(lesson_id);
       let randomizedVariants: any;
       if (lesson.course.user_id != user_id) {
-        if (test_settings.test_type != 'vocabulary') {
+        if (test_settings?.test_type != 'vocabulary') {
           randomizedVariants = this.shuffle(tests).map((variant) => {
             let variants = variant.get('variants');
             const withIndex = variants.map((item, index) => ({
