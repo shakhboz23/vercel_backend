@@ -31,7 +31,7 @@ export class BotService {
         { command: 'reyting', description: 'Test reytingi' },
         { command: 'help', description: 'Yordam ko‘rsatish' },
       ]);
-      
+
       // const webhookInfo = await this.bot.telegram.getWebhookInfo();
       // console.log('Webhook Info:', webhookInfo);
       // const webhookUrl = `https://jellyfish-app-9syay.ondigitalocean.app/bot`; // Replace SERVER_URL with your public server URL
@@ -68,12 +68,6 @@ export class BotService {
     try {
       const bot_id = ctx.from.id;
       const user = await this.botRepo.findOne({ where: { bot_id } });
-      await ctx.reply(
-        'Click the button below to open Mini App:',
-        Markup.inlineKeyboard([
-          Markup.button.webApp('Open Mini App', 'https://ilmnur.online'),
-        ]),
-      );
       if (!user) {
         await this.botRepo.create({
           bot_id: bot_id,
@@ -106,6 +100,7 @@ export class BotService {
         );
       } else {
         await this.bot.telegram.sendChatAction(bot_id, 'typing');
+
         await ctx.reply(
           "Bu bot orqali IlmNur dasturi orqali ro'yhatga o'tilgan",
           {
@@ -116,6 +111,13 @@ export class BotService {
               .oneTime()
               .resize()
           }
+        );
+
+        await ctx.reply(
+          'Click the button below to open Mini App:',
+          Markup.inlineKeyboard([
+            Markup.button.webApp('Open Mini App', 'https://ilmnur-front.vercel.app/'),
+          ]),
         );
       }
     } catch (error) {

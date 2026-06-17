@@ -107,6 +107,14 @@ export class UserController {
     return this.userService.getById(id);
   }
 
+  @ApiOperation({ summary: 'Get user by ID' })
+  // @UseGuards(AuthGuard)
+  @Post('/telegram_info')
+  getWebAppUser(@Body() initData: any) {
+    console.log("Hi");
+    return this.userService.getWebAppUser(initData);
+  }
+
   @ApiOperation({ summary: 'Get users with pagination' })
   // @UseGuards(AuthGuard)
   @Get('pagination/:page/:limit')

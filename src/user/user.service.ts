@@ -37,6 +37,7 @@ import { EmailUserDto } from './dto/email.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { ChangeUserEmailDto } from './dto/change-email.dto';
 import { OtpService } from 'src/otp/otp.service';
+import { validateTelegramWebAppData } from 'src/utils/webAppInitData';
 
 @Injectable()
 export class UserService {
@@ -422,11 +423,10 @@ export class UserService {
         order: [['totalReyting', 'DESC']],
       });
       return users;
-    } catch (error) {
+    } catch (error: any) {
       throw new BadRequestException(error.message);
     }
   }
-
 
   async getById(id: number): Promise<object> {
     console.log('getById', id);
@@ -478,6 +478,23 @@ export class UserService {
     } catch (error) {
       throw new BadRequestException(error.message);
     }
+  }
+
+  async getWebAppUser(initData: any): Promise<object> {
+    const isValid = validateTelegramWebAppData(
+      initData,
+      process.env.TELEGRAM_BOT_TOKEN
+    );
+
+    if (!isValid) {
+      throw new NotFoundException('User not found!');
+    }
+
+    const params = new URLSearchParams(initData);
+
+    const user = JSON.parse(params.get('user'));
+
+    return user;
   }
 
   async searchUsers(page: number, search: string): Promise<object> {

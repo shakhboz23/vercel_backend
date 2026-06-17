@@ -71,30 +71,41 @@ import { Test_settings } from './test_settings/models/test_settings.models';
 
 @Module({
   imports: [
-    // TelegrafModule.forRootAsync({
-    //   botName: BOT_NAME,
-    //   useFactory: () => {
-    //     return process.env.NODE_ENV !== 'production' ? {
-    //       token: process.env.BOT_TOKEN,
-    //       includes: [BotModule],
-    //       // launchOptions: {
-    //       //   webhook: {
-    //       //     domain: 'https://vercelbackend-production.up.railway.app',
-    //       //     hookPath: '/api/webhook',
-    //       //   }
-    //       // }
-    //     } : {
-    //       token: process.env.BOT_TOKEN,
-    //       // includes: [BotModule],
-    //       launchOptions: {
-    //         webhook: {
-    //           domain: 'https://vercel-backend-bay.vercel.app',
-    //           hookPath: '/api/webhook/bot',
-    //         }
-    //       }
-    //     }
-    //   },
-    // }),
+    TelegrafModule.forRootAsync({
+      botName: BOT_NAME,
+      useFactory: () => {
+
+        return {
+          token: process.env.BOT_TOKEN,
+          includes: [BotModule],
+          // launchOptions: {
+          //   webhook: {
+          //     domain: 'https://vercel-backend-bay.vercel.app',
+          //     hookPath: '/api/webhook/bot',
+          //   }
+          // }
+        }
+        // return process.env.NODE_ENV !== 'production' ? {
+        //   token: process.env.BOT_TOKEN,
+        //   includes: [BotModule],
+        //   // launchOptions: {
+        //   //   webhook: {
+        //   //     domain: 'https://vercelbackend-production.up.railway.app',
+        //   //     hookPath: '/api/webhook',
+        //   //   }
+        //   // }
+        // } : {
+        //   token: process.env.BOT_TOKEN,
+        //   includes: [BotModule],
+        //   launchOptions: {
+        //     webhook: {
+        //       domain: 'https://vercel-backend-bay.vercel.app',
+        //       hookPath: '/api/webhook/bot',
+        //     }
+        //   }
+        // }
+      },
+    }),
     ScheduleModule.forRoot(),
     ConfigModule.forRoot({
       envFilePath: '.env',
@@ -130,7 +141,7 @@ import { Test_settings } from './test_settings/models/test_settings.models';
         Comment,
         SubCategory,
         PaymentStripe,
-        // Bot,
+        Bot,
         Watched,
         Test_settings,
       ],
@@ -179,7 +190,7 @@ import { Test_settings } from './test_settings/models/test_settings.models';
     VideoChatModule,
     WatchedModule,
     CommentModule,
-    // BotModule,
+    BotModule,
     StripeModule,
   ],
   controllers: [AppController],
