@@ -1,4 +1,5 @@
-import crypto from 'crypto';
+// import crypto from 'crypto';
+import { createHmac, BinaryLike } from 'crypto';
 
 export function validateTelegramWebAppData(initData, botToken) {
     const params = new URLSearchParams(initData);
@@ -11,13 +12,11 @@ export function validateTelegramWebAppData(initData, botToken) {
         .map(([key, value]) => `${key}=${value}`)
         .join('\n');
 
-    const secretKey = crypto
-        .createHmac('sha256', 'WebAppData')
+    const secretKey = createHmac('sha256', 'WebAppData')
         .update(botToken)
         .digest();
 
-    const calculatedHash = crypto
-        .createHmac('sha256', secretKey as crypto.BinaryLike )
+    const calculatedHash = createHmac('sha256', secretKey as BinaryLike )
         .update(dataCheckString)
         .digest('hex');
 
