@@ -111,7 +111,7 @@ export class UserController {
   // @UseGuards(AuthGuard)
   @Post('/telegram_info')
   getWebAppUser(@Body() initData: any) {
-    console.log("Hi");
+    console.log(initData);
     return this.userService.getWebAppUser(initData);
   }
 
