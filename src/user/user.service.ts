@@ -483,7 +483,7 @@ export class UserService {
   async getWebAppUser(initData: any): Promise<object> {
     const isValid = validateTelegramWebAppData(
       initData,
-      process.env.TELEGRAM_BOT_TOKEN
+      process.env.BOT_TOKEN
     );
 
     if (!isValid) {

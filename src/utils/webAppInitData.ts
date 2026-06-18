@@ -4,7 +4,7 @@ export function validateTelegramWebAppData(initData, botToken) {
     // const params = new URLSearchParams(initData);
 
     const hash = initData.hash;
-    initData.delete('hash');
+    delete initData.hash;
 
     const dataCheckString = [...initData.entries()]
         .sort(([a], [b]) => a.localeCompare(b))
