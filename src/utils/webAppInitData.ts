@@ -3,8 +3,8 @@ import crypto from 'crypto';
 export function validateTelegramWebAppData(initData, botToken) {
     // const params = new URLSearchParams(initData);
 
-    // const hash = initData.get('hash');
-    // params.delete('hash');
+    const hash = initData.hash;
+    initData.delete('hash');
 
     const dataCheckString = [...initData.entries()]
         .sort(([a], [b]) => a.localeCompare(b))
