@@ -8,7 +8,7 @@ export function validateTelegramWebAppData(initData, botToken) {
 
     const hash = params.get('hash');
     params.delete('hash');
-
+    params.delete('signature');
     const dataCheckString = [...params.entries()]
         .sort(([a], [b]) => a.localeCompare(b))
         .map(([key, value]) => `${key}=${value}`)
