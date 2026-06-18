@@ -485,7 +485,8 @@ export class UserService {
       initData,
       process.env.BOT_TOKEN
     );
-
+    console.log(isValid);
+    
     if (!isValid) {
       throw new NotFoundException('User not found!');
     }
