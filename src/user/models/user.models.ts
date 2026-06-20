@@ -16,7 +16,7 @@ import { Reyting } from 'src/reyting/models/reyting.models';
 interface UserAttributes {
   name: string;
   surname: string;
-  email: string;
+  phone: string;
   // phone: string;
   current_role: string;
   bio: string;
@@ -59,7 +59,7 @@ export class User extends Model<User, UserAttributes> {
     type: DataType.STRING,
     // unique: true,
   })
-  email: string;
+  phone: string;
 
   // @Column({
   //   type: DataType.STRING,

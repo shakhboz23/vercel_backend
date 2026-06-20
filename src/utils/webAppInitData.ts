@@ -1,29 +1,33 @@
-// import crypto from 'crypto';
-import { createHmac, BinaryLike } from 'crypto';
+import { BinaryLike, createHmac } from 'crypto';
 
-export function validateTelegramWebAppData(initData, botToken) {
-    console.log(botToken);
+export function validateTelegramInitData(rawInitData, botToken) {
+  try {
+    const params = new URLSearchParams(rawInitData);
+    const receivedHash = params.get('hash');
     
-    const params = new URLSearchParams(initData);
+    if (!receivedHash) return false;
 
-    const hash = params.get('hash');
+    // Remove hash and sort keys alphabetically
     params.delete('hash');
-    params.delete('signature');
+    params.sort();
+
+    // Construct the data-check-string (values must be decoded)
     const dataCheckString = [...params.entries()]
-        .sort(([a], [b]) => a.localeCompare(b))
-        .map(([key, value]) => `${key}=${value}`)
-        .join('\n');
-    console.log(dataCheckString);
-    
+      .map(([key, value]) => `${key}=${decodeURIComponent(value)}`)
+      .join('\n');
+
+    // Generate secret key using the bot token and constant string
     const secretKey = createHmac('sha256', 'WebAppData')
-        .update(botToken)
-        .digest();
-    console.log(secretKey);
+      .update(botToken)
+      .digest();
 
-    const calculatedHash = createHmac('sha256', secretKey as BinaryLike )
-        .update(dataCheckString)
-        .digest('hex');
-    console.log(calculatedHash);
+    // Calculate signature hash
+    const calculatedHash = createHmac('sha256', secretKey as BinaryLike)
+      .update(dataCheckString)
+      .digest('hex');
 
-    return calculatedHash === hash;
+    return calculatedHash === receivedHash;
+  } catch (error) {
+    return false;
+  }
 }

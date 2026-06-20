@@ -16,7 +16,7 @@ export class LoginUserDto {
   })
   @IsOptional()
   // @IsEmail()
-  email?: string;
+  phone?: string;
 
   @ApiProperty({
     example: '1',

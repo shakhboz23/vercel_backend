@@ -9,7 +9,7 @@ export class MailService {
     async sendUserConfirmation(user: User, token: string): Promise<void> {
         const url = `${process.env.API_HOST}/verify-email?activation_link=${token}`;
         const data = await this.mailerService.sendMail({
-            to: user.email,
+            to: user.phone,
             subject: "Welcome to IlmNur App! Confirm your email!",
             template: './confirmation',
             context: {

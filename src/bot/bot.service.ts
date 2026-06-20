@@ -14,6 +14,7 @@ import {
 import { Context, Telegraf, Markup } from 'telegraf';
 import { Message } from 'telegraf/typings/core/types/typegram';
 import { UserService } from 'src/user/user.service';
+import { RoleName } from 'src/activity/models/activity.models';
 @Injectable()
 export class BotService {
   constructor(
@@ -213,10 +214,10 @@ export class BotService {
     let bot_user: any;
     if (!user?.user_id) {
       console.log(user);
-      // bot_user = await this.userService.register({ password, role: RoleName.student, name: user.name, surname: user.surname, phone: user.phone });
+      bot_user = await this.userService.register({ password, name: user.name, surname: user.surname, role: RoleName.student, phone: user.phone });
       console.log(bot_user);
-      console.log(bot_user?.data?.user.get('id'));
-      await this.botRepo.update({ user_id: bot_user?.data?.user.get('id') }, {
+      console.log(bot_user?.data.get('id'));
+      await this.botRepo.update({ user_id: bot_user?.data.get('id') }, {
         where: { bot_id: user.bot_id },
         returning: true
       })

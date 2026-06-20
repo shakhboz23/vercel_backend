@@ -25,7 +25,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ImageValidationPipe } from 'src/pipes/image-validation.pipe';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
-import { EmailUserDto } from './dto/email.dto';
+import { PhoneUserDto } from './dto/email.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { ChangeUserEmailDto } from './dto/change-email.dto';
 
@@ -189,7 +189,7 @@ export class UserController {
   @Post('forgot-password')
   forgotPassword(
     // @Param('id') id: string,
-    @Body() emailUserDto: EmailUserDto,
+    @Body() emailUserDto: PhoneUserDto,
   ) {
     return this.userService.forgotPassword(emailUserDto);
   }

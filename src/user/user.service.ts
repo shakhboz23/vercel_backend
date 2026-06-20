@@ -33,11 +33,11 @@ import { Lesson } from 'src/lesson/models/lesson.models';
 import { Course } from 'src/course/models/course.models';
 import { FilesService } from 'src/files/files.service';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
-import { EmailUserDto } from './dto/email.dto';
+import { PhoneUserDto } from './dto/email.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { ChangeUserEmailDto } from './dto/change-email.dto';
 import { OtpService } from 'src/otp/otp.service';
-import { validateTelegramWebAppData } from 'src/utils/webAppInitData';
+import { validateTelegramInitData } from 'src/utils/webAppInitData';
 
 @Injectable()
 export class UserService {
@@ -54,15 +54,15 @@ export class UserService {
   async register(
     registerUserDto: RegisterUserDto,
     type?: string,
-  ): Promise<object> {
+  ) {
     try {
       let is_new_role = false;
       console.log(registerUserDto);
-      let { email, role, password } = registerUserDto;
-      email = email || null;
+      let { phone, role, password } = registerUserDto;
+      phone = phone || null;
       const hashed_password: string = await hash(password, 7);
       let user = await this.userRepository.findOne({
-        where: { [Op.or]: { email } },
+        where: { [Op.or]: { phone } },
       });
       let is_role: any;
       if (user) {
@@ -91,15 +91,15 @@ export class UserService {
         const user_data: any = await this.userRepository.findByPk(user.id, {
           include: { model: Role },
         });
-        if (type != 'googleauth') {
-          await this.mailService.sendUserConfirmation(user_data, access_token);
-        }
+        // if (type != 'googleauth') {
+        //   await this.mailService.sendUserConfirmation(user_data, access_token);
+        // }
 
         return {
           statusCode: HttpStatus.OK,
           message: 'Successfully registered1!',
           data: user_data,
-          token: type == 'googleauth' ? access_token : '',
+          token: access_token,
         };
       } else {
         user = await this.userRepository.create({
@@ -122,9 +122,9 @@ export class UserService {
           { where: { id: user.id }, returning: true },
         );
 
-        if (type != 'googleauth') {
-          await this.mailService.sendUserConfirmation(updateuser[1][0], uniqueKey);
-        }
+        // if (type != 'googleauth') {
+        //   await this.mailService.sendUserConfirmation(updateuser[1][0], uniqueKey);
+        // }
 
         const roleData: RoleDto = {
           ...registerUserDto,
@@ -150,7 +150,7 @@ export class UserService {
           statusCode: HttpStatus.OK,
           message: 'Verification code sended successfully',
           data: user_data,
-          token: type == 'googleauth' ? access_token : '',
+          token: access_token,
         };
       }
     } catch (error) {
@@ -168,7 +168,7 @@ export class UserService {
       await this.register({
         name: name[0],
         surname: name[1],
-        email: name[0] + password.slice(0, 2) + '@gmail.com',
+        // phone: name[0] + password.slice(0, 2) + '@gmail.com',
         password,
         role: RoleName.student,
       })
@@ -216,10 +216,10 @@ export class UserService {
   async login(
     loginUserDto: LoginUserDto,
     type?: string,
-  ): Promise<object> {
+  ) {
     try {
       const user = await this.userRepository.findOne({
-        where: { email: loginUserDto.email },
+        where: { phone: loginUserDto.phone },
       });
 
       if (!user) {
@@ -247,7 +247,7 @@ export class UserService {
           { where: { id: user.id }, returning: true },
         );
 
-        await this.mailService.sendUserConfirmation(updateuser[1][0], uniqueKey);
+        // await this.mailService.sendUserConfirmation(updateuser[1][0], uniqueKey);
 
         return {
           statusCode: HttpStatus.OK,
@@ -272,7 +272,7 @@ export class UserService {
     }
   }
 
-  async getAll(role: string): Promise<object> {
+  async getAll(role: string) {
     try {
       console.log(role);
       const where: any = {};
@@ -293,7 +293,7 @@ export class UserService {
   //   subject_id: number,
   //   group_id: number,
   //   user_id: number,
-  // ): Promise<object> {
+  // ) {
   //   try {
   //     const filter: any = [];
   //     if (subject_id != 0) {
@@ -341,7 +341,7 @@ export class UserService {
   //   }
   // }
 
-  async getReyting(group_id: number, course_id: number): Promise<object> {
+  async getReyting(group_id: number, course_id: number) {
     console.log(+course_id)
     course_id = +course_id;
     try {
@@ -396,7 +396,7 @@ export class UserService {
     }
   }
 
-  async getLessonReyting(lesson_id: number): Promise<object> {
+  async getLessonReyting(lesson_id: number) {
     try {
       const users = await this.userRepository.findAll({
         where: {
@@ -428,7 +428,7 @@ export class UserService {
     }
   }
 
-  async getById(id: number): Promise<object> {
+  async getById(id: number) {
     console.log('getById', id);
     try {
       if (!id) {
@@ -480,8 +480,8 @@ export class UserService {
     }
   }
 
-  async getWebAppUser(initData: any): Promise<object> {
-    const isValid = validateTelegramWebAppData(
+  async getWebAppUser(initData: any) {
+    const isValid = validateTelegramInitData(
       initData,
       process.env.BOT_TOKEN
     );
@@ -498,7 +498,7 @@ export class UserService {
     return user;
   }
 
-  async searchUsers(page: number, search: string): Promise<object> {
+  async searchUsers(page: number, search: string) {
     try {
       const limit = 20;
       const offset = (page - 1) * limit;
@@ -507,7 +507,7 @@ export class UserService {
           [Op.or]: [
             { name: { [Op.iLike]: `%${search}%` } },
             { surname: { [Op.iLike]: `%${search}%` } },
-            { email: { [Op.iLike]: `%${search}%` } },
+            { phone: { [Op.iLike]: `%${search}%` } },
           ],
         },
         include: { model: Role, where: { role: 'student' } },
@@ -540,24 +540,24 @@ export class UserService {
     }
   }
 
-  async checkEmail(email: string): Promise<object> {
-    try {
-      const user = await this.userRepository.findOne({
-        where: { email },
-      });
-      if (!user) {
-        throw new BadRequestException('User not found');
-      }
-      return {
-        statusCode: HttpStatus.OK,
-        data: user,
-      };
-    } catch (error) {
-      throw new BadRequestException(error.message);
-    }
+  async checkEmail(email: string) {
+    // try {
+    //   const user = await this.userRepository.findOne({
+    //     where: { email },
+    //   });
+    //   if (!user) {
+    //     throw new BadRequestException('User not found');
+    //   }
+    //   return {
+    //     statusCode: HttpStatus.OK,
+    //     data: user,
+    //   };
+    // } catch (error) {
+    //   throw new BadRequestException(error.message);
+    // }
   }
 
-  async pagination(page: number, limit: number): Promise<object> {
+  async pagination(page: number, limit: number) {
     try {
       const offset = (page - 1) * limit;
       const users = await this.userRepository.findAll({ offset, limit });
@@ -599,7 +599,7 @@ export class UserService {
     id: number,
     updateDto: UpdateDto,
     image: any
-  ): Promise<object> {
+  ) {
     console.log(image);
     try {
       let user: any = await this.userRepository.findByPk(id);
@@ -635,35 +635,35 @@ export class UserService {
     }
   }
 
-  async newPassword(newPasswordDto: NewPasswordDto): Promise<object> {
+  async newPassword(newPasswordDto: NewPasswordDto) {
     try {
-      const { new_password, confirm_password, activation_link } =
-        newPasswordDto;
-      const email =
-        await this.resetpasswordService.checkActivationLink(activation_link);
-      const hashed_password = await hash(new_password, 7);
-      const updated_info = await this.userRepository.update(
-        { hashed_password },
-        { where: { email }, returning: true },
-      );
-      return {
-        statusCode: HttpStatus.OK,
-        message: 'Password updated successfully',
-        data: {
-          user: updated_info[1][0],
-        },
-      };
+      // const { new_password, confirm_password, activation_link } =
+      //   newPasswordDto;
+      // const email =
+      //   await this.resetpasswordService.checkActivationLink(activation_link);
+      // const hashed_password = await hash(new_password, 7);
+      // const updated_info = await this.userRepository.update(
+      //   { hashed_password },
+      //   { where: { email }, returning: true },
+      // );
+      // return {
+      //   statusCode: HttpStatus.OK,
+      //   message: 'Password updated successfully',
+      //   data: {
+      //     user: updated_info[1][0],
+      //   },
+      // };
     } catch (error) {
       throw new BadRequestException(error.message);
     }
   }
 
-  async updatePassword(password: string, email: string): Promise<object> {
+  async updatePassword(password: string, phone: string) {
     try {
       const hashed_password = await hash(password, 7);
       const updated_info = await this.userRepository.update(
         { hashed_password },
-        { where: { email }, returning: true },
+        { where: { phone }, returning: true },
       );
       return updated_info[1][0]
     } catch (error) {
@@ -671,30 +671,30 @@ export class UserService {
     }
   }
 
-  async changeEmail(user_id: number, changeUserEmailDto: ChangeUserEmailDto): Promise<object> {
-    try {
-      const { email, password, code } = changeUserEmailDto;
-      const user = await this.userRepository.findByPk(user_id);
-      if (!user) {
-        throw new BadRequestException("User not found");
-      }
-      await this.otpService.verifyOtp({ email, code })
+  async changeEmail(user_id: number, changeUserEmailDto: ChangeUserEmailDto) {
+    // try {
+    //   const { phone, password, code } = changeUserEmailDto;
+    //   const user = await this.userRepository.findByPk(user_id);
+    //   if (!user) {
+    //     throw new BadRequestException("User not found");
+    //   }
+    //   await this.otpService.verifyOtp({ phone, code })
 
-      const hashed_password = await hash(password, 7);
-      const updated_info = await this.userRepository.update(
-        { email, hashed_password },
-        { where: { email: user.email }, returning: true },
-      );
-      return updated_info[1][0]
-    } catch (error) {
-      throw new BadRequestException(error.message);
-    }
+    //   const hashed_password = await hash(password, 7);
+    //   const updated_info = await this.userRepository.update(
+    //     { phone, hashed_password },
+    //     { where: { phone: user.phone }, returning: true },
+    //   );
+    //   return updated_info[1][0]
+    // } catch (error) {
+    //   throw new BadRequestException(error.message);
+    // }
   }
 
   // async newPassword(
   //   id: string,
   //   newPasswordDto: NewPasswordDto,
-  // ): Promise<object> {
+  // ) {
   //   try {
   //     const { old_password, new_password } = newPasswordDto;
   //     const user = await this.userRepository.findByPk(id);
@@ -723,17 +723,17 @@ export class UserService {
   // }
   async forgotPassword(
     // id: string,
-    emailUserDto: EmailUserDto,
-  ): Promise<object> {
+    phoneUserDto: PhoneUserDto,
+  ) {
     try {
-      const { email } = emailUserDto;
+      const { phone } = phoneUserDto;
       const activation_link: string = uuid.v4();
 
       const updated_info = await this.userRepository.update(
         { activation_link },
-        { where: { email }, returning: true },
+        { where: { phone }, returning: true },
       );
-      await this.mailService.sendUserActivationLink(activation_link, email);
+      await this.mailService.sendUserActivationLink(activation_link, phone);
 
       return {
         statusCode: HttpStatus.OK,
@@ -750,7 +750,7 @@ export class UserService {
   async resetPassword(
     // id: string,
     forgotPasswordDto: ForgotPasswordDto,
-  ): Promise<object> {
+  ) {
     try {
       const { activation_link, new_password } =
         forgotPasswordDto;
@@ -765,7 +765,7 @@ export class UserService {
       const hashed_password = await hash(new_password, 7);
       const updated_info = await this.userRepository.update(
         { hashed_password },
-        { where: { email: user.email }, returning: true },
+        { where: { phone: user.phone }, returning: true },
       );
       return {
         message: "Paroli o'zgartirildi",
@@ -779,7 +779,7 @@ export class UserService {
   async changePassword(
     user_id: number,
     changePasswordDto: ChangePasswordDto,
-  ): Promise<object> {
+  ) {
     try {
       const { old_password, new_password } =
         changePasswordDto;
@@ -794,7 +794,7 @@ export class UserService {
       const hashed_password = await hash(new_password, 7);
       await this.userRepository.update(
         { hashed_password },
-        { where: { email: user.email }, returning: true },
+        { where: { phone: user.phone }, returning: true },
       );
       return {
         message: "Parolingiz o'zgartirildi",
@@ -804,7 +804,7 @@ export class UserService {
     }
   }
 
-  async update(id: number, updateDto: UpdateDto): Promise<object> {
+  async update(id: number, updateDto: UpdateDto) {
     try {
       const user = await this.userRepository.findByPk(id);
       if (!user) {
@@ -826,7 +826,7 @@ export class UserService {
     }
   }
 
-  async updateCurrentRole(id: number, current_role: string): Promise<object> {
+  async updateCurrentRole(id: number, current_role: string) {
     try {
       const user = await this.userRepository.findByPk(id);
       if (!user) {
@@ -849,7 +849,7 @@ export class UserService {
     }
   }
 
-  // async updateTestReyting(id: number): Promise<object> {
+  // async updateTestReyting(id: number) {
   //   try {
   //     console.log(id, '-----------------------');
   //     const user = await this.userRepository.findByPk(id);
@@ -874,7 +874,7 @@ export class UserService {
   //   }
   // }
 
-  async deleteUser(id: string): Promise<object> {
+  async deleteUser(id: string) {
     try {
       const user = await this.userRepository.findByPk(id);
       if (!user) {
@@ -918,33 +918,33 @@ export class UserService {
 
   async googleAuth(credential: string, type?: string) {
     console.log(credential, 'credential');
-    try {
-      const payload: any = await this.verify(credential, type);
-      console.log(payload);
-      const data: any = {
-        name: payload.given_name,
-        surname: payload.family_name,
-        password: credential,
-        email: payload.email,
-        is_active: true,
-        role: 'student',
-      };
-      const is_user = await this.userRepository.findOne({
-        where: {
-          email: payload.email,
-        },
-      });
-      let user: any;
-      if (is_user) {
-        user = await this.login(data, 'googleauth');
-      } else {
-        user = await this.register(data, 'googleauth');
-      }
-      return user;
-    } catch (error) {
-      console.log(error);
-      throw new BadRequestException(error);
-    }
+    // try {
+    //   const payload: any = await this.verify(credential, type);
+    //   console.log(payload);
+    //   const data: any = {
+    //     name: payload.given_name,
+    //     surname: payload.family_name,
+    //     password: credential,
+    //     email: payload.email,
+    //     is_active: true,
+    //     role: 'student',
+    //   };
+    //   const is_user = await this.userRepository.findOne({
+    //     where: {
+    //       email: payload.email,
+    //     },
+    //   });
+    //   let user: any;
+    //   if (is_user) {
+    //     user = await this.login(data, 'googleauth');
+    //   } else {
+    //     user = await this.register(data, 'googleauth');
+    //   }
+    //   return user;
+    // } catch (error) {
+    //   console.log(error);
+    //   throw new BadRequestException(error);
+    // }
   }
 
   async createDefaultUser() {
@@ -954,7 +954,7 @@ export class UserService {
         surname: process.env.INITIAL_SURNAME,
         password: process.env.INITIAL_PASSWORD,
         role: RoleName.super_admin,
-        email: process.env.INITIAL_EMAIL,
+        // email: process.env.INITIAL_EMAIL,
       });
     } catch { }
   }

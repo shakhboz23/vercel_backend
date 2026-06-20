@@ -37,24 +37,16 @@ export class RegisterUserDto extends RoleDto {
   is_active?: boolean;
 
   @ApiProperty({
-    example: 'shahbozmamatkarimov2303@gmail.com',
-    description: 'Email of user',
+    example: '+998999999999',
+    description: 'Phone of user',
   })
   @IsOptional()
-  @IsEmail()
-  email?: string;
-
-  // @ApiProperty({
-  //   example: 'shahbozmamatkarimov2303@gmail.com',
-  //   description: 'Email of user',
-  // })
-  // @IsOptional()
-  // @IsPhoneNumber()
-  // phone?: string;
+  @IsPhoneNumber()
+  phone?: string;
 
   @ApiProperty({
-    example: 'shahbozmamatkarimov2303@gmail.com',
-    description: 'Email of user',
+    example: 'password',
+    description: 'Password of user',
   })
   @IsNotEmpty()
   @IsString()
