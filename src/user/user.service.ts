@@ -38,6 +38,7 @@ import { ChangePasswordDto } from './dto/change-password.dto';
 import { ChangeUserEmailDto } from './dto/change-email.dto';
 import { OtpService } from 'src/otp/otp.service';
 import { validateTelegramInitData } from 'src/utils/webAppInitData';
+import { Bot } from 'src/bot/models/bot.model';
 
 @Injectable()
 export class UserService {
@@ -486,15 +487,22 @@ export class UserService {
       process.env.BOT_TOKEN
     );
     console.log(isValid);
-    
+
     if (!isValid) {
       throw new NotFoundException('User not found!');
     }
 
     const params = new URLSearchParams(initData);
+    const bot_id = JSON.parse(params.get('user'))?.bot_id;
+    const user = this.userRepository.findOne({
+      include: {
+        model: Bot, where: { bot_id }
+      }
+    })
 
-    const user = JSON.parse(params.get('user'));
-
+    if (!user) {
+      throw new NotFoundException('User not found!');
+    }
     return user;
   }
 
