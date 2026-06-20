@@ -494,7 +494,7 @@ export class UserService {
 
     const params = new URLSearchParams(initData);
     const bot_id = JSON.parse(params.get('user'))?.id;
-    const user: any = this.userRepository.findOne({
+    const user: any = await this.userRepository.findOne({
       include: {
         model: Bot, where: { bot_id }
       }
