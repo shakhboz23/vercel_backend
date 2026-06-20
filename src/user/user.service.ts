@@ -494,7 +494,7 @@ export class UserService {
 
     const params = new URLSearchParams(initData);
     const bot_id = JSON.parse(params.get('user'))?.bot_id;
-    const user = this.userRepository.findOne({
+    const user: any = this.userRepository.findOne({
       include: {
         model: Bot, where: { bot_id }
       }
@@ -503,7 +503,18 @@ export class UserService {
     if (!user) {
       throw new NotFoundException('User not found!');
     }
-    return user;
+
+    const { access_token, refresh_token } = await generateToken(
+      { id: user.id },
+      this.jwtService,
+    );
+
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Successfully registered1!',
+      data: user,
+      token: access_token,
+    };
   }
 
   async searchUsers(page: number, search: string) {
