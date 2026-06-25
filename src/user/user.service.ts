@@ -433,7 +433,7 @@ export class UserService {
     }
   }
 
-  async getById(id: number) {
+  async getById(id: number): Promise<any> {
     console.log('getById', id);
     try {
       if (!id) {

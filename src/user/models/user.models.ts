@@ -17,7 +17,6 @@ import { Subscriptions } from 'src/subscriptions/models/subscriptions.models';
 // import { Bot } from 'src/bot/models/bot.model';
 
 interface UserAttributes {
-  id: number;
   name: string;
   surname: string;
   phone: string;
