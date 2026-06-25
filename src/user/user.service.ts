@@ -541,7 +541,7 @@ export class UserService {
       if (!user) {
         throw new NotFoundException('User not found!');
       }
-      return { user, rankings };
+      return { ...user, rankings };
     } catch (error) {
       throw new BadRequestException(error.message);
     }
