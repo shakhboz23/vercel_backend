@@ -12,6 +12,8 @@ import { Course } from '../../course/models/course.models';
 import { Like } from 'src/likes/models/like.models';
 import { Comment } from 'src/comment/models/comment.models';
 import { Reyting } from 'src/reyting/models/reyting.models';
+import { Tests } from 'src/test/models/test.models';
+import { Test_settings } from 'src/test_settings/models/test_settings.models';
 
 interface LessonAttributes {
   title: string;
@@ -94,7 +96,10 @@ export class Lesson extends Model<Lesson, LessonAttributes> {
   })
   duration: number;
 
-  @BelongsTo(() => Course)
+  @BelongsTo(() => Course, {
+    foreignKey: 'course_id',
+    as: 'course',
+  })
   course: Course[];
 
   @HasMany(() => Lesson, {
@@ -120,4 +125,16 @@ export class Lesson extends Model<Lesson, LessonAttributes> {
     hooks: true,
   })
   reyting: Reyting;
+
+  @HasMany(() => Tests, {
+    onDelete: 'CASCADE',
+    hooks: true,
+  })
+  tests: Tests[];
+
+  @HasMany(() => Test_settings, {
+    onDelete: 'CASCADE',
+    hooks: true,
+  })
+  test_settings: Test_settings[];
 }

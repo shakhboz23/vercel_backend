@@ -109,6 +109,8 @@ export class Course extends Model<Course, CourseAttributes> {
   subcategory: SubCategory[];
 
   @HasMany(() => Lesson, {
+    foreignKey: 'course_id',
+    as: 'lessons',
     onDelete: 'CASCADE',
     hooks: true,
   })

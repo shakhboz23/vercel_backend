@@ -13,9 +13,11 @@ import { Chat } from '../../chat/models/chat.model';
 import { Role } from '../../role/models/role.models';
 import { Reyting } from 'src/reyting/models/reyting.models';
 import { Bot } from 'src/bot/models/bot.model';
+import { Subscriptions } from 'src/subscriptions/models/subscriptions.models';
 // import { Bot } from 'src/bot/models/bot.model';
 
 interface UserAttributes {
+  id: number;
   name: string;
   surname: string;
   phone: string;
@@ -136,11 +138,11 @@ export class User extends Model<User, UserAttributes> {
   })
   image: string;
 
-  // @HasMany(() => Subscriptions, {
-  //   onDelete: 'CASCADE',
-  //   hooks: true,
-  // })
-  // subscriptions: Subscriptions[];
+  @HasMany(() => Subscriptions, {
+    onDelete: 'CASCADE',
+    hooks: true,
+  })
+  subscriptions: Subscriptions[];
 
   @HasMany(() => Reyting, {
     onDelete: 'CASCADE',

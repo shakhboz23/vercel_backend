@@ -13,7 +13,7 @@ import { Response } from 'express';
 import { RegisterUserDto } from './dto/register.dto';
 import { generateToken, writeToCookie } from '../utils/token';
 import { LoginUserDto } from './dto/login.dto';
-import { Op } from 'sequelize';
+import { Op, QueryTypes } from 'sequelize';
 import { NotificationService } from '../notification/notification.service';
 import { NotificationDto } from '../notification/dto/notification.dto';
 import { RoleService } from '../role/role.service';
@@ -39,6 +39,10 @@ import { ChangeUserEmailDto } from './dto/change-email.dto';
 import { OtpService } from 'src/otp/otp.service';
 import { validateTelegramInitData } from 'src/utils/webAppInitData';
 import { Bot } from 'src/bot/models/bot.model';
+import { Tests } from 'src/test/models/test.models';
+import { Group } from 'src/group/models/group.models';
+import { Test_settings } from 'src/test_settings/models/test_settings.models';
+import { Subscriptions } from 'src/subscriptions/models/subscriptions.models';
 
 @Injectable()
 export class UserService {
@@ -50,7 +54,7 @@ export class UserService {
     private readonly resetpasswordService: ResetpasswordService,
     private readonly filesService: FilesService,
     private readonly otpService: OtpService,
-
+    private readonly sequelize: Sequelize,
   ) { }
   async register(
     registerUserDto: RegisterUserDto,
@@ -435,6 +439,119 @@ export class UserService {
       if (!id) {
         throw new NotFoundException('User not found!');
       }
+      const groupId = 14;
+      const userdata: any = await this.userRepository.findByPk(id);
+      const current_role: string = userdata?.current_role || 'student';
+      const user = await this.userRepository.findOne({
+        where: { id },
+        include: [
+          {
+            model: Role,
+          },
+          {
+            model: Subscriptions,
+            include: [
+              {
+                model: Course,
+                include: [
+                  {
+                    model: Lesson,
+                    as: 'lessons',
+                    include: [
+                      {
+                        model: Reyting,
+                      },
+                      {
+                        model: Test_settings,
+                        where: {
+                          start_date: {
+                            [Op.gt]: new Date(),
+                          },
+                        },
+                        limit: 6,
+                        required: false,
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+        replacements: { id, current_role },
+      });
+
+      const [result]: any = await this.sequelize.query(
+        `
+  WITH ranked AS (
+    SELECT
+      r.user_id,
+      ROW_NUMBER() OVER (ORDER BY r.ball DESC) AS position
+    FROM reyting r
+    JOIN lesson l ON l.id = r.lesson_id
+    JOIN course c ON c.group_id = :groupId
+    WHERE c.group_id = :groupId
+  )
+  SELECT position
+  FROM ranked
+  WHERE user_id = :userId
+  `,
+        {
+          replacements: {
+            groupId,
+            userId: id,
+          },
+          type: QueryTypes.SELECT,
+        },
+      );
+
+      const userPosition = result.position;
+
+      const rankings = await this.sequelize.query(
+        `
+  WITH ranked AS (
+    SELECT
+      r.*,
+      u.id AS "user.id",
+      u.name AS "user.name",
+      u.surname AS "user.surname",
+      u.image AS "user.image",
+      ROW_NUMBER() OVER (ORDER BY r.ball DESC) AS position
+    FROM reyting r
+    JOIN lesson l ON l.id = r.lesson_id
+    JOIN course c ON c.group_id = :groupId
+    JOIN "user" u ON u.id = r.user_id
+    WHERE c.group_id = :groupId
+  )
+  SELECT *
+  FROM ranked
+  WHERE position BETWEEN :userPosition - 2
+                     AND :userPosition + 2
+  `,
+        {
+          replacements: {
+            groupId,
+            userPosition,
+          },
+          type: QueryTypes.SELECT,
+          nest: true,
+          raw: true,
+        },
+      );
+      if (!user) {
+        throw new NotFoundException('User not found!');
+      }
+      return { user, rankings };
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
+  }
+
+  async getUserInfo(id: number) {
+    try {
+      if (!id) {
+        throw new NotFoundException('User not found!');
+      }
       const userdata: any = await this.userRepository.findByPk(id);
       const current_role: string = userdata?.current_role || 'student';
       const user = await this.userRepository.findOne({
@@ -444,31 +561,15 @@ export class UserService {
             model: Role,
             attributes: {
               include: [
-                // [
-                //   Sequelize.literal(`
-                //     (
-                //       SELECT json_agg(json_build_object('id', s.id, 'title', s.title)) AS subjects
-                //       FROM "subject" AS s
-                //       JOIN "role" AS r ON s.id = ANY(r.subjects::int[])
-                //       WHERE r."user_id" = :id
-                //     )
-                //   `),
-                //   'subjects',
-                // ],
-                // [
-                //   Sequelize.literal(`
-                //     (
-                //       SELECT json_agg(s.title) AS subjects
-                //       FROM "subject" AS s
-                //       JOIN "role" AS r ON s.id = ANY(r.subjects::int[])
-                //       WHERE r."user_id" = :id AND r."role" = :current_role
-                //     )
-                //   `),
-                //   'subjects',
-                // ],
               ],
             },
           },
+          {
+            model: Tests,
+          },
+          {
+            model: Course,
+          }
         ],
         replacements: { id, current_role },
       });
