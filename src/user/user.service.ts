@@ -541,7 +541,9 @@ export class UserService {
       if (!user) {
         throw new NotFoundException('User not found!');
       }
-      return { ...user, rankings };
+      const userJSON = user.get({ plain: true });
+
+      return { ...userJSON, rankings };
     } catch (error) {
       throw new BadRequestException(error.message);
     }
