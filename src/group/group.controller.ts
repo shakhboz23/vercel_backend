@@ -88,10 +88,10 @@ export class GroupController {
   @ApiOperation({ summary: 'Get all groups' })
   // @UseGuards(AuthGuard)
   // @ApiBearerAuth()
-  @Get('/') 
+  @Get('/')
   getAll(@Headers() headers: string, @Query() groupSearchDto: GroupSearchDto) {
     const user_id = extractUserIdFromToken(headers, this.jwtService, true);
-    return this.groupService.getAll({groupSearchDto, user_id});
+    return this.groupService.getAll({ groupSearchDto, user_id });
   }
 
   @ApiOperation({ summary: 'Get all groups' })
@@ -110,7 +110,16 @@ export class GroupController {
   @Get()
   getMyGroup(@Headers() headers: string) {
     const user_id = extractUserIdFromToken(headers, this.jwtService, true);
-    return this.groupService.getAll({user_id, type: 'my_groups'});
+    return this.groupService.getAll({ user_id, type: 'my_groups' });
+  }
+
+  @ApiOperation({ summary: 'Get all groups' })
+  // @UseGuards(AuthGuard)
+  @ApiBearerAuth()
+  @Get('subscribed-groups')
+  getSubscribedGroups(@Headers() headers: string) {
+    const user_id = extractUserIdFromToken(headers, this.jwtService, true);
+    return this.groupService.getSubscribedGroups(user_id);
   }
 
   @ApiOperation({ summary: 'Get groups with pagination' })

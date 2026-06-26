@@ -19,6 +19,7 @@ import { GroupSearchDto } from './dto/search.dto';
 import { Op } from 'sequelize';
 import { SubCategory } from 'src/subcategory/models/subcategory.models';
 import { Category } from 'src/category/models/category.models';
+import { Subscriptions } from 'src/subscriptions/models/subscriptions.models';
 
 @Injectable()
 export class GroupService {
@@ -306,6 +307,20 @@ export class GroupService {
         my_groups,
         summary,
       };
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
+  }
+
+  async getSubscribedGroups(user_id: number): Promise<object> {
+    try {
+      const groups = await this.groupRepository.findAll({
+        include: [{ model: Course, include: [{ model: Subscriptions, where: { user_id }, required: true }] }]
+      });
+      if (!groups) {
+        throw new NotFoundException('Group not found');
+      }
+      return groups;
     } catch (error) {
       throw new BadRequestException(error.message);
     }
