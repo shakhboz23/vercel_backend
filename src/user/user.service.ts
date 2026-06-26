@@ -453,6 +453,9 @@ export class UserService {
             include: [
               {
                 model: Course,
+                where: {
+                  group_id: groupId,
+                },
                 include: [
                   {
                     model: Lesson,
