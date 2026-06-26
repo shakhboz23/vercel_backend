@@ -434,7 +434,6 @@ export class UserService {
   }
 
   async getById(id: number): Promise<any> {
-    console.log('getById', id);
     try {
       if (!id) {
         throw new NotFoundException('User not found!');
@@ -448,13 +447,40 @@ export class UserService {
           {
             model: Role,
           },
+        ],
+        replacements: { id, current_role },
+      });
+
+      if (!user) {
+        throw new NotFoundException('User not found!');
+      }
+
+      return user;
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
+  }
+
+  async getUserAnalytics(user_id: number, group_id: number): Promise<any> {
+    try {
+      if (!user_id) {
+        throw new NotFoundException('User not found!');
+      }
+      const userdata: any = await this.userRepository.findByPk(id);
+      const current_role: string = userdata?.current_role || 'student';
+      const user = await this.userRepository.findOne({
+        where: { id: user_id },
+        include: [
+          {
+            model: Role,
+          },
           {
             model: Subscriptions,
             include: [
               {
                 model: Course,
                 where: {
-                  group_id: groupId,
+                  group_id,
                 },
                 include: [
                   {
@@ -481,7 +507,7 @@ export class UserService {
             ],
           },
         ],
-        replacements: { id, current_role },
+        replacements: { id: user_id, current_role },
       });
 
       const [result]: any = await this.sequelize.query(
@@ -501,8 +527,8 @@ export class UserService {
   `,
         {
           replacements: {
-            groupId,
-            userId: id,
+            groupId: group_id,
+            userId: user_id,
           },
           type: QueryTypes.SELECT,
         },
@@ -533,7 +559,7 @@ export class UserService {
   `,
         {
           replacements: {
-            groupId,
+            groupId: group_id,
             userPosition,
           },
           type: QueryTypes.SELECT,

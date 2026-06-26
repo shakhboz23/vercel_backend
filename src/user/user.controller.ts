@@ -109,6 +109,14 @@ export class UserController {
 
   @ApiOperation({ summary: 'Get user by ID' })
   // @UseGuards(AuthGuard)
+  @Get('/analytics/:group_id')
+  getUserAnalytics(@Param('group_id') group_id: number, @Headers() headers?: string) {
+    const user_id = extractUserIdFromToken(headers, this.jwtService, true);
+    return this.userService.getUserAnalytics(user_id, group_id);
+  }
+
+  @ApiOperation({ summary: 'Get user by ID' })
+  // @UseGuards(AuthGuard)
   @Post('/telegram_info')
   getWebAppUser(@Body() initData: any) {
     console.log(initData);
