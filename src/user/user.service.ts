@@ -510,6 +510,10 @@ export class UserService {
         replacements: { id: user_id, current_role },
       });
 
+      if (!user) {
+        throw new NotFoundException('User not found!');
+      }
+
       const [result]: any = await this.sequelize.query(
         `
   WITH ranked AS (
@@ -534,7 +538,7 @@ export class UserService {
         },
       );
 
-      const userPosition = result.position;
+      const userPosition = result?.position || 0;
 
       const rankings = await this.sequelize.query(
         `
@@ -567,12 +571,182 @@ export class UserService {
           raw: true,
         },
       );
-      if (!user) {
-        throw new NotFoundException('User not found!');
+
+      // =========== reyting position ============ //
+      // 1. Joriy va o'tgan oyning sanalarini aniqlaymiz (agar bazada timestamp bo'yicha ajratish kerak bo'lsa)
+      const now = new Date();
+      const currentMonth = now.getMonth() + 1; // 1-12
+      const currentYear = now.getFullYear();
+
+      const lastMonth = currentMonth === 1 ? 12 : currentMonth - 1;
+      const lastMonthYear = currentMonth === 1 ? currentYear - 1 : currentYear;
+
+      // 2. SQL so'rovni bitta o'tishda ham joriy, ham o'tgan oydagi o'rinni hisoblaydigan qilamiz
+      const positions: any = await this.sequelize.query(
+        `
+  WITH current_month_ranked AS (
+    SELECT
+      r.user_id,
+      ROW_NUMBER() OVER (ORDER BY SUM(r.ball) DESC) AS position
+    FROM reyting r
+    JOIN lesson l ON l.id = r.lesson_id
+    JOIN course c ON c.group_id = :groupId
+    WHERE c.group_id = :groupId 
+      AND EXTRACT(MONTH FROM r."createdAt") = :currentMonth
+      AND EXTRACT(YEAR FROM r."createdAt") = :currentYear
+    GROUP BY r.user_id
+  ),
+  last_month_ranked AS (
+    SELECT
+      r.user_id,
+      ROW_NUMBER() OVER (ORDER BY SUM(r.ball) DESC) AS position
+    FROM reyting r
+    JOIN lesson l ON l.id = r.lesson_id
+    JOIN course c ON c.group_id = :groupId
+    WHERE c.group_id = :groupId 
+      AND EXTRACT(MONTH FROM r."createdAt") = :lastMonth
+      AND EXTRACT(YEAR FROM r."createdAt") = :lastMonthYear
+    GROUP BY r.user_id
+  )
+  SELECT 
+    coalesce(cm.position, 0) as "currentPosition",
+    coalesce(lm.position, 0) as "lastPosition"
+  FROM "user" u
+  LEFT JOIN current_month_ranked cm ON cm.user_id = u.id
+  LEFT JOIN last_month_ranked lm ON lm.user_id = u.id
+  WHERE u.id = :userId
+  `,
+        {
+          replacements: {
+            groupId: group_id,
+            userId: user_id,
+            currentMonth,
+            currentYear,
+            lastMonth,
+            lastMonthYear
+          },
+          type: QueryTypes.SELECT,
+          plain: true // Obvekt ko'rinishida olish uchun
+        }
+      );
+
+      const currentPosition = positions?.currentPosition || 0;
+      const lastPosition = positions?.lastPosition || 0;
+
+      // 3. O'rinlar farqini (dinamikani) hisoblaymiz
+      let rankStatus = "o'zgarishsiz";
+      let rankDifference = 0;
+
+      if (lastPosition === 0 && currentPosition > 0) {
+        rankStatus = "yangi"; // O'tgan oyda reytingi bo'lmagan
+      } else if (currentPosition > 0 && lastPosition > 0) {
+        rankDifference = lastPosition - currentPosition;
+        if (rankDifference > 0) {
+          rankStatus = "ko'tarildi";
+        } else if (rankDifference < 0) {
+          rankStatus = "tushdi";
+          rankDifference = Math.abs(rankDifference); // musbat songa o'tkazish
+        }
       }
+
       const userJSON = user.get({ plain: true });
 
-      return { ...userJSON, rankings };
+      // ========== reyting ball ================== //
+
+
+      const positionsBall: any = await this.sequelize.query(
+        `
+  WITH current_month_ranked AS (
+    SELECT
+      r.user_id,
+      SUM(r.ball) AS total_ball,
+      ROW_NUMBER() OVER (ORDER BY SUM(r.ball) DESC) AS position
+    FROM reyting r
+    JOIN lesson l ON l.id = r.lesson_id
+    JOIN course c ON c.group_id = :groupId
+    WHERE c.group_id = :groupId 
+      AND EXTRACT(MONTH FROM r."createdAt") = :currentMonth
+      AND EXTRACT(YEAR FROM r."createdAt") = :currentYear
+    GROUP BY r.user_id
+  ),
+  last_month_ranked AS (
+    SELECT
+      r.user_id,
+      SUM(r.ball) AS total_ball,
+      ROW_NUMBER() OVER (ORDER BY SUM(r.ball) DESC) AS position
+    FROM reyting r
+    JOIN lesson l ON l.id = r.lesson_id
+    JOIN course c ON c.group_id = :groupId
+    WHERE c.group_id = :groupId 
+      AND EXTRACT(MONTH FROM r."createdAt") = :lastMonth
+      AND EXTRACT(YEAR FROM r."createdAt") = :lastMonthYear
+    GROUP BY r.user_id
+  )
+  SELECT 
+    COALESCE(cm.position, 0) as "currentPosition",
+    COALESCE(lm.position, 0) as "lastPosition",
+    COALESCE(cm.total_ball, 0) as "currentBall",
+    COALESCE(lm.total_ball, 0) as "lastBall"
+  FROM "user" u
+  LEFT JOIN current_month_ranked cm ON cm.user_id = u.id
+  LEFT JOIN last_month_ranked lm ON lm.user_id = u.id
+  WHERE u.id = :userId
+  `,
+        {
+          replacements: {
+            groupId: group_id,
+            userId: user_id,
+            currentMonth,
+            currentYear,
+            lastMonth,
+            lastMonthYear
+          },
+          type: QueryTypes.SELECT,
+          plain: true
+        }
+      );
+
+      // Qiymatlarni o'zgaruvchilarga olamiz
+      const currentBall = Number(positionsBall?.currentBall) || 0;
+      const lastBall = Number(positionsBall?.lastBall) || 0;
+
+      // 1. Reyting (O'rin) o'zgarishi mantiqi
+      let rankBallStatus = "o'zgarishsiz";
+      let rankBallDifference = 0;
+
+      if (lastPosition === 0 && currentPosition > 0) {
+        rankStatus = "yangi";
+      } else if (currentPosition > 0 && lastPosition > 0) {
+        rankDifference = lastPosition - currentPosition; // O'rin kichrayishi — o'sish hisoblanadi
+        if (rankDifference > 0) rankStatus = "ko'tarildi";
+        else if (rankDifference < 0) {
+          rankStatus = "tushdi";
+          rankDifference = Math.abs(rankDifference);
+        }
+      }
+
+      // 2. Ball o'zgarishi mantiqi
+      let ballStatus = "o'zgarishsiz";
+      let ballDifference = currentBall - lastBall; // Joriy balldan o'tgan oynikini ayiramiz
+
+      if (ballDifference > 0) {
+        ballStatus = "oshdi";
+      } else if (ballDifference < 0) {
+        ballStatus = "kamaydi";
+        ballDifference = Math.abs(ballDifference); // Musbat son ko'rinishiga o'tkazish
+      }
+
+      return {
+        ...userJSON, rankings, ratingStats: {
+          currentPosition,
+          difference: rankDifference,
+          status: rankStatus,
+        }, ratingBallStats: {
+          currentBall,
+          difference: rankBallDifference,
+          status: rankBallStatus,
+        }
+      };
     } catch (error) {
       throw new BadRequestException(error.message);
     }
