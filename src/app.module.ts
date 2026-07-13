@@ -68,6 +68,8 @@ import { AppService } from './app.service';
 import { Watched } from './watched/models/watched.models';
 import pg from "pg"
 import { Test_settings } from './test_settings/models/test_settings.models';
+import { Attendance } from './attendance/models/attendance.models';
+import { AttendanceModule } from './attendance/attendance.module';
 
 @Module({
   imports: [
@@ -144,6 +146,7 @@ import { Test_settings } from './test_settings/models/test_settings.models';
         Bot,
         Watched,
         Test_settings,
+        Attendance,
       ],
       // autoLoadModels: true,
       // synchronize: true,
@@ -192,6 +195,7 @@ import { Test_settings } from './test_settings/models/test_settings.models';
     CommentModule,
     BotModule,
     StripeModule,
+    AttendanceModule,
   ],
   controllers: [AppController],
   providers: [

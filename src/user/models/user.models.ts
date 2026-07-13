@@ -14,6 +14,7 @@ import { Role } from '../../role/models/role.models';
 import { Reyting } from 'src/reyting/models/reyting.models';
 import { Bot } from 'src/bot/models/bot.model';
 import { Subscriptions } from 'src/subscriptions/models/subscriptions.models';
+import { Attendance } from 'src/attendance/models/attendance.models';
 // import { Bot } from 'src/bot/models/bot.model';
 
 interface UserAttributes {
@@ -124,6 +125,12 @@ export class User extends Model<User, UserAttributes> {
     hooks: true,
   })
   activity: Activity[];
+
+  @HasMany(() => Attendance, {
+    onDelete: 'CASCADE',
+    hooks: true,
+  })
+  attendance: Attendance[];
 
   @Column({
     type: DataType.DATE,

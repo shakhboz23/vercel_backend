@@ -27,6 +27,7 @@ import { SubCategory } from 'src/subcategory/models/subcategory.models';
 import { Category } from 'src/category/models/category.models';
 import { GroupService } from 'src/group/group.service';
 import { group } from 'console';
+import { Attendance } from 'src/attendance/models/attendance.models';
 
 @Injectable()
 export class CourseService {
@@ -274,7 +275,7 @@ export class CourseService {
       let user: any = await this.courseRepository.findAll({
         where: { group_id },
         include: [{
-          model: Subscriptions, include: [{ model: User }, { model: Course }]
+          model: Subscriptions, include: [{ model: User, include: [{model: Attendance, where: { course_id }}] }, { model: Course }]
         }],
       });
       // if (!users) {
