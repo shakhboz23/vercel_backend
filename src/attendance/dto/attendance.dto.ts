@@ -8,12 +8,12 @@ import {
 
 export class AttendanceDto {
   @ApiProperty({
-    example: '100',
-    description: 'Phone number of user',
+    example: 100,
+    description: 'Attendance count',
   })
   @IsNotEmpty()
-  @IsString()
-  attendance: string;
+  @IsNumber()
+  attendance: number;
 
   @ApiProperty({
     example: '100',

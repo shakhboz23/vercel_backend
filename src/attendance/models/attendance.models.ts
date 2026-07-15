@@ -11,7 +11,7 @@ import { User } from '../../user/models/user.models';
 import { Course } from 'src/course/models/course.models';
 
 interface AttendanceAttributes {
-  attendance: string;
+  attendance: number;
   role: string;
   user_id: number;
   course_id: number;
@@ -34,10 +34,10 @@ export class Attendance extends Model<Attendance, AttendanceAttributes> {
   id: number;
 
   @Column({
-    type: DataType.STRING,
-    defaultValue: '0',
+    type: DataType.INTEGER,
+    defaultValue: 0,
   })
-  attendance: string;
+  attendance: number;
 
   @Column({
     type: DataType.STRING,
