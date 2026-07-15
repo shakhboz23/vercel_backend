@@ -51,7 +51,7 @@ export class Attendance extends Model<Attendance, AttendanceAttributes> {
   user_id: number;
 
   @BelongsTo(() => User)
-  user: User[];
+  user: User;
 
   @ForeignKey(() => Course)
   @Column({
@@ -60,5 +60,5 @@ export class Attendance extends Model<Attendance, AttendanceAttributes> {
   course_id: number;
 
   @BelongsTo(() => Course)
-  course: Course[];
+  course: Course;
 }

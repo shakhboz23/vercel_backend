@@ -250,7 +250,6 @@ export class CourseService {
       let id: any;
       course_id ? id = { id: course_id } : {};
       // let id = {};
-      console.log(id);
       const targetDate = new Date(date);
       const startOfDay = new Date(targetDate.setHours(0, 0, 0, 0)); // Kun boshidan
       const endOfDay = new Date(targetDate.setHours(23, 59, 59, 999)); // Kun oxirigacha
@@ -271,11 +270,11 @@ export class CourseService {
       //     ]
       //   }],
       //   order: [[{ model: Subscriptions, as: 'subscriptions' }, { model: User, as: 'user' }, 'name', 'ASC']],
-      // });
+      // });      
       let user: any = await this.courseRepository.findAll({
         where: { group_id },
         include: [{
-          model: Subscriptions, include: [{ model: User, include: [{model: Attendance, where: { course_id }}] }, { model: Course }]
+          model: Subscriptions, include: [{ model: User, required: false, include: [{ model: Attendance, required: false }] }, { model: Course }]
         }],
       });
       // if (!users) {
