@@ -544,7 +544,6 @@ export class UserService {
                           },
                         },
                         limit: 6,
-                        required: false,
                       },
                     ],
                   },
