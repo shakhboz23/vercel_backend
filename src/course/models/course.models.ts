@@ -17,6 +17,7 @@ import { GroupType } from 'src/group/dto/group.dto';
 import { SubCategory } from 'src/subcategory/models/subcategory.models';
 import { PaymentStripe } from 'src/stripe/models/stripe.models';
 import { Attendance } from 'src/attendance/models/attendance.models';
+import { CourseSchedule } from 'src/course_schedule/models/course_schedule.models';
 
 interface CourseAttributes {
   title: string;
@@ -146,6 +147,12 @@ export class Course extends Model<Course, CourseAttributes> {
     hooks: true,
   })
   attendance: Attendance[];
+
+  @HasMany(() => CourseSchedule, {
+    onDelete: 'CASCADE',
+    hooks: true,
+  })
+  schedule: CourseSchedule[];
 
   //   @HasMany(() => PaymentStripe, {
   //     onDelete: 'CASCADE',

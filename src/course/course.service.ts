@@ -28,11 +28,17 @@ import { Category } from 'src/category/models/category.models';
 import { GroupService } from 'src/group/group.service';
 import { group } from 'console';
 import { Attendance } from 'src/attendance/models/attendance.models';
+import {
+  AttendanceDay,
+  CourseSchedule,
+} from 'src/course_schedule/models/course_schedule.models';
+import { CourseScheduleService } from 'src/course_schedule/course_schedule.service';
 
 @Injectable()
 export class CourseService {
   constructor(
     @InjectModel(Course) private courseRepository: typeof Course,
+    private readonly courseScheduleService: CourseScheduleService,
     private readonly userService: UserService,
     private readonly groupService: GroupService,
     private readonly chatGroupService: ChatGroupService,
@@ -41,9 +47,51 @@ export class CourseService {
     private readonly filesService: FilesService,
   ) { }
 
+  private parseAttendanceDays(attendanceDays?: string): AttendanceDay[] | undefined {
+    if (attendanceDays === undefined || attendanceDays === null || attendanceDays === '') {
+      return undefined;
+    }
+
+    let days: unknown;
+    try {
+      days = Array.isArray(attendanceDays)
+        ? attendanceDays
+        : JSON.parse(attendanceDays);
+    } catch {
+      throw new BadRequestException(
+        'attendance_days must be a JSON array, for example ["Mon", "Tue", "Wed"]',
+      );
+    }
+
+    if (!Array.isArray(days)) {
+      throw new BadRequestException('attendance_days must be a JSON array');
+    }
+
+    const aliases: Record<string, AttendanceDay> = {
+      mon: AttendanceDay.mon,
+      tue: AttendanceDay.tue,
+      wed: AttendanceDay.wed,
+      wen: AttendanceDay.wed,
+      thu: AttendanceDay.thu,
+      fri: AttendanceDay.fri,
+      sat: AttendanceDay.sat,
+      sun: AttendanceDay.sun,
+    };
+    const normalizedDays = days.map((day) => aliases[String(day).trim().toLowerCase()]);
+
+    if (normalizedDays.some((day) => !day)) {
+      throw new BadRequestException(
+        'attendance_days may only contain Mon, Tue, Wed, Thu, Fri, Sat, or Sun',
+      );
+    }
+
+    return [...new Set(normalizedDays)];
+  }
+
   async create(courseDto: CourseDto, cover: any, user_id: number): Promise<object> {
     try {
-      const { title } = courseDto;
+      const { title, attendance_days, ...courseData } = courseDto;
+      const attendanceDays = this.parseAttendanceDays(attendance_days);
       const exist = await this.courseRepository.findOne({
         where: { title },
       });
@@ -58,11 +106,14 @@ export class CourseService {
         cover = file_data;
       }
       const course: any = await this.courseRepository.create({
-        ...courseDto,
-        group_id: +courseDto.group_id,
+        ...courseData,
+        group_id: +courseData.group_id,
         user_id,
         cover,
       });
+      if (attendanceDays?.length) {
+        await this.courseScheduleService.create(course.id, attendanceDays);
+      }
       await this.chatGroupService.create({ course_id: course.id, chat_type: ChatGroupType.group, group_id: courseDto.group_id })
       return {
         statusCode: HttpStatus.OK,
@@ -323,6 +374,7 @@ export class CourseService {
     try {
       const course = await this.courseRepository.findOne({
         where: { id },
+        include: [{ model: CourseSchedule, as: 'schedule' }],
         attributes: {
           include: [
             [
@@ -450,6 +502,8 @@ export class CourseService {
       if (course.user_id != user_id) {
         throw new ForbiddenException("You don't have an access");
       }
+      const { attendance_days, ...courseData } = courseDto;
+      const attendanceDays = this.parseAttendanceDays(attendance_days);
       const file_type: string = 'image';
       if (cover) {
         if (course.cover) {
@@ -458,10 +512,21 @@ export class CourseService {
         cover = await this.uploadedService.create(cover, file_type);
         console.log(cover)
       }
-      const update = await this.courseRepository.update({ ...courseDto, cover: cover || course.cover }, {
+      const update = await this.courseRepository.update({ ...courseData, cover: cover || course.cover }, {
         where: { id },
         returning: true,
       });
+      if (attendanceDays !== undefined) {
+        const hasSameAttendanceDays =
+          await this.courseScheduleService.hasSameAttendanceDays(
+            id,
+            attendanceDays,
+          );
+
+        if (!hasSameAttendanceDays) {
+          await this.courseScheduleService.create(id, attendanceDays);
+        }
+      }
       return {
         statusCode: HttpStatus.OK,
         message: 'Updated successfully',

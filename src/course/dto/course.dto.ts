@@ -77,4 +77,13 @@ export class CourseDto {
   @IsOptional()
   @IsEnum(GroupType)
   group_type?: GroupType;
+
+  @ApiProperty({
+    example: '["Mon", "Tue", "Wed"]',
+    description: 'JSON array of the days on which attendance is taken',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  attendance_days?: string;
 }

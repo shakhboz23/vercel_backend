@@ -70,6 +70,7 @@ import pg from "pg"
 import { Test_settings } from './test_settings/models/test_settings.models';
 import { Attendance } from './attendance/models/attendance.models';
 import { AttendanceModule } from './attendance/attendance.module';
+import { CourseSchedule } from './course_schedule/models/course_schedule.models';
 
 @Module({
   imports: [
@@ -147,6 +148,7 @@ import { AttendanceModule } from './attendance/attendance.module';
         Watched,
         Test_settings,
         Attendance,
+        CourseSchedule,
       ],
       // autoLoadModels: true,
       // synchronize: true,

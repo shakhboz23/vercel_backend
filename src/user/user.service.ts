@@ -43,6 +43,7 @@ import { Tests } from 'src/test/models/test.models';
 import { Group } from 'src/group/models/group.models';
 import { Test_settings } from 'src/test_settings/models/test_settings.models';
 import { Subscriptions } from 'src/subscriptions/models/subscriptions.models';
+import { CourseSchedule } from 'src/course_schedule/models/course_schedule.models';
 
 @Injectable()
 export class UserService {
@@ -56,6 +57,44 @@ export class UserService {
     private readonly otpService: OtpService,
     private readonly sequelize: Sequelize,
   ) { }
+
+  private countScheduledClasses(
+    subscriptionDate: Date | string,
+    schedules: CourseSchedule[],
+  ): number {
+    const startDate = new Date(subscriptionDate);
+    if (Number.isNaN(startDate.getTime()) || !schedules.length) {
+      return 0;
+    }
+
+    const weekDays: Record<string, number> = {
+      Sun: 0,
+      Mon: 1,
+      Tue: 2,
+      Wed: 3,
+      Thu: 4,
+      Fri: 5,
+      Sat: 6,
+    };
+    const scheduledWeekDays = new Set(
+      schedules.map((schedule) => weekDays[schedule.attendance_day]),
+    );
+    const date = new Date(startDate);
+    date.setHours(0, 0, 0, 0);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    let scheduledClasses = 0;
+    while (date <= today) {
+      if (scheduledWeekDays.has(date.getDay())) {
+        scheduledClasses += 1;
+      }
+      date.setDate(date.getDate() + 1);
+    }
+
+    return scheduledClasses;
+  }
+
   async register(
     registerUserDto: RegisterUserDto,
     type?: string,
@@ -484,6 +523,11 @@ export class UserService {
                 },
                 include: [
                   {
+                    model: CourseSchedule,
+                    as: 'schedule',
+                    attributes: ['attendance_day'],
+                  },
+                  {
                     model: Lesson,
                     as: 'lessons',
                     include: [
@@ -650,6 +694,44 @@ export class UserService {
       }
 
       const userJSON = user.get({ plain: true });
+
+      const attendanceRows = await this.sequelize.query<{
+        course_id: number;
+        attendance: number;
+      }>(
+        `
+          SELECT "course_id", "attendance"
+          FROM "attendance"
+          WHERE "user_id" = :userId
+        `,
+        {
+          replacements: { userId: user_id },
+          type: QueryTypes.SELECT,
+        },
+      );
+      const attendanceByCourse = new Map(
+        attendanceRows.map((row) => [row.course_id, Number(row.attendance) || 0]),
+      );
+
+      userJSON.subscriptions = userJSON.subscriptions.map((subscription: any) => {
+        const scheduledClasses = this.countScheduledClasses(
+          subscription.createdAt,
+          subscription.course?.schedule || [],
+        );
+        const attendedClasses = attendanceByCourse.get(subscription.course_id) || 0;
+        const percentage = scheduledClasses
+          ? Number(((attendedClasses / scheduledClasses) * 100).toFixed(2))
+          : 0;
+
+        return {
+          ...subscription,
+          attendance: {
+            attended_classes: attendedClasses,
+            scheduled_classes: scheduledClasses,
+            percentage,
+          },
+        };
+      });
 
       // ========== reyting ball ================== //
 

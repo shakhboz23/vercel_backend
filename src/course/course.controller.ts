@@ -59,6 +59,11 @@ export class CourseController {
         category_id: {
           type: 'integer',
         },
+        attendance_days: {
+          type: 'string',
+          example: '["Mon", "Tue", "Wed"]',
+          description: 'JSON array of attendance weekdays',
+        },
         image: {
           type: 'string',
           format: 'binary',
@@ -162,6 +167,11 @@ export class CourseController {
         },
         category_id: {
           type: 'integer',
+        },
+        attendance_days: {
+          type: 'string',
+          example: '["Mon", "Tue", "Wed"]',
+          description: 'JSON array of attendance weekdays',
         },
         image: {
           type: 'string',
