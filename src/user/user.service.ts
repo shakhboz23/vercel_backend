@@ -526,6 +526,7 @@ export class UserService {
                     model: CourseSchedule,
                     as: 'schedule',
                     attributes: ['attendance_day'],
+                    required: false,
                   },
                   {
                     model: Lesson,
@@ -533,6 +534,7 @@ export class UserService {
                     include: [
                       {
                         model: Reyting,
+                        required: false,
                       },
                       {
                         model: Test_settings,
