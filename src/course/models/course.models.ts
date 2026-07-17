@@ -152,7 +152,7 @@ export class Course extends Model<Course, CourseAttributes> {
     onDelete: 'CASCADE',
     hooks: true,
   })
-  schedule: CourseSchedule[];
+  attendance_days: CourseSchedule[];
 
   //   @HasMany(() => PaymentStripe, {
   //     onDelete: 'CASCADE',

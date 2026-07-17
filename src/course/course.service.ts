@@ -240,6 +240,9 @@ export class CourseService {
             attributes: ['user_id'],
             include: [{ model: User, include: [{ model: Role }] }],
           },
+          {
+            model: CourseSchedule,
+          },
         ],
         attributes: {
           include: [
