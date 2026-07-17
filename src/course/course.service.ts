@@ -242,6 +242,9 @@ export class CourseService {
           },
           {
             model: CourseSchedule,
+            separate: true,
+            limit: 1,
+            order: [['createdAt', 'DESC']],
           },
         ],
         attributes: {
