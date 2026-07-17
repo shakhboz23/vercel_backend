@@ -1,9 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
-import {
-  AttendanceDay,
-  CourseSchedule,
-} from './models/course_schedule.models';
+import { AttendanceDay, CourseSchedule } from './models/course_schedule.models';
 
 @Injectable()
 export class CourseScheduleService {
@@ -15,47 +12,58 @@ export class CourseScheduleService {
   async create(
     course_id: number,
     attendanceDays: AttendanceDay[],
-  ): Promise<CourseSchedule[]> {
+  ): Promise<CourseSchedule | null> {
     if (!attendanceDays.length) {
-      return [];
+      return null;
     }
 
-    const existingSchedules = await this.courseScheduleRepository.findAll({
+    const currentSchedule = await this.courseScheduleRepository.findOne({
       where: { course_id },
-      attributes: ['attendance_day'],
+      order: [
+        ['createdAt', 'DESC'],
+        ['id', 'DESC'],
+      ],
     });
-    const existingDays = new Set(
-      existingSchedules.map((schedule) => schedule.attendance_day),
-    );
-    const newDays = attendanceDays.filter((day) => !existingDays.has(day));
 
-    if (!newDays.length) {
-      return [];
+    if (
+      currentSchedule &&
+      this.hasSameDays(currentSchedule.attendance_day, attendanceDays)
+    ) {
+      return null;
     }
 
-    return this.courseScheduleRepository.bulkCreate(
-      newDays.map((attendance_day) => ({
-        course_id,
-        attendance_day,
-      })),
-    );
+    // Schedules are immutable so createdAt records when this version took effect.
+    return this.courseScheduleRepository.create({
+      course_id,
+      attendance_day: attendanceDays,
+    });
   }
 
   async hasSameAttendanceDays(
     course_id: number,
     attendanceDays: AttendanceDay[],
   ): Promise<boolean> {
-    const schedules = await this.courseScheduleRepository.findAll({
+    const currentSchedule = await this.courseScheduleRepository.findOne({
       where: { course_id },
-      attributes: ['attendance_day'],
+      order: [
+        ['createdAt', 'DESC'],
+        ['id', 'DESC'],
+      ],
     });
-    const existingDays = new Set(
-      schedules.map((schedule) => schedule.attendance_day),
-    );
 
     return (
-      existingDays.size === attendanceDays.length &&
-      attendanceDays.every((day) => existingDays.has(day))
+      !!currentSchedule &&
+      this.hasSameDays(currentSchedule.attendance_day, attendanceDays)
+    );
+  }
+
+  private hasSameDays(
+    existingDays: AttendanceDay[],
+    attendanceDays: AttendanceDay[],
+  ): boolean {
+    return (
+      existingDays.length === attendanceDays.length &&
+      existingDays.every((day) => attendanceDays.includes(day))
     );
   }
 }

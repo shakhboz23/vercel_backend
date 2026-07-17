@@ -76,9 +76,13 @@ export class UserService {
       Fri: 5,
       Sat: 6,
     };
-    const scheduledWeekDays = new Set(
-      schedules.map((schedule) => weekDays[schedule.attendance_day]),
-    );
+    const scheduleHistory = schedules
+      .filter((schedule) => Array.isArray(schedule.attendance_day))
+      .sort(
+        (left, right) =>
+          new Date(left.createdAt).getTime() -
+            new Date(right.createdAt).getTime() || left.id - right.id,
+      );
     const date = new Date(startDate);
     date.setHours(0, 0, 0, 0);
     const today = new Date();
@@ -86,6 +90,20 @@ export class UserService {
 
     let scheduledClasses = 0;
     while (date <= today) {
+      // A change applies from its calendar date and remains active until the
+      // next version. This preserves the schedule that was valid on each date.
+      const activeSchedule = scheduleHistory.reduce<CourseSchedule | undefined>(
+        (active, schedule) =>
+          new Date(schedule.createdAt).setHours(0, 0, 0, 0) <= date.getTime()
+            ? schedule
+            : active,
+        undefined,
+      );
+      const scheduledWeekDays = new Set(
+        activeSchedule?.attendance_day
+          .map((day) => weekDays[day])
+          .filter((day): day is number => day !== undefined) || [],
+      );
       if (scheduledWeekDays.has(date.getDay())) {
         scheduledClasses += 1;
       }
@@ -525,7 +543,7 @@ export class UserService {
                   {
                     model: CourseSchedule,
                     as: 'schedule',
-                    attributes: ['attendance_day'],
+                    attributes: ['id', 'attendance_day', 'createdAt'],
                     required: false,
                   },
                   {

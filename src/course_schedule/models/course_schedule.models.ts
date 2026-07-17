@@ -20,7 +20,7 @@ export enum AttendanceDay {
 
 interface CourseScheduleAttributes {
   course_id: number;
-  attendance_day: AttendanceDay;
+  attendance_day: AttendanceDay[];
 }
 
 @Table({ tableName: 'course_schedule' })
@@ -44,13 +44,23 @@ export class CourseSchedule extends Model<
   course_id: number;
 
   @Column({
-    type: DataType.STRING(3),
+    type: DataType.ARRAY(DataType.STRING(3)),
     allowNull: false,
     validate: {
-      isIn: [Object.values(AttendanceDay)],
+      isValidAttendanceDays(value: AttendanceDay[]) {
+        if (
+          !Array.isArray(value) ||
+          !value.length ||
+          value.some((day) => !Object.values(AttendanceDay).includes(day))
+        ) {
+          throw new Error(
+            'attendance_day must be a non-empty array of valid weekdays',
+          );
+        }
+      },
     },
   })
-  attendance_day: AttendanceDay;
+  attendance_day: AttendanceDay[];
 
   @BelongsTo(() => Course)
   course: Course;
