@@ -242,6 +242,7 @@ export class CourseService {
           },
           {
             model: CourseSchedule,
+            as: 'attendance_days',
             separate: true,
             limit: 1,
             order: [['createdAt', 'DESC']],
