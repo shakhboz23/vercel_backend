@@ -542,7 +542,7 @@ export class UserService {
                 include: [
                   {
                     model: CourseSchedule,
-                    as: 'schedule',
+                    as: 'attendance_days',
                     attributes: ['id', 'attendance_day', 'createdAt'],
                     required: false,
                   },
