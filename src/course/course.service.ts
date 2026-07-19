@@ -381,7 +381,7 @@ export class CourseService {
     try {
       const course = await this.courseRepository.findOne({
         where: { id },
-        include: [{ model: CourseSchedule, as: 'schedule' }],
+        include: [{ model: CourseSchedule, as: 'attendance_days' }],
         attributes: {
           include: [
             [
