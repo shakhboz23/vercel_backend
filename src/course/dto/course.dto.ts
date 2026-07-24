@@ -55,6 +55,13 @@ export class CourseDto {
 
   @ApiProperty({
     example: 1,
+    description: 'Teacher id',
+  })
+  @IsOptional()
+  teacher_id?: number;
+
+  @ApiProperty({
+    example: 1,
     description: 'Course id',
   })
   @IsNotEmpty()

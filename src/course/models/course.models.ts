@@ -29,6 +29,7 @@ interface CourseAttributes {
   subcategory_id: number;
   user_id: number
   group_type: string;
+  teacher_id: number;
 }
 
 @Table({ tableName: 'course' })
@@ -96,8 +97,24 @@ export class Course extends Model<Course, CourseAttributes> {
   })
   user_id: number;
 
-  @BelongsTo(() => User)
-  user: User[];
+  @BelongsTo(() => User, {
+    as: 'user',
+    foreignKey: 'user_id',
+  })
+  user: User;
+
+  @ForeignKey(() => User)
+  @Column({
+    type: DataType.INTEGER,
+    onDelete: 'SET NULL',
+  })
+  teacher_id: number;
+
+  @BelongsTo(() => User, {
+    as: 'teacher',
+    foreignKey: 'teacher_id',
+  })
+  teacher: User;
 
 
   @ForeignKey(() => SubCategory)

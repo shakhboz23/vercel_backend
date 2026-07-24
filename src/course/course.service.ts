@@ -120,7 +120,7 @@ export class CourseService {
         message: 'Created successfully',
         data: course,
       };
-    } catch (error) {
+    } catch (error: any) {
       throw new BadRequestException(error.message);
     }
   }
@@ -203,7 +203,7 @@ export class CourseService {
         throw new NotFoundException('Courses not found');
       }
       return courses;
-    } catch (error) {
+    } catch (error: any) {
       throw new BadRequestException(error.message);
     }
   }
@@ -297,7 +297,7 @@ export class CourseService {
       //   throw new NotFoundException('Courses not found');
       // }
       return { courses, group };
-    } catch (error) {
+    } catch (error: any) {
       throw new BadRequestException(error.message);
     }
   }
@@ -372,7 +372,7 @@ export class CourseService {
       // }
 
       return user;
-    } catch (error) {
+    } catch (error: any) {
       throw new BadRequestException(error.message);
     }
   }
@@ -381,7 +381,7 @@ export class CourseService {
     try {
       const course = await this.courseRepository.findOne({
         where: { id },
-        include: [{ model: CourseSchedule, as: 'attendance_days' }],
+        include: [{ model: CourseSchedule, as: 'attendance_days' }, { model: User, as: 'teacher', }, { model: Subscriptions, include: [{ model: User }] }],
         attributes: {
           include: [
             [
@@ -470,7 +470,7 @@ export class CourseService {
       });
       await this.watchedService.create({ course_id: id }, user_id);
       return course;
-    } catch (error) {
+    } catch (error: any) {
       throw new BadRequestException(error.message);
     }
   }
@@ -494,7 +494,7 @@ export class CourseService {
         },
       };
       return response;
-    } catch (error) {
+    } catch (error: any) {
       throw new BadRequestException(error.message);
     }
   }
@@ -541,7 +541,7 @@ export class CourseService {
           course: update[1][0],
         },
       };
-    } catch (error) {
+    } catch (error: any) {
       throw new BadRequestException(error.message);
     }
   }
@@ -558,7 +558,7 @@ export class CourseService {
         statusCode: HttpStatus.OK,
         message: 'Deleted successfully',
       };
-    } catch (error) {
+    } catch (error: any) {
       throw new BadRequestException(error.message);
     }
   }
