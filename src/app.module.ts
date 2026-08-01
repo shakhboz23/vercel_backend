@@ -153,14 +153,14 @@ import { CourseSchedule } from './course_schedule/models/course_schedule.models'
       // autoLoadModels: true,
       // synchronize: true,
       // sync: { alter: true },
-      // logging: true,
+      logging: true,
       dialectModule: pg,
-      dialectOptions: {
+      dialectOptions: process.env.NODE_ENV == 'production' ? {
         ssl: {
           require: true,
           rejectUnauthorized: false,
         },
-      },
+      } : {},
     }),
     ServeStaticModule.forRoot({
       rootPath: resolve(__dirname, '..', 'static'),

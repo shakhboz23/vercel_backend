@@ -14,6 +14,7 @@ import { Comment } from 'src/comment/models/comment.models';
 import { Reyting } from 'src/reyting/models/reyting.models';
 import { Tests } from 'src/test/models/test.models';
 import { Test_settings } from 'src/test_settings/models/test_settings.models';
+import { Attendance } from 'src/attendance/models/attendance.models';
 
 interface LessonAttributes {
   title: string;
@@ -25,6 +26,7 @@ interface LessonAttributes {
   type: lessonType;
   position: number;
   duration: number;
+  start_date: Date;
 }
 
 export enum lessonType {
@@ -137,4 +139,15 @@ export class Lesson extends Model<Lesson, LessonAttributes> {
     hooks: true,
   })
   test_settings: Test_settings[];
+
+  @HasMany(() => Attendance, {
+    onDelete: 'CASCADE',
+    hooks: true,
+  })
+  attendance: Attendance[];
+
+  @Column({
+    type: DataType.DATE,
+  })
+  start_date: Date;
 }

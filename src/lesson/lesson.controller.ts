@@ -25,7 +25,7 @@ export class LessonController {
   constructor(
     private readonly lessonService: LessonService,
     private readonly jwtService: JwtService,
-  ) {}
+  ) { }
 
   @ApiOperation({ summary: 'Create a new lesson' })
   @ApiConsumes('multipart/form-data')
@@ -55,6 +55,10 @@ export class LessonController {
           type: 'string',
           format: 'binary',
         },
+        start_date: {
+          type: 'string',
+          format: 'date',
+        },
       },
     },
   })
@@ -73,7 +77,7 @@ export class LessonController {
   getById(@Param('id') id: number, @Headers() headers?: string) {
     const user_id = extractUserIdFromToken(headers, this.jwtService, true);
     console.log(user_id);
-    
+
     return this.lessonService.getById(id, user_id);
   }
 
@@ -128,6 +132,10 @@ export class LessonController {
           type: 'string',
           format: 'binary',
         },
+        start_date: {
+          type: 'string',
+          format: 'date',
+        },
       },
     },
   })
@@ -135,9 +143,9 @@ export class LessonController {
   @UseInterceptors(FileInterceptor('video'))
   update(
     @Param('id') id: number,
-    @Body() lessonDto: LessonDto, 
+    @Body() lessonDto: LessonDto,
     @UploadedFile(new ImageValidationPipe()) video: Express.Multer.File,
-  ) { 
+  ) {
     return this.lessonService.update(id, lessonDto, video);
   }
 

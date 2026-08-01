@@ -9,11 +9,14 @@ import { InjectModel } from '@nestjs/sequelize';
 import { AttendanceDto } from './dto/attendance.dto';
 import { Op } from 'sequelize';
 import { Role } from '../role/models/role.models';
+import { ReytingService } from 'src/reyting/reyting.service';
+import { ReytingDto } from 'src/reyting/dto/reyting.dto';
 
 @Injectable()
 export class AttendanceService {
   constructor(
     @InjectModel(Attendance) private attendanceRepository: typeof Attendance,
+    private reytingService: ReytingService,
   ) { }
 
   async create(attendanceDto: AttendanceDto): Promise<object> {
@@ -22,6 +25,7 @@ export class AttendanceService {
       const attendance = await this.attendanceRepository.findOne({
         where: {
           user_id: attendanceDto.user_id,
+          lesson_id: attendanceDto.lesson_id,
         },
       });
 
@@ -33,14 +37,32 @@ export class AttendanceService {
           {
             where: {
               user_id: attendanceDto.user_id,
-              course_id: attendanceDto.course_id,
+              lesson_id: attendanceDto.lesson_id,
             },
             returning: true,
           },
         );
-        data = update[0][1];
+        data = update[1][0];
+        const reyting: ReytingDto = {
+          // role_id,
+          ball: attendanceDto.attendance,
+          lesson_id: attendanceDto.lesson_id,
+        };
+        await this.reytingService.create(
+          reyting,
+          attendanceDto.user_id,
+        );
       } else {
         data = await this.attendanceRepository.create(attendanceDto);
+        const reyting: ReytingDto = {
+          // role_id,
+          ball: attendanceDto.attendance,
+          lesson_id: attendanceDto.lesson_id,
+        };
+        await this.reytingService.create(
+          reyting,
+          attendanceDto.user_id,
+        );
       }
 
       return {

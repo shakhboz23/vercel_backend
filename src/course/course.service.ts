@@ -105,11 +105,14 @@ export class CourseService {
         file_data = await this.uploadedService.create(cover, file_type);
         cover = file_data;
       }
+      console.log(courseData);
+
       const course: any = await this.courseRepository.create({
         ...courseData,
         group_id: +courseData.group_id,
         user_id,
         cover,
+        title,
       });
       if (attendanceDays?.length) {
         await this.courseScheduleService.create(course.id, attendanceDays);
@@ -302,7 +305,7 @@ export class CourseService {
     }
   }
 
-  async getUsersByGroupId(group_id: number, date: Date, user_id: number, course_id: number, page: string): Promise<object> {
+  async getUsersByGroupId(group_id: number, date: Date, user_id: number, course_id: number, lesson_id: number, page: string): Promise<object> {
     try {
       course_id = +course_id || null;
       let id: any;
@@ -332,7 +335,7 @@ export class CourseService {
       let user: any = await this.courseRepository.findAll({
         where: { group_id },
         include: [{
-          model: Subscriptions, include: [{ model: User, required: false, include: [{ model: Attendance, required: false }] }, { model: Course }]
+          model: Subscriptions, include: [{ model: User, required: false, include: [{ model: Attendance, where: { lesson_id, date: { [Op.between]: [startOfDay, endOfDay] } }, required: false }] }, { model: Course }]
         }],
       });
       // if (!users) {

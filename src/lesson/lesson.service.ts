@@ -13,10 +13,7 @@ import { Sequelize } from 'sequelize-typescript';
 import { CourseService } from 'src/course/course.service';
 import { WatchedService } from 'src/watched/watched.service';
 import { FilesService } from 'src/files/files.service';
-import { Tests } from 'src/test/models/test.models';
 import { Reyting } from 'src/reyting/models/reyting.models';
-import { Comment } from 'src/comment/models/comment.models';
-import { User } from 'src/user/models/user.models';
 import { CommentService } from 'src/comment/comment.service';
 import { Op } from 'sequelize';
 import { SubCategory } from 'src/subcategory/models/subcategory.models';
@@ -165,6 +162,10 @@ export class LessonService {
           lesson_id: null,
         },
         include: [
+          {
+            model: Course,
+            attributes: ['group_id'],
+          },
           {
             model: Lesson,
             include: [{

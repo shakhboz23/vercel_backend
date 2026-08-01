@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
+  IsDateString,
   IsNotEmpty,
   IsNumber,
   IsOptional,
@@ -14,6 +15,14 @@ export class AttendanceDto {
   @IsNotEmpty()
   @IsNumber()
   attendance: number;
+
+   @ApiProperty({
+    example: '2023-08-01T00:00:00.000Z',
+    description: 'Attendance date',
+  })
+  @IsNotEmpty()
+  @IsDateString()
+  date: Date;
 
   @ApiProperty({
     example: '100',
@@ -33,9 +42,9 @@ export class AttendanceDto {
 
   @ApiProperty({
     example: 5,
-    description: 'Course id',
+    description: 'Lesson id',
   })
   @IsOptional()
   @IsNumber()
-  course_id: number;
+  lesson_id: number;
 }

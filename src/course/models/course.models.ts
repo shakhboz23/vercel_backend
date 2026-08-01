@@ -16,7 +16,6 @@ import { Group } from 'src/group/models/group.models';
 import { GroupType } from 'src/group/dto/group.dto';
 import { SubCategory } from 'src/subcategory/models/subcategory.models';
 import { PaymentStripe } from 'src/stripe/models/stripe.models';
-import { Attendance } from 'src/attendance/models/attendance.models';
 import { CourseSchedule } from 'src/course_schedule/models/course_schedule.models';
 
 interface CourseAttributes {
@@ -30,6 +29,7 @@ interface CourseAttributes {
   user_id: number
   group_type: string;
   teacher_id: number;
+  start_date: Date;
 }
 
 @Table({ tableName: 'course' })
@@ -53,6 +53,11 @@ export class Course extends Model<Course, CourseAttributes> {
     allowNull: false,
   })
   description: string;
+
+  @Column({
+    type: DataType.DATE,
+  })
+  start_date: Date;
 
   @Column({
     type: DataType.INTEGER,
@@ -158,12 +163,6 @@ export class Course extends Model<Course, CourseAttributes> {
     hooks: true,
   })
   lesson: Lesson[];
-
-  @HasMany(() => Attendance, {
-    onDelete: 'CASCADE',
-    hooks: true,
-  })
-  attendance: Attendance[];
 
   @HasMany(() => CourseSchedule, {
     onDelete: 'CASCADE',

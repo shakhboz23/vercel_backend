@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import {
   IsBoolean,
   IsBooleanString,
+  IsDateString,
   IsEnum,
   IsNotEmpty,
   IsNumber,
@@ -28,7 +29,7 @@ export class LessonDto {
   @IsNumberString()
   course_id: number;
 
-  
+
   @ApiProperty({
     example: 1,
     description: 'Course id',
@@ -68,4 +69,12 @@ export class LessonDto {
   @IsNotEmpty()
   @IsEnum(lessonType)
   type: lessonType;
+
+  @ApiProperty({
+    example: '2023-10-10',
+    description: 'Lesson start date',
+  })
+  @IsNotEmpty()
+  @IsDateString()
+  start_date: Date;
 }

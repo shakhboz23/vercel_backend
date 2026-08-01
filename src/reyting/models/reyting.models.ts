@@ -16,6 +16,8 @@ interface ReytingAttributes {
 export enum FinishedType {
   manual = 'manual',
   test = 'test',
+  attendance = 'attendance',
+  task = 'task',
 }
 
 @Table({ tableName: 'reyting' })

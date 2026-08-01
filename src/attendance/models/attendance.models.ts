@@ -8,13 +8,14 @@ import {
   Table,
 } from 'sequelize-typescript';
 import { User } from '../../user/models/user.models';
-import { Course } from 'src/course/models/course.models';
+import { Lesson } from 'src/lesson/models/lesson.models';
 
 interface AttendanceAttributes {
   attendance: number;
   role: string;
   user_id: number;
-  course_id: number;
+  lesson_id: number;
+  date: Date;
 }
 
 export enum RoleName {
@@ -40,6 +41,12 @@ export class Attendance extends Model<Attendance, AttendanceAttributes> {
   attendance: number;
 
   @Column({
+    type: DataType.DATE,
+    defaultValue: DataType.NOW,
+  })
+  date: Date;
+
+  @Column({
     type: DataType.STRING,
   })
   role: string;
@@ -53,12 +60,12 @@ export class Attendance extends Model<Attendance, AttendanceAttributes> {
   @BelongsTo(() => User)
   user: User;
 
-  @ForeignKey(() => Course)
+  @ForeignKey(() => Lesson)
   @Column({
     type: DataType.INTEGER,
   })
-  course_id: number;
+  lesson_id: number;
 
-  @BelongsTo(() => Course)
-  course: Course;
+  @BelongsTo(() => Lesson)
+  lesson: Lesson;
 }

@@ -97,9 +97,9 @@ export class CourseController {
   @ApiOperation({ summary: 'Get group by ID' })
   // @UseGuards(AuthGuard)
   @Get('/getUsersByGroupId/:group_id')
-  getUsersByGroupId(@Param('group_id') group_id: number, @Query() { date, course_id, page }: { date: Date, course_id: number, page: string }, @Headers() headers: string) {
+  getUsersByGroupId(@Param('group_id') group_id: number, @Query() { date, course_id, lesson_id, page }: { date: Date, course_id: number, lesson_id: number, page: string }, @Headers() headers: string) {
     const user_id = extractUserIdFromToken(headers, this.jwtService, true);
-    return this.courseService.getUsersByGroupId(group_id, date, user_id, course_id, page);
+    return this.courseService.getUsersByGroupId(group_id, date, user_id, course_id, lesson_id, page);
   }
 
   @ApiOperation({ summary: 'Get all lessons' })
