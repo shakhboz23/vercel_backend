@@ -166,6 +166,7 @@ export class Course extends Model<Course, CourseAttributes> {
 
   @HasMany(() => CourseSchedule, {
     onDelete: 'CASCADE',
+    as: 'attendance_days',
     hooks: true,
   })
   attendance_days: CourseSchedule[];

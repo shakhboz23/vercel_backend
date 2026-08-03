@@ -71,6 +71,9 @@ import { Test_settings } from './test_settings/models/test_settings.models';
 import { Attendance } from './attendance/models/attendance.models';
 import { AttendanceModule } from './attendance/attendance.module';
 import { CourseSchedule } from './course_schedule/models/course_schedule.models';
+import { UserStreak } from './user_streak/models/user_streak.models';
+import { UserStreakModule } from './user_streak/user_streak.module';
+import { CourseScheduleModule } from './course_schedule/course_schedule.module';
 
 @Module({
   imports: [
@@ -149,6 +152,7 @@ import { CourseSchedule } from './course_schedule/models/course_schedule.models'
         Test_settings,
         Attendance,
         CourseSchedule,
+        UserStreak,
       ],
       // autoLoadModels: true,
       // synchronize: true,
@@ -198,6 +202,8 @@ import { CourseSchedule } from './course_schedule/models/course_schedule.models'
     BotModule,
     StripeModule,
     AttendanceModule,
+    UserStreakModule,
+    CourseScheduleModule,
   ],
   controllers: [AppController],
   providers: [

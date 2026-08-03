@@ -11,12 +11,16 @@ import { Op } from 'sequelize';
 import { Role } from '../role/models/role.models';
 import { ReytingService } from 'src/reyting/reyting.service';
 import { ReytingDto } from 'src/reyting/dto/reyting.dto';
+import { UserStreakService } from 'src/user_streak/user_streak.service';
+import { Lesson } from 'src/lesson/models/lesson.models';
+import { Course } from 'src/course/models/course.models';
+import { CourseSchedule } from 'src/course_schedule/models/course_schedule.models';
 
 @Injectable()
 export class AttendanceService {
   constructor(
     @InjectModel(Attendance) private attendanceRepository: typeof Attendance,
-    private reytingService: ReytingService,
+    private userStreakService: UserStreakService,
   ) { }
 
   async create(attendanceDto: AttendanceDto): Promise<object> {
@@ -27,6 +31,7 @@ export class AttendanceService {
           user_id: attendanceDto.user_id,
           lesson_id: attendanceDto.lesson_id,
         },
+        include: [{ model: Lesson, include: [{ model: Course, include: [{ model: CourseSchedule, attributes: ['attendance_day'], required: false }] },] }],
       });
 
       if (attendance) {
@@ -43,14 +48,12 @@ export class AttendanceService {
           },
         );
         data = update[1][0];
-        const reyting: ReytingDto = {
-          // role_id,
-          ball: attendanceDto.attendance,
-          lesson_id: attendanceDto.lesson_id,
-        };
-        await this.reytingService.create(
-          reyting,
-          attendanceDto.user_id,
+
+        await this.userStreakService.create(
+          {
+            ...attendanceDto,
+            attendance_days:  (attendance.lesson?.course as any)?.attendance_days[0]?.attendance_day,
+          }
         );
       } else {
         data = await this.attendanceRepository.create(attendanceDto);
@@ -59,9 +62,11 @@ export class AttendanceService {
           ball: attendanceDto.attendance,
           lesson_id: attendanceDto.lesson_id,
         };
-        await this.reytingService.create(
-          reyting,
-          attendanceDto.user_id,
+        await this.userStreakService.create(
+          {
+            ...attendanceDto,
+            attendance_days: [data.attendace_day],
+          }
         );
       }
 
