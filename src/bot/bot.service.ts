@@ -113,25 +113,52 @@ export class BotService {
         await this.bot.telegram.sendChatAction(bot_id, 'typing');
 
         await ctx.reply(
-          "Academic Success Hub ga xush kelibsiz",
-          {
-            parse_mode: 'HTML',
-            ...Markup.keyboard([
-              ["Statistika", "Kurslarim"],
-              ["Reyting", "Davomat"],
-              ["Parolni o'zgaritish", "Telefon raqamni o'zgartirish"],
-            ])
-              .oneTime()
-              .resize()
-          }
-        );
+      'Academic Success Hub ga xush kelibsiz',
+      {
+        parse_mode: 'HTML',
+        ...Markup.keyboard([
+          ['Statistika', 'Kurslarim'],
+          ['Reyting', 'Davomat'],
+          ["Parolni o'zgartirish", 'Telefon raqamni o\'zgartirish'],
+        ])
+          .oneTime()
+          .resize(),
+      },
+    );
 
-        await ctx.reply(
-          'Click the button below to open Mini App:',
-          Markup.inlineKeyboard([
-            Markup.button.webApp('Open Mini App', 'https://ilmnur-front.vercel.app/'),
-          ]),
-        );
+    console.log('1-chi reply ishladi');
+
+    await ctx.reply(
+      'Click the button below to open Mini App:',
+      Markup.inlineKeyboard([
+        Markup.button.webApp(
+          'Open Mini App',
+          'https://ilmnur-front.vercel.app/',
+        ),
+      ]),
+    );
+
+    console.log('2-chi reply ishladi');
+        // await ctx.reply(
+        //   "Academic Success Hub ga xush kelibsiz",
+        //   {
+        //     parse_mode: 'HTML',
+        //     ...Markup.keyboard([
+        //       ["Statistika", "Kurslarim"],
+        //       ["Reyting", "Davomat"],
+        //       ["Parolni o'zgaritish", "Telefon raqamni o'zgartirish"],
+        //     ])
+        //       .oneTime()
+        //       .resize()
+        //   }
+        // );
+
+        // await ctx.reply(
+        //   'Click the button below to open Mini App:',
+        //   Markup.inlineKeyboard([
+        //     Markup.button.webApp('Open Mini App', 'https://ilmnur-front.vercel.app/'),
+        //   ]),
+        // );
       }
     } catch (error) {
       console.log(error)
