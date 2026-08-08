@@ -347,10 +347,6 @@ export class BotService {
           callback_data: `lesson_test_${lesson.id}`,
         },
         {
-          text: 'Test javoblarini yuborish',
-          callback_data: `lesson_test_anwer_${lesson.id}`,
-        },
-        {
           text: 'Vazifa yuborish',
           callback_data: `lesson_task_${lesson.id}`,
         },
@@ -386,10 +382,6 @@ export class BotService {
         {
           text: 'Test yechish',
           callback_data: `lesson_test_${tests.id}`,
-        },
-        {
-          text: 'Test javoblarini yuborish',
-          callback_data: `lesson_test_anwer_${tests.id}`,
         },
         {
           text: 'Vazifa yuborish',
