@@ -116,17 +116,4 @@ export class BotUpdate {
 
     return this.botService.lessonTest(ctx, lessonId);
   }
-
-  @Action(/^lesson_test_anwer_(\d+)$/)
-  async lessonTestAnwer(ctx: Context) {
-    const callbackQuery = ctx.callbackQuery;
-
-    if (!('data' in callbackQuery)) {
-      return;
-    }
-
-    const lessonId = Number(callbackQuery.data.replace('lesson_test_anwer_', ''));
-
-    return this.botService.lessonTestAnwer(ctx, lessonId);
-  }
 }

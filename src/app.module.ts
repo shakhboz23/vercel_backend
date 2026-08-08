@@ -157,9 +157,9 @@ import { PaymentModule } from './payment/payment.module';
         UserStreak,
         Payment,
       ],
-      autoLoadModels: true,
-      synchronize: true,
-      sync: { alter: true },
+      // autoLoadModels: true,
+      // synchronize: true,
+      // sync: { alter: true },
       logging: true,
       dialectModule: pg,
       dialectOptions: process.env.NODE_ENV == 'production' ? {
