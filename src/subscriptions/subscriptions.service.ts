@@ -29,6 +29,8 @@ export class SubscriptionsService {
     user_id: number,
   ): Promise<object> {
     try {
+      console.log(subscriptionsDto, '===');
+      
       const { course_id } = subscriptionsDto;
       const exist = await this.subscriptionsRepository.findOne({
         where: { user_id, course_id },
@@ -37,7 +39,7 @@ export class SubscriptionsService {
         return this.delete(user_id, subscriptionsDto.course_id);
         // throw new BadRequestException('Already created');
       }
-      return this.subscriptionsRepository.create({ course_id, user_id, is_active: SubscribeActive.requested });
+      return this.subscriptionsRepository.create({ course_id, user_id, is_active: SubscribeActive.requested, start_date: subscriptionsDto.start_date });
     } catch (error) {
       console.log(error);
       throw new BadRequestException(error.message);
@@ -67,7 +69,7 @@ export class SubscriptionsService {
         if (exist) {
           await this.deleteSubscription(exist.id, i, user_id)
         }
-        subcription = await this.subscriptionsRepository.create({ course_id: i, user_id, role, is_active: SubscribeActive.pending });
+        subcription = await this.subscriptionsRepository.create({ course_id: i, user_id, role, is_active: SubscribeActive.pending, start_date: creaetSubscriptionsDto.start_date });
       }
       return subcription;
     } catch (error) {

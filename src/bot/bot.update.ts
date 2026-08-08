@@ -1,4 +1,4 @@
-import { Ctx, Start, Update, On, Help, Hears } from 'nestjs-telegraf';
+import { Ctx, Start, Update, On, Help, Hears, Action } from 'nestjs-telegraf';
 import { BotService } from './bot.service';
 import { Context } from 'telegraf';
 
@@ -32,6 +32,27 @@ export class BotUpdate {
     await ctx.reply('Hi');
   }
 
+  @Hears('Statistika')
+  async statistics(@Ctx() ctx: Context) {
+    await ctx.reply('working...');
+  }
+
+  @Hears('Reyting')
+  async reyting(@Ctx() ctx: Context) {
+    await ctx.reply('working...');
+  }
+
+  @Hears('Kurslarim')
+  async courses(@Ctx() ctx: Context) {
+    // await ctx.reply('working...');
+    return this.botService.my_courses(ctx);
+  }
+
+  @Hears('Davomat')
+  async attendance(@Ctx() ctx: Context) {
+    await ctx.reply('working...');
+  }
+
   @Hears("Telefon raqamni o'zgartirish")
   async handlePhone(@Ctx() ctx: Context) {
     return this.botService.handlePhone(ctx);
@@ -55,5 +76,57 @@ export class BotUpdate {
   @On('message')
   async handleMessages(@Ctx() ctx: Context) {
     await ctx.reply(`Noto'g'ri ma'lumot!`);
+  }
+
+  @Action(/^course_(\d+)$/)
+  async selectCourse(ctx: Context) {
+    const callbackQuery = ctx.callbackQuery;
+
+    if (!('data' in callbackQuery)) {
+      return;
+    }
+
+    const courseId = Number(callbackQuery.data.replace('course_', ''));
+
+    return this.botService.lessons(ctx, courseId);
+  }
+
+  @Action(/^lesson_(\d+)$/)
+  async selectLesson(ctx: Context) {
+    const callbackQuery = ctx.callbackQuery;
+
+    if (!('data' in callbackQuery)) {
+      return;
+    }
+
+    const lessonId = Number(callbackQuery.data.replace('lesson_', ''));
+
+    return this.botService.lessonInfo(ctx, lessonId);
+  }
+  
+  @Action(/^lesson_test_(\d+)$/)
+  async lessonTest(ctx: Context) {
+    const callbackQuery = ctx.callbackQuery;
+
+    if (!('data' in callbackQuery)) {
+      return;
+    }
+
+    const lessonId = Number(callbackQuery.data.replace('lesson_test_', ''));
+
+    return this.botService.lessonTest(ctx, lessonId);
+  }
+
+  @Action(/^lesson_test_anwer_(\d+)$/)
+  async lessonTestAnwer(ctx: Context) {
+    const callbackQuery = ctx.callbackQuery;
+
+    if (!('data' in callbackQuery)) {
+      return;
+    }
+
+    const lessonId = Number(callbackQuery.data.replace('lesson_test_anwer_', ''));
+
+    return this.botService.lessonTestAnwer(ctx, lessonId);
   }
 }

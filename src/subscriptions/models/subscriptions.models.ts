@@ -18,6 +18,7 @@ interface SubscriptionsAttributes {
   user_id: number;
   role: RoleName;
   is_active: SubscribeActive;
+  start_date: Date;
 }
 
 
@@ -36,6 +37,11 @@ export class Subscriptions extends Model<Subscriptions, SubscriptionsAttributes>
     primaryKey: true,
   })
   id: number;
+
+  @Column({
+    type: DataType.DATE,
+  })
+  start_date: Date;
 
   @Column({
     type: DataType.ENUM({

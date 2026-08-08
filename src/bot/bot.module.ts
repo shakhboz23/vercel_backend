@@ -8,9 +8,13 @@ import { UserModule } from 'src/user/user.module';
 import { ConfigService } from '@nestjs/config';
 import { TelegrafModule } from 'nestjs-telegraf';
 import { BOT_NAME } from 'src/app.constants';
+import { SubscriptionsModule } from 'src/subscriptions/subscriptions.module';
+import { CourseModule } from 'src/course/course.module';
+import { LessonModule } from 'src/lesson/lesson.module';
+import { TestsModule } from 'src/test/test.module';
 
 @Module({
-  imports: [SequelizeModule.forFeature([Bot]), UserModule,
+  imports: [SequelizeModule.forFeature([Bot]), UserModule, SubscriptionsModule, CourseModule, LessonModule, TestsModule,
   // TelegrafModule.forRootAsync({
   //   botName: BOT_NAME,
   //   useFactory: async (configService: ConfigService) => ({

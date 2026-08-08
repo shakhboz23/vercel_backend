@@ -153,7 +153,7 @@ export class LessonService {
     }
   }
 
-  async getByCourse(course_id: number, user_id: number): Promise<Object> {
+  async getByCourse(course_id: number, user_id: number, date?: string): Promise<Object> {
     try {
       user_id = user_id || null;
       const lessons: any = await this.lessonRepository.findAll({
@@ -222,7 +222,7 @@ export class LessonService {
       if (!lessons.length) {
         // throw new NotFoundException('Lessons not found');
       }
-      const course = await this.courseService.getById(course_id, user_id);
+      const course = await this.courseService.getById(course_id, user_id, date);
       // const course: any = await this.lessonRepository.findOne({
       //   where: {
       //     course_id,

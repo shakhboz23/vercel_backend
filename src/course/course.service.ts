@@ -22,7 +22,7 @@ import { ChatGroupService } from 'src/chat_group/chat_group.service';
 import { ChatGroupType } from 'src/chat_group/dto/chat_group.dto';
 import { WatchedService } from 'src/watched/watched.service';
 import { FilesService } from 'src/files/files.service';
-import { lessonType } from 'src/lesson/models/lesson.models';
+import { Lesson, lessonType } from 'src/lesson/models/lesson.models';
 import { SubCategory } from 'src/subcategory/models/subcategory.models';
 import { Category } from 'src/category/models/category.models';
 import { GroupService } from 'src/group/group.service';
@@ -33,6 +33,7 @@ import {
   CourseSchedule,
 } from 'src/course_schedule/models/course_schedule.models';
 import { CourseScheduleService } from 'src/course_schedule/course_schedule.service';
+import { Payment } from 'src/payment/models/payment.models';
 
 @Injectable()
 export class CourseService {
@@ -211,6 +212,24 @@ export class CourseService {
     }
   }
 
+  async getAllLessons(course_id: number): Promise<object> {
+    try {
+      const courses: any = await this.courseRepository.findOne({
+        where: {
+          id: course_id,
+        },
+        include: [{ model: Lesson, as: 'lessons', where: { type: lessonType.lesson } }]
+        // order: [['id', 'ASC']],
+      });
+      if (!courses) {
+        throw new NotFoundException('Courses not found');
+      }
+      return courses;
+    } catch (error: any) {
+      throw new BadRequestException(error.message);
+    }
+  }
+
   async getByCourse(group_id: number, subcategory_id: string, user_id: number): Promise<Object> {
     try {
       subcategory_id = JSON.parse(subcategory_id || "[]");
@@ -241,7 +260,6 @@ export class CourseService {
           {
             model: Subscriptions,
             attributes: ['user_id'],
-            include: [{ model: User, include: [{ model: Role }] }],
           },
           {
             model: CourseSchedule,
@@ -380,11 +398,36 @@ export class CourseService {
     }
   }
 
-  async getById(id: number, user_id: number): Promise<object> {
+  async getById(id: number, user_id: number, date?: any): Promise<object> {
     try {
+      let startOfMonth: any = null;
+      let endOfMonth: any = null;
+      console.log(date, '----------')
+      if (date && date != 'null') {
+        date = new Date(date);
+        startOfMonth = new Date(date?.getFullYear(), date.getMonth(), 1);
+        endOfMonth = new Date(date?.getFullYear(), date?.getMonth() + 1, 1);
+      }
+
       const course = await this.courseRepository.findOne({
         where: { id },
-        include: [{ model: CourseSchedule, as: 'attendance_days' }, { model: User, as: 'teacher', }, { model: Subscriptions, include: [{ model: User }] }],
+        include: [{ model: CourseSchedule, as: 'attendance_days' }, { model: User, as: 'teacher', }, {
+          model: Subscriptions, include: [{
+            model: User, include: [{
+              model: Payment, where:
+                startOfMonth && endOfMonth
+                  ? {
+                    createdAt: {
+                      [Op.gte]: startOfMonth,
+                      [Op.lt]: endOfMonth,
+                    },
+                  }
+                  : undefined,
+              required: false,
+              order: [['createdAt', 'ASC']]
+            }]
+          }]
+        }],
         attributes: {
           include: [
             [

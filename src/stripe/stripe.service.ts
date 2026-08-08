@@ -40,41 +40,41 @@ export class StripeService {
     if (isPaid) {
       throw new BadRequestException("You already subscribed to this course");
     }
-    const course: any = await this.courseService.getById(stripeDto.course_id, user_id);
+    // const course: any = await this.courseService.getById(stripeDto.course_id, user_id);
     let session: any = { id: "" };
-    if (course.price) {
-      session = await this.stripe.checkout.sessions.create({
-        payment_method_types: ['card'],
-        line_items: [
-          {
-            price_data: {
-              currency: 'usd',
-              product_data: {
-                name: `Course #${stripeDto.course_id}`,
-              },
-              unit_amount: course.price * 100, // dollar to cent
-            },
-            quantity: 1,
-          },
-        ],
-        mode: 'payment',
-        success_url: `https://ilmnur.online/course/${stripeDto.course_id}`,
-        cancel_url: `https://ilmnur.online/course/${stripeDto.course_id}`,
-      });
-    }
+    // if (course.price) {
+    //   session = await this.stripe.checkout.sessions.create({
+    //     payment_method_types: ['card'],
+    //     line_items: [
+    //       {
+    //         price_data: {
+    //           currency: 'usd',
+    //           product_data: {
+    //             name: `Course #${stripeDto.course_id}`,
+    //           },
+    //           unit_amount: course.price * 100, // dollar to cent
+    //         },
+    //         quantity: 1,
+    //       },
+    //     ],
+    //     mode: 'payment',
+    //     success_url: `https://ilmnur.online/course/${stripeDto.course_id}`,
+    //     cancel_url: `https://ilmnur.online/course/${stripeDto.course_id}`,
+    //   });
+    // }
 
-    await this.stripeRepository.create({
-      user_id, ...stripeDto, amount: course.price, status: course.price ? PaymentStatus.pending : PaymentStatus.completed, stripe_id: session.id,
-    });
-    await this.subscriptionsService.create({ role: RoleName.student, course_id: stripeDto.course_id }, user_id)
+    // await this.stripeRepository.create({
+    //   user_id, ...stripeDto, amount: course.price, status: course.price ? PaymentStatus.pending : PaymentStatus.completed, stripe_id: session.id,
+    // });
+    // await this.subscriptionsService.create({ role: RoleName.student, course_id: stripeDto.course_id }, user_id)
 
-    if (course.price) {
-      return { url: session.url };
-    } else {
-      return {
-        message: "Successfully joined!",
-      }
-    }
+    // if (course.price) {
+    //   return { url: session.url };
+    // } else {
+    //   return {
+    //     message: "Successfully joined!",
+    //   }
+    // }
   }
 
   async handleStripeWebhook(req: RawBodyRequest<Request>) {
@@ -114,7 +114,7 @@ export class StripeService {
               { status: PaymentStatus.completed },
               { where: { stripe_id: session.id }, returning: true },
             );
-            await this.subscriptionsService.create({ role: RoleName.student, course_id: stripeData.course_id }, stripeData.user_id)
+            // await this.subscriptionsService.create({ role: RoleName.student, course_id: stripeData.course_id, start_date:  }, stripeData.user_id)
           }
           break;
         default:

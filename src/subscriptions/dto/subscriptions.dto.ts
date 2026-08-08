@@ -1,6 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsEnum, IsNotEmpty, IsNumber, IsOptional } from 'class-validator';
-import { SubscribeActive } from '../models/subscriptions.models';
+import { IsDateString, IsEnum, IsNotEmpty, IsNumber, IsOptional } from 'class-validator';
 import { RoleName } from 'src/activity/models/activity.models';
 
 export class SubscriptionsDto {
@@ -19,4 +18,12 @@ export class SubscriptionsDto {
   @IsNotEmpty()
   @IsNumber()
   course_id: number;
+
+  @ApiProperty({
+    example: 1,
+    description: 'Course id',
+  })
+  @IsNotEmpty()
+  @IsDateString()
+  start_date: Date;
 }

@@ -15,12 +15,20 @@ import { Context, Telegraf, Markup } from 'telegraf';
 import { Message } from 'telegraf/typings/core/types/typegram';
 import { UserService } from 'src/user/user.service';
 import { RoleName } from 'src/activity/models/activity.models';
+import { SubscriptionsService } from 'src/subscriptions/subscriptions.service';
+import { CourseService } from 'src/course/course.service';
+import { LessonService } from 'src/lesson/lesson.service';
+import { TestsService } from 'src/test/test.service';
 @Injectable()
 export class BotService {
   constructor(
     @InjectModel(Bot) private botRepo: typeof Bot,
     @InjectBot(BOT_NAME) private readonly bot: Telegraf<Context>,
     private readonly userService: UserService,
+    private readonly subscriptionsService: SubscriptionsService,
+    private readonly courseService: CourseService,
+    private readonly lessonService: LessonService,
+    private readonly testsService: TestsService,
   ) { }
 
   async onModuleInit() {
@@ -58,6 +66,8 @@ export class BotService {
     return {
       parse_mode: 'HTML',
       ...Markup.keyboard([
+        ["Statistika", "Kurslarim"],
+        ["Reyting", "Davomat"],
         ["Parolni o'zgaritish", "Telefon raqamni o'zgartirish"],
       ])
         .oneTime()
@@ -103,10 +113,12 @@ export class BotService {
         await this.bot.telegram.sendChatAction(bot_id, 'typing');
 
         await ctx.reply(
-          "Bu bot orqali IlmNur dasturi orqali ro'yhatga o'tilgan",
+          "Academic Success Hub ga xush kelibsiz",
           {
             parse_mode: 'HTML',
             ...Markup.keyboard([
+              ["Statistika", "Kurslarim"],
+              ["Reyting", "Davomat"],
               ["Parolni o'zgaritish", "Telefon raqamni o'zgartirish"],
             ])
               .oneTime()
@@ -223,7 +235,7 @@ export class BotService {
       })
       // await ctx.reply("Siz ro'yhatdan muvaffaqiyatli o'tdingiz!")
       const url = `https://www.ilmnur.online/login?token=${bot_user.token}`;
-      await ctx.reply(`[IlmNur online saytiga kirish uchun shu yerga bosing](${url})`, { parse_mode: 'MarkdownV2' });
+      await ctx.reply(`[Academic Success Hub saytiga kirish uchun shu yerga bosing](${url})`, { parse_mode: 'MarkdownV2' });
     } else {
       bot_user = await this.userService.updatePassword(password, user.phone);
       await ctx.reply(`Parolingiz muvaffaqiyatli o'zgartirildi`);
@@ -239,5 +251,162 @@ export class BotService {
     await this.bot.telegram.sendChatAction(user.bot_id, 'typing');
     await this.bot.telegram.sendMessage(user.bot_id, 'Verify code:' + OTP);
     return true;
+  }
+
+  async my_courses(ctx: Context) {
+    const bot_id = ctx.from.id;
+
+    const user = await this.botRepo.findOne({ where: { bot_id } });
+
+    if (!user?.user_id) {
+      await ctx.reply('Foydalanuvchi topilmadi');
+      return;
+    }
+
+    const courses: any = await this.subscriptionsService.getByUserId(user?.user_id);
+
+    if (!courses.length) {
+      await ctx.reply('Sizda hozircha kurslar mavjud emas.');
+      return;
+    }
+
+    const buttons = courses.map((subscription) => {
+      const course = subscription.dataValues.course;
+      console.log(course);
+
+      return [
+        {
+          text: course.title,
+          callback_data: `course_${course.id}`,
+        },
+      ];
+    });
+
+    await ctx.reply('📚 Kurslaringiz:', {
+      reply_markup: {
+        inline_keyboard: buttons,
+      },
+    });
+  }
+
+  async lessons(ctx: Context, courseId: number) {
+    const bot_id = ctx.from.id;
+
+    const user = await this.botRepo.findOne({ where: { bot_id } });
+
+    if (!user?.user_id) {
+      await ctx.reply('Foydalanuvchi topilmadi');
+      return;
+    }
+
+    const course: any = await this.courseService.getAllLessons(courseId);
+    const data = course.dataValues;
+
+    if (!data?.lessons?.length) {
+      await ctx.reply('Sizda hozircha kurslar mavjud emas.');
+      return;
+    }
+
+    const buttons = data?.lessons.map((lesson) => {
+      return [
+        {
+          text: lesson.title,
+          callback_data: `lesson_${lesson.id}`,
+        },
+      ];
+    });
+
+    await ctx.reply('📚 Darslar:', {
+      reply_markup: {
+        inline_keyboard: buttons,
+      },
+    });
+  }
+
+  async lessonInfo(ctx: Context, lessonId: number) {
+    const bot_id = ctx.from.id;
+
+    const user = await this.botRepo.findOne({ where: { bot_id } });
+
+    if (!user?.user_id) {
+      await ctx.reply('Foydalanuvchi topilmadi');
+      return;
+    }
+
+    const lesson: any = await this.lessonService.getById(lessonId);
+
+    if (!lesson) {
+      await ctx.reply('Dars mavjud emas.');
+      return;
+    }
+
+    const buttons =
+      [[
+        {
+          text: 'Test yechish',
+          callback_data: `lesson_test_${lesson.id}`,
+        },
+        {
+          text: 'Test javoblarini yuborish',
+          callback_data: `lesson_test_anwer_${lesson.id}`,
+        },
+        {
+          text: 'Vazifa yuborish',
+          callback_data: `lesson_task_${lesson.id}`,
+        },
+      ]];
+
+
+    await ctx.reply(`📚 Dars: ${lesson.title}`, {
+      reply_markup: {
+        inline_keyboard: buttons,
+      },
+    });
+  }
+
+  async lessonTest(ctx: Context, lessonId: number) {
+    const bot_id = ctx.from.id;
+
+    const user = await this.botRepo.findOne({ where: { bot_id } });
+
+    if (!user?.user_id) {
+      await ctx.reply('Foydalanuvchi topilmadi');
+      return;
+    }
+
+    const tests: any = await this.testsService.getById(lessonId, user.user_id);
+
+    if (!tests) {
+      await ctx.reply('Dars mavjud emas.');
+      return;
+    }
+
+    const buttons =
+      [[
+        {
+          text: 'Test yechish',
+          callback_data: `lesson_test_${tests.id}`,
+        },
+        {
+          text: 'Test javoblarini yuborish',
+          callback_data: `lesson_test_anwer_${tests.id}`,
+        },
+        {
+          text: 'Vazifa yuborish',
+          callback_data: `lesson_task_${tests.id}`,
+        },
+      ]];
+
+    await ctx.replyWithDocument(tests.test?.[0]?.question, {
+      caption: `Testni yechib bo'lgach javoblarni "Test javoblarini yuborish" tugmasi orqali yuborishingiz mumkin`,
+    });
+    console.log(lessonId, 'lessonId');
+    
+    await ctx.reply(
+      'Test javoblarini yuborish:',
+      Markup.inlineKeyboard([
+        Markup.button.webApp('Open Mini App', `https://ilmnur-front.vercel.app/test/${lessonId}?pdf=true`),
+      ]),
+    );
   }
 }

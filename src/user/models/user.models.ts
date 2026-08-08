@@ -15,6 +15,7 @@ import { Reyting } from 'src/reyting/models/reyting.models';
 import { Bot } from 'src/bot/models/bot.model';
 import { Subscriptions } from 'src/subscriptions/models/subscriptions.models';
 import { Attendance } from 'src/attendance/models/attendance.models';
+import { Payment } from 'src/payment/models/payment.models';
 // import { Bot } from 'src/bot/models/bot.model';
 
 interface UserAttributes {
@@ -167,4 +168,10 @@ export class User extends Model<User, UserAttributes> {
   //   foreignKey: 'user_id',
   // })
   // courses: Course[];
+
+  @HasMany(() => Payment, {
+    onDelete: 'CASCADE',
+    hooks: true,
+  })
+  payments: Payment[];
 }

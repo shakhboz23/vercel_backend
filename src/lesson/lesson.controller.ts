@@ -91,9 +91,9 @@ export class LessonController {
   @ApiOperation({ summary: 'Get all lessons' })
   // @UseGuards(AuthGuard)
   @Get('/getByCourse/:id')
-  getByCourse(@Param('id') id: number, @Headers() headers: string) {
+  getByCourse(@Param('id') id: number, @Headers() headers: string, @Query('date') date: string,) {
     const user_id = extractUserIdFromToken(headers, this.jwtService, true);
-    return this.lessonService.getByCourse(+id, user_id);
+    return this.lessonService.getByCourse(+id, user_id, date);
   }
 
   @ApiOperation({ summary: 'Get lessons with pagination' })

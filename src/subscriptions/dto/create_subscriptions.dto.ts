@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsEnum, IsNotEmpty, IsNumber, IsOptional } from 'class-validator';
+import { IsArray, IsDateString, IsEnum, IsNotEmpty, IsNumber, IsOptional } from 'class-validator';
 import { RoleName } from 'src/activity/models/activity.models';
 import { RegisterUserDto } from 'src/user/dto/register.dto';
 
@@ -27,4 +27,12 @@ export class CreateSubscriptionsDto {
   @IsNotEmpty()
   @IsArray()
   course_ids: number[];
+
+  @ApiProperty({
+    example: 1,
+    description: 'Course id',
+  })
+  @IsNotEmpty()
+  @IsDateString()
+  start_date: Date;
 }
