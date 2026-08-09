@@ -78,8 +78,15 @@ export class BotService {
   async start(ctx: Context) {
     try {
       const bot_id = ctx.from.id;
-      const user = await this.botRepo.findOne({ where: { bot_id } });
-      if (!user) {
+      const botUser = await this.botRepo.findOne({ where: { bot_id } });
+      let user;
+      try {
+        user = await this.userService.getById(botUser?.user_id);
+      } catch (error) {
+
+      }
+
+      if (!botUser) {
         await this.botRepo.create({
           bot_id: bot_id,
           name: ctx.from.first_name,
@@ -97,7 +104,7 @@ export class BotService {
               .resize(),
           },
         );
-      } else if (!user.dataValues.status) {
+      } else if (!botUser.dataValues.status) {
         await ctx.reply(
           `Iltimos, <b> "Telefon raqamni yuborish"</b> tugmasini bosing!`,
           {
@@ -110,35 +117,38 @@ export class BotService {
           },
         );
       } else {
+        if (!user && botUser.dataValues.status) {
+          return this.handlePassword(ctx);
+        }
         await this.bot.telegram.sendChatAction(bot_id, 'typing');
 
         await ctx.reply(
-      'Academic Success Hub ga xush kelibsiz',
-      {
-        parse_mode: 'HTML',
-        ...Markup.keyboard([
-          ['Statistika', 'Kurslarim'],
-          ['Reyting', 'Davomat'],
-          ["Parolni o'zgartirish", 'Telefon raqamni o\'zgartirish'],
-        ])
-          .oneTime()
-          .resize(),
-      },
-    );
+          'Academic Success Hub ga xush kelibsiz',
+          {
+            parse_mode: 'HTML',
+            ...Markup.keyboard([
+              ['Statistika', 'Kurslarim'],
+              ['Reyting', 'Davomat'],
+              ["Parolni o'zgartirish", 'Telefon raqamni o\'zgartirish'],
+            ])
+              .oneTime()
+              .resize(),
+          },
+        );
 
-    console.log('1-chi reply ishladi');
+        console.log('1-chi reply ishladi');
 
-    await ctx.reply(
-      'Click the button below to open Mini App:',
-      Markup.inlineKeyboard([
-        Markup.button.webApp(
-          'Open Mini App',
-          'https://ilmnur-front.vercel.app/',
-        ),
-      ]),
-    );
+        await ctx.reply(
+          'Click the button below to open Mini App:',
+          Markup.inlineKeyboard([
+            Markup.button.webApp(
+              'Open Mini App',
+              'https://ilmnur-front.vercel.app/',
+            ),
+          ]),
+        );
 
-    console.log('2-chi reply ishladi');
+        console.log('2-chi reply ishladi');
         // await ctx.reply(
         //   "Academic Success Hub ga xush kelibsiz",
         //   {
@@ -261,7 +271,7 @@ export class BotService {
         returning: true
       })
       // await ctx.reply("Siz ro'yhatdan muvaffaqiyatli o'tdingiz!")
-      const url = `https://www.ilmnur.online/login?token=${bot_user.token}`;
+      const url = `https://ilmnur-front.vercel.app/login?token=${bot_user.token}`;
       await ctx.reply(`[Academic Success Hub saytiga kirish uchun shu yerga bosing](${url})`, { parse_mode: 'MarkdownV2' });
     } else {
       bot_user = await this.userService.updatePassword(password, user.phone);
@@ -420,7 +430,7 @@ export class BotService {
       caption: `Testni yechib bo'lgach javoblarni "Test javoblarini yuborish" tugmasi orqali yuborishingiz mumkin`,
     });
     console.log(lessonId, 'lessonId');
-    
+
     await ctx.reply(
       'Test javoblarini yuborish:',
       Markup.inlineKeyboard([
