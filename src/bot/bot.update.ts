@@ -68,6 +68,16 @@ export class BotUpdate {
     return this.botService.setPassword(ctx);
   }
 
+  @Hears(/ism:\w+/)
+  async handleNameRegex(@Ctx() ctx: Context) {
+    return this.botService.setName(ctx);
+  }
+
+  @Hears(/familiya:\w+/)
+  async handleSurnameRegex(@Ctx() ctx: Context) {
+    return this.botService.setSurname(ctx);
+  }
+
   @On('contact')
   async onContact(@Ctx() ctx: Context) {
     return this.botService.onContact(ctx);

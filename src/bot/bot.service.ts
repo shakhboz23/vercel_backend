@@ -89,8 +89,8 @@ export class BotService {
       if (!botUser) {
         await this.botRepo.create({
           bot_id: bot_id,
-          name: ctx.from.first_name,
-          surname: ctx.from.last_name,
+          // name: ctx.from.first_name,
+          // surname: ctx.from.last_name,
           username: ctx.from.username,
         });
         await ctx.reply(
@@ -117,7 +117,19 @@ export class BotService {
           },
         );
       } else {
-        if (!user && botUser.dataValues.status) {
+        if (!user?.name) {
+          await ctx.reply("Iltimos ismingizni quyidagicha kiriting: 👇👇👇 \n\nism:Eshmat", {
+            parse_mode: 'HTML',
+            ...Markup.removeKeyboard(),
+          });
+          return
+        } else if (!user?.surname) {
+          await ctx.reply("Iltimos familiyangizni quyidagicha kiriting: 👇👇👇 \n\nfamiliya:Toshmatov", {
+            parse_mode: 'HTML',
+            ...Markup.removeKeyboard(),
+          });
+          return
+        } else if (!user && botUser.dataValues.status) {
           return this.handlePassword(ctx);
         }
         await this.bot.telegram.sendChatAction(bot_id, 'typing');
@@ -136,39 +148,15 @@ export class BotService {
           },
         );
 
-        console.log('1-chi reply ishladi');
-
         await ctx.reply(
-          'Click the button below to open Mini App:',
+          'Click the button below to Academic Success Hub:',
           Markup.inlineKeyboard([
             Markup.button.webApp(
-              'Open Mini App',
+              'Academic Success Hub',
               'https://ilmnur-front.vercel.app/',
             ),
           ]),
         );
-
-        console.log('2-chi reply ishladi');
-        // await ctx.reply(
-        //   "Academic Success Hub ga xush kelibsiz",
-        //   {
-        //     parse_mode: 'HTML',
-        //     ...Markup.keyboard([
-        //       ["Statistika", "Kurslarim"],
-        //       ["Reyting", "Davomat"],
-        //       ["Parolni o'zgaritish", "Telefon raqamni o'zgartirish"],
-        //     ])
-        //       .oneTime()
-        //       .resize()
-        //   }
-        // );
-
-        // await ctx.reply(
-        //   'Click the button below to open Mini App:',
-        //   Markup.inlineKeyboard([
-        //     Markup.button.webApp('Open Mini App', 'https://ilmnur-front.vercel.app/'),
-        //   ]),
-        // );
       }
     } catch (error) {
       console.log(error)
@@ -244,6 +232,16 @@ export class BotService {
             parse_mode: 'HTML',
             ...Markup.removeKeyboard(),
           });
+        } else if (!user.name) {
+          await ctx.reply("Iltimos ismingizni quyidagicha kiriting: 👇👇👇 \n\nism:Eshmat", {
+            parse_mode: 'HTML',
+            ...Markup.removeKeyboard(),
+          });
+        } else if (!user.surname) {
+          await ctx.reply("Iltimos familiyangizni quyidagicha kiriting: 👇👇👇 \n\nfamiliya:Toshmatov", {
+            parse_mode: 'HTML',
+            ...Markup.removeKeyboard(),
+          });
         } else {
           await ctx.reply("Parolingizni quyidagicha kiriting: 👇👇👇 \n\npass:user123", {
             parse_mode: 'HTML',
@@ -272,12 +270,48 @@ export class BotService {
       })
       // await ctx.reply("Siz ro'yhatdan muvaffaqiyatli o'tdingiz!")
       const url = `https://ilmnur-front.vercel.app/login?token=${bot_user.token}`;
-      await ctx.reply(`[Academic Success Hub saytiga kirish uchun shu yerga bosing](${url})`, { parse_mode: 'MarkdownV2' });
+      // await ctx.reply(`[Academic Success Hub saytiga kirish uchun shu yerga bosing](${url})`, { parse_mode: 'MarkdownV2' });
+      await ctx.reply(
+        'Academic Success Hub saytiga kirish uchun shu yerga bosing',
+        Markup.inlineKeyboard([
+          Markup.button.webApp('Academic Success Hub', url),
+        ]),
+      );
     } else {
       bot_user = await this.userService.updatePassword(password, user.phone);
       await ctx.reply(`Parolingiz muvaffaqiyatli o'zgartirildi`);
     }
     console.log(bot_user);
+  }
+
+  async setName(@Ctx() ctx: Context) {
+    const bot_id = ctx.from.id;
+    const message = ctx.message as Message.TextMessage;
+    const name = message.text.split(':')[1]
+
+    const user = await this.botRepo.findOne({ where: { bot_id } });
+    let bot_user: any;
+    bot_user = await this.botRepo.update({ ...user, name }, {
+      where: { bot_id },
+      returning: true,
+    });
+    await ctx.reply("Iltimos familiyangizni quyidagicha kiriting: 👇👇👇 \n\nfamiliya:Toshmatov", {
+      parse_mode: 'HTML',
+      ...Markup.removeKeyboard(),
+    });
+  }
+
+  async setSurname(@Ctx() ctx: Context) {
+    const bot_id = ctx.from.id;
+    const message = ctx.message as Message.TextMessage;
+    const surname = message.text.split(':')[1]
+    const user = await this.botRepo.findOne({ where: { bot_id } });
+    let bot_user: any;
+    bot_user = await this.botRepo.update({ ...user, surname }, {
+      where: { bot_id },
+      returning: true,
+    });
+    return this.handlePassword(ctx);
   }
 
   async onStop(ctx: Context) { }
@@ -299,10 +333,12 @@ export class BotService {
       await ctx.reply('Foydalanuvchi topilmadi');
       return;
     }
+    let courses: any;
+    try {
+      courses = await this.subscriptionsService.getByUserId(user?.user_id);
+    } catch (error) { }
 
-    const courses: any = await this.subscriptionsService.getByUserId(user?.user_id);
-
-    if (!courses.length) {
+    if (!courses?.length) {
       await ctx.reply('Sizda hozircha kurslar mavjud emas.');
       return;
     }
@@ -434,7 +470,7 @@ export class BotService {
     await ctx.reply(
       'Test javoblarini yuborish:',
       Markup.inlineKeyboard([
-        Markup.button.webApp('Open Mini App', `https://ilmnur-front.vercel.app/test/${lessonId}?pdf=true`),
+        Markup.button.webApp('Academic Success Hub', `https://ilmnur-front.vercel.app/test/${lessonId}?pdf=true`),
       ]),
     );
   }
