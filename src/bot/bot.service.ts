@@ -23,6 +23,9 @@ import { TestsService } from 'src/test/test.service';
 import { User } from 'src/user/models/user.models';
 
 const CHILD_ID_STEP = 'child_id';
+const NAME_STEP = 'name';
+const SURNAME_STEP = 'surname';
+const PASSWORD_STEP = 'password';
 
 @Injectable()
 export class BotService {
@@ -87,12 +90,6 @@ export class BotService {
     try {
       const bot_id = ctx.from.id;
       const botUser = await this.botRepo.findOne({ where: { bot_id } });
-      let user;
-      try {
-        user = await this.userService.getById(botUser?.user_id);
-      } catch (error) {
-
-      }
 
       if (!botUser) {
         await this.botRepo.create({
@@ -101,18 +98,54 @@ export class BotService {
           // surname: ctx.from.last_name,
           username: ctx.from.username,
         });
-        await ctx.reply(
-          `Iltimos, <b> "Telefon raqamni yuborish"</b> tugmasini bosing!`,
-          {
-            parse_mode: 'HTML',
-            ...Markup.keyboard([
-              [Markup.button.contactRequest('Telefon raqamni yuborish')],
-            ])
-              .oneTime()
-              .resize(),
-          },
-        );
-      } else if (!botUser.dataValues.status) {
+      }
+
+      return this.askRole(ctx);
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  private mainMenuButtons(role: string): string[][] {
+    if (role === 'parent') {
+      return [['Farzandlarim'], ['Profil']];
+    }
+
+    return [
+      ['Statistika', 'Kurslar'],
+      ['Reyting', 'Davomat'],
+      ['Profil'],
+    ];
+  }
+
+  async askRole(ctx: Context) {
+    await ctx.reply('Siz kimsiz?', {
+      parse_mode: 'HTML',
+      ...Markup.inlineKeyboard([
+        [Markup.button.callback('👨‍👩‍👦 Ota-ona', 'role_parent')],
+        [Markup.button.callback("🎓 O'quvchi", 'role_student')],
+      ]),
+    });
+  }
+
+  async setRole(ctx: Context, role: 'parent' | 'student') {
+    const bot_id = ctx.from.id;
+    await this.botRepo.update({ role }, { where: { bot_id } });
+    return this.continueAfterRole(ctx);
+  }
+
+  async continueAfterRole(ctx: Context) {
+    try {
+      const bot_id = ctx.from.id;
+      const botUser = await this.botRepo.findOne({ where: { bot_id } });
+      let user;
+      try {
+        user = await this.userService.getById(botUser?.user_id);
+      } catch (error) {
+
+      }
+
+      if (!botUser.dataValues.status) {
         await ctx.reply(
           `Iltimos, <b> "Telefon raqamni yuborish"</b> tugmasini bosing!`,
           {
@@ -126,17 +159,9 @@ export class BotService {
         );
       } else {
         if (!user?.name) {
-          await ctx.reply("Iltimos ismingizni quyidagicha kiriting: 👇👇👇 \n\nism:Eshmat", {
-            parse_mode: 'HTML',
-            ...Markup.removeKeyboard(),
-          });
-          return
+          return this.askName(ctx);
         } else if (!user?.surname) {
-          await ctx.reply("Iltimos familiyangizni quyidagicha kiriting: 👇👇👇 \n\nfamiliya:Toshmatov", {
-            parse_mode: 'HTML',
-            ...Markup.removeKeyboard(),
-          });
-          return
+          return this.askSurname(ctx);
         } else if (!user && botUser.dataValues.status) {
           return this.handlePassword(ctx);
         }
@@ -146,13 +171,7 @@ export class BotService {
           'Academic Success Hub ga xush kelibsiz',
           {
             parse_mode: 'HTML',
-            ...Markup.keyboard([
-              ['Farzandlarim'],
-              ['Statistika', 'Kurslar'],
-              ['Reyting', 'Davomat'],
-              ["Profil"],
-              // ["Parolni o'zgartirish", 'Telefon raqamni o\'zgartirish'],
-            ])
+            ...Markup.keyboard(this.mainMenuButtons(botUser.dataValues.role))
               .oneTime()
               .resize(),
           },
@@ -189,10 +208,28 @@ export class BotService {
     );
   }
 
+  async askName(ctx: Context) {
+    const bot_id = ctx.from.id;
+    await this.botRepo.update({ step: NAME_STEP }, { where: { bot_id } });
+    await ctx.reply('Iltimos ismingizni kiriting: 👇', {
+      parse_mode: 'HTML',
+      ...Markup.removeKeyboard(),
+    });
+  }
+
+  async askSurname(ctx: Context) {
+    const bot_id = ctx.from.id;
+    await this.botRepo.update({ step: SURNAME_STEP }, { where: { bot_id } });
+    await ctx.reply('Iltimos familiyangizni kiriting: 👇', {
+      parse_mode: 'HTML',
+      ...Markup.removeKeyboard(),
+    });
+  }
+
   async handlePassword(ctx: Context) {
     const bot_id = ctx.from.id;
-    const user = await this.botRepo.findOne({ where: { bot_id } });
-    await ctx.reply("Parolingizni quyidagicha kiriting: 👇👇👇 \n\npass:user123", {
+    await this.botRepo.update({ step: PASSWORD_STEP }, { where: { bot_id } });
+    await ctx.reply('Parolingizni kiriting: 👇', {
       parse_mode: 'HTML',
       ...Markup.removeKeyboard(),
     });
@@ -243,20 +280,11 @@ export class BotService {
             ...Markup.removeKeyboard(),
           });
         } else if (!user.name) {
-          await ctx.reply("Iltimos ismingizni quyidagicha kiriting: 👇👇👇 \n\nism:Eshmat", {
-            parse_mode: 'HTML',
-            ...Markup.removeKeyboard(),
-          });
+          await this.askName(ctx);
         } else if (!user.surname) {
-          await ctx.reply("Iltimos familiyangizni quyidagicha kiriting: 👇👇👇 \n\nfamiliya:Toshmatov", {
-            parse_mode: 'HTML',
-            ...Markup.removeKeyboard(),
-          });
+          await this.askSurname(ctx);
         } else {
-          await ctx.reply("Parolingizni quyidagicha kiriting: 👇👇👇 \n\npass:user123", {
-            parse_mode: 'HTML',
-            ...Markup.removeKeyboard(),
-          });
+          await this.handlePassword(ctx);
         }
       }
     }
@@ -264,23 +292,17 @@ export class BotService {
 
   async setPassword(@Ctx() ctx: Context) {
     const bot_id = ctx.from.id;
-    console.log(ctx);
     const message = ctx.message as Message.TextMessage;
-    const password = message.text.split(':')[1]
+    const password = message.text.trim();
     const user = await this.botRepo.findOne({ where: { bot_id } });
     let bot_user: any;
     if (!user?.user_id) {
-      console.log(user);
-      bot_user = await this.userService.register({ password, name: user.name, surname: user.surname, role: RoleName.student, phone: user.phone, is_active: true });
-      console.log(bot_user);
-      console.log(bot_user?.data.get('id'));
-      await this.botRepo.update({ user_id: bot_user?.data.get('id') }, {
+      bot_user = await this.userService.register({ password, name: user.name, surname: user.surname, role: user.role || RoleName.student, phone: user.phone, is_active: true });
+      await this.botRepo.update({ user_id: bot_user?.data.get('id'), step: null }, {
         where: { bot_id: user.bot_id },
         returning: true
       })
-      // await ctx.reply("Siz ro'yhatdan muvaffaqiyatli o'tdingiz!")
       const url = `https://ilmnur-front.vercel.app/login?token=${bot_user.token}`;
-      // await ctx.reply(`[Academic Success Hub saytiga kirish uchun shu yerga bosing](${url})`, { parse_mode: 'MarkdownV2' });
       await ctx.reply(
         'Academic Success Hub saytiga kirish uchun shu yerga bosing',
         Markup.inlineKeyboard([
@@ -289,23 +311,20 @@ export class BotService {
       );
     } else {
       bot_user = await this.userService.updatePassword(password, user.phone);
+      await this.botRepo.update({ step: null }, { where: { bot_id } });
       await ctx.reply(`Parolingiz muvaffaqiyatli o'zgartirildi`);
     }
-    console.log(bot_user);
   }
 
   async setName(@Ctx() ctx: Context) {
     const bot_id = ctx.from.id;
     const message = ctx.message as Message.TextMessage;
-    const name = message.text.split(':')[1]
+    const name = message.text.trim();
 
-    const user = await this.botRepo.findOne({ where: { bot_id } });
-    let bot_user: any;
-    bot_user = await this.botRepo.update({ ...user, name }, {
+    await this.botRepo.update({ name, step: SURNAME_STEP }, {
       where: { bot_id },
-      returning: true,
     });
-    await ctx.reply("Iltimos familiyangizni quyidagicha kiriting: 👇👇👇 \n\nfamiliya:Toshmatov", {
+    await ctx.reply('Iltimos familiyangizni kiriting: 👇', {
       parse_mode: 'HTML',
       ...Markup.removeKeyboard(),
     });
@@ -314,12 +333,10 @@ export class BotService {
   async setSurname(@Ctx() ctx: Context) {
     const bot_id = ctx.from.id;
     const message = ctx.message as Message.TextMessage;
-    const surname = message.text.split(':')[1]
-    const user = await this.botRepo.findOne({ where: { bot_id } });
-    let bot_user: any;
-    bot_user = await this.botRepo.update({ ...user, surname }, {
+    const surname = message.text.trim();
+
+    await this.botRepo.update({ surname }, {
       where: { bot_id },
-      returning: true,
     });
     return this.handlePassword(ctx);
   }
@@ -489,8 +506,17 @@ export class BotService {
 
     const botUser = await this.botRepo.findOne({ where: { bot_id } });
 
-    if (botUser?.step == CHILD_ID_STEP && ctx.message && 'text' in ctx.message) {
-      return this.saveChild(ctx);
+    if (botUser?.step && ctx.message && 'text' in ctx.message) {
+      switch (botUser.step) {
+        case CHILD_ID_STEP:
+          return this.saveChild(ctx);
+        case NAME_STEP:
+          return this.setName(ctx);
+        case SURNAME_STEP:
+          return this.setSurname(ctx);
+        case PASSWORD_STEP:
+          return this.setPassword(ctx);
+      }
     }
 
     await ctx.reply(`Noto'g'ri ma'lumot!`);

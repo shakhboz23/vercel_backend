@@ -16,6 +16,18 @@ export class BotUpdate {
     }
   }
 
+  @Action('role_parent')
+  async roleParent(@Ctx() ctx: Context) {
+    await ctx.answerCbQuery();
+    return this.botService.setRole(ctx, 'parent');
+  }
+
+  @Action('role_student')
+  async roleStudent(@Ctx() ctx: Context) {
+    await ctx.answerCbQuery();
+    return this.botService.setRole(ctx, 'student');
+  }
+
   @Help()
   async help(@Ctx() ctx: Context) {
     console.log(ctx);
@@ -71,21 +83,6 @@ export class BotUpdate {
   @Hears("Parolni o'zgaritish")
   async handlePassword(@Ctx() ctx: Context) {
     return this.botService.handlePassword(ctx);
-  }
-
-  @Hears(/pass:\w+/i)
-  async handlePasswordRegex(@Ctx() ctx: Context) {
-    return this.botService.setPassword(ctx);
-  }
-
-  @Hears(/ism:\w+/i)
-  async handleNameRegex(@Ctx() ctx: Context) {
-    return this.botService.setName(ctx);
-  }
-
-  @Hears(/familiya:\w+/i)
-  async handleSurnameRegex(@Ctx() ctx: Context) {
-    return this.botService.setSurname(ctx);
   }
 
   @On('contact')
