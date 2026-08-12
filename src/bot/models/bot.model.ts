@@ -10,6 +10,7 @@ interface BotAttr {
     surname: string;
     phone: string;
     status: boolean;
+    step?: string;
 }
 
 @Table({ tableName: 'bot' })
@@ -46,4 +47,8 @@ export class Bot extends Model<Bot, BotAttr> {
     @ApiProperty({ example: "user active", description: 'status' })
     @Column({ type: DataType.BOOLEAN, defaultValue: false })
     status: boolean;
+
+    @ApiProperty({ example: "child_id", description: 'kutilayotgan javob turi' })
+    @Column({ type: DataType.STRING, allowNull: true })
+    step: string;
 }

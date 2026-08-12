@@ -63,6 +63,7 @@ import { StripeModule } from './stripe/stripe.module';
 import { PaymentStripe } from './stripe/models/stripe.models';
 import { BOT_NAME } from './app.constants';
 import { Bot } from './bot/models/bot.model';
+import { BotChild } from './bot/models/bot_child.model';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { Watched } from './watched/models/watched.models';
@@ -150,6 +151,7 @@ import { PaymentModule } from './payment/payment.module';
         SubCategory,
         PaymentStripe,
         Bot,
+        BotChild,
         Watched,
         Test_settings,
         Attendance,
@@ -157,9 +159,9 @@ import { PaymentModule } from './payment/payment.module';
         UserStreak,
         Payment,
       ],
-      // autoLoadModels: true,
-      // synchronize: true,
-      // sync: { alter: true },
+      autoLoadModels: true,
+      synchronize: true,
+      sync: { alter: true },
       logging: true,
       dialectModule: pg,
       dialectOptions: process.env.NODE_ENV == 'production' ? {

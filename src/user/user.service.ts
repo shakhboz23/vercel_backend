@@ -518,6 +518,26 @@ export class UserService {
     }
   }
 
+  async getStudentById(id: number): Promise<any> {
+    try {
+      if (!id) {
+        return null;
+      }
+      const student = await this.userRepository.findOne({
+        where: { id },
+        include: [
+          {
+            model: Role,
+            where: { role: RoleName.student },
+          },
+        ],
+      });
+      return student;
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
+  }
+
   async getUserAnalytics(user_id: number, group_id: number): Promise<any> {
     try {
       if (!user_id) {

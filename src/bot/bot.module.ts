@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { BotService } from './bot.service';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { Bot } from './models/bot.model';
+import { BotChild } from './models/bot_child.model';
 import { BotUpdate } from './bot.update';
 import { UserModule } from 'src/user/user.module';
 // import { WebhookController } from './bot.controller';
@@ -14,7 +15,7 @@ import { LessonModule } from 'src/lesson/lesson.module';
 import { TestsModule } from 'src/test/test.module';
 
 @Module({
-  imports: [SequelizeModule.forFeature([Bot]), UserModule, SubscriptionsModule, CourseModule, LessonModule, TestsModule,
+  imports: [SequelizeModule.forFeature([Bot, BotChild]), UserModule, SubscriptionsModule, CourseModule, LessonModule, TestsModule,
   // TelegrafModule.forRootAsync({
   //   botName: BOT_NAME,
   //   useFactory: async (configService: ConfigService) => ({

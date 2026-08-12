@@ -1,6 +1,7 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Bot } from './models/bot.model';
+import { BotChild } from './models/bot_child.model';
 import { BOT_NAME } from '../app.constants';
 import {
   InjectBot,
@@ -19,10 +20,15 @@ import { SubscriptionsService } from 'src/subscriptions/subscriptions.service';
 import { CourseService } from 'src/course/course.service';
 import { LessonService } from 'src/lesson/lesson.service';
 import { TestsService } from 'src/test/test.service';
+import { User } from 'src/user/models/user.models';
+
+const CHILD_ID_STEP = 'child_id';
+
 @Injectable()
 export class BotService {
   constructor(
     @InjectModel(Bot) private botRepo: typeof Bot,
+    @InjectModel(BotChild) private botChildRepo: typeof BotChild,
     @InjectBot(BOT_NAME) private readonly bot: Telegraf<Context>,
     private readonly userService: UserService,
     private readonly subscriptionsService: SubscriptionsService,
@@ -66,9 +72,11 @@ export class BotService {
     return {
       parse_mode: 'HTML',
       ...Markup.keyboard([
-        ["Statistika", "Kurslarim"],
+        ['Farzandlarim'],
+        ["Statistika", "Kurslar"],
         ["Reyting", "Davomat"],
-        ["Parolni o'zgaritish", "Telefon raqamni o'zgartirish"],
+        ["Profil"],
+        // ["Parolni o'zgaritish", "Telefon raqamni o'zgartirish"],
       ])
         .oneTime()
         .resize()
@@ -139,9 +147,11 @@ export class BotService {
           {
             parse_mode: 'HTML',
             ...Markup.keyboard([
-              ['Statistika', 'Kurslarim'],
+              ['Farzandlarim'],
+              ['Statistika', 'Kurslar'],
               ['Reyting', 'Davomat'],
-              ["Parolni o'zgartirish", 'Telefon raqamni o\'zgartirish'],
+              ["Profil"],
+              // ["Parolni o'zgartirish", 'Telefon raqamni o\'zgartirish'],
             ])
               .oneTime()
               .resize(),
@@ -175,7 +185,7 @@ export class BotService {
         ])
           .oneTime()
           .resize(),
-      },
+      }, 
     );
   }
 
@@ -322,6 +332,252 @@ export class BotService {
     await this.bot.telegram.sendChatAction(user.bot_id, 'typing');
     await this.bot.telegram.sendMessage(user.bot_id, 'Verify code:' + OTP);
     return true;
+  }
+
+  async my_children(ctx: Context) {
+    const bot_id = ctx.from.id;
+
+    const botUser = await this.botRepo.findOne({ where: { bot_id } });
+
+    if (!botUser) {
+      return this.start(ctx);
+    }
+
+    const children = await this.botChildRepo.findAll({
+      where: { parent_bot_id: bot_id },
+      include: [{ model: User, as: 'student' }],
+      order: [['id', 'ASC']],
+    });
+
+    if (!children.length) {
+      return this.askChildId(ctx);
+    }
+
+    const buttons = children.map((child) => {
+      const student: any = child.student;
+      const name = [student?.name, student?.surname].filter(Boolean).join(' ');
+
+      return [
+        {
+          text: `${child.student_id}.${name || "Noma'lum"}`,
+          callback_data: `child_${child.student_id}`,
+        },
+      ];
+    });
+
+    buttons.push([
+      {
+        text: "➕ Farzand qo'shish",
+        callback_data: 'add_child',
+      },
+    ]);
+
+    await ctx.reply('👨‍👩‍👦 Farzandlaringiz:', {
+      reply_markup: {
+        inline_keyboard: buttons,
+      },
+    });
+  }
+
+  async askChildId(ctx: Context) {
+    const bot_id = ctx.from.id;
+
+    await this.botRepo.update(
+      { step: CHILD_ID_STEP },
+      { where: { bot_id } },
+    );
+
+    await ctx.reply(
+      "Farzandingizning ID raqamini yuboring: 👇👇👇 \n\nMasalan: 125",
+    );
+  }
+
+  async saveChild(ctx: Context) {
+    const bot_id = ctx.from.id;
+    const message = ctx.message as Message.TextMessage;
+    const student_id = Number(message.text.trim());
+
+    if (!Number.isInteger(student_id) || student_id <= 0) {
+      await ctx.reply(
+        "Iltimos, faqat raqamlardan iborat ID yuboring. \n\nMasalan: 125",
+      );
+      return;
+    }
+
+    let student: any;
+    try {
+      student = await this.userService.getStudentById(student_id);
+    } catch (error) {
+      console.log(error);
+    }
+
+    if (!student) {
+      await ctx.reply(
+        `❌ ${student_id} ID raqamli o'quvchi topilmadi. Iltimos, boshqa ID yuboring.`,
+      );
+      return;
+    }
+
+    const [, created] = await this.botChildRepo.findOrCreate({
+      where: { parent_bot_id: bot_id, student_id },
+      defaults: { parent_bot_id: bot_id, student_id },
+    });
+
+    await this.botRepo.update({ step: null }, { where: { bot_id } });
+
+    await ctx.reply(
+      created
+        ? '✅ Farzandingiz saqlandi'
+        : "ℹ️ Bu o'quvchi allaqachon saqlangan",
+    );
+
+    await this.childInfo(ctx, student_id);
+
+    return this.my_children(ctx);
+  }
+
+  async childInfo(ctx: Context, student_id: number) {
+    let student: any;
+    try {
+      student = await this.userService.getStudentById(student_id);
+    } catch (error) {
+      console.log(error);
+    }
+
+    if (!student) {
+      await ctx.reply("O'quvchi topilmadi");
+      return;
+    }
+
+    let courses: any;
+    try {
+      courses = await this.subscriptionsService.getByUserId(student_id);
+    } catch (error) { }
+
+    const course_titles = (courses || [])
+      .map((subscription: any) => subscription.dataValues.course?.title)
+      .filter(Boolean);
+
+    await ctx.reply(
+      `👤 <b>${student.name || ''} ${student.surname || ''}</b>\n` +
+      `🆔 ID: ${student.id}\n` +
+      `📞 Telefon: ${student.phone || "ko'rsatilmagan"}\n` +
+      `📚 Kurslar: ${course_titles.length ? course_titles.join(', ') : 'mavjud emas'}`,
+      { parse_mode: 'HTML' },
+    );
+  }
+
+  async handleText(ctx: Context) {
+    const bot_id = ctx.from.id;
+
+    const botUser = await this.botRepo.findOne({ where: { bot_id } });
+
+    if (botUser?.step == CHILD_ID_STEP && ctx.message && 'text' in ctx.message) {
+      return this.saveChild(ctx);
+    }
+
+    await ctx.reply(`Noto'g'ri ma'lumot!`);
+  }
+
+  async reyting_courses(ctx: Context) {
+    const bot_id = ctx.from.id;
+
+    const user = await this.botRepo.findOne({ where: { bot_id } });
+
+    if (!user?.user_id) {
+      await ctx.reply('Foydalanuvchi topilmadi');
+      return;
+    }
+
+    let courses: any;
+    try {
+      courses = await this.subscriptionsService.getByUserId(user?.user_id);
+    } catch (error) { }
+
+    if (!courses?.length) {
+      await ctx.reply('Sizda hozircha kurslar mavjud emas.');
+      return;
+    }
+
+    const buttons = courses.map((subscription) => {
+      const course = subscription.dataValues.course;
+
+      return [
+        {
+          text: course.title,
+          callback_data: `reyting_course_${course.id}`,
+        },
+      ];
+    });
+
+    await ctx.reply("📊 Reytingni ko'rish uchun kursni tanlang:", {
+      reply_markup: {
+        inline_keyboard: buttons,
+      },
+    });
+  }
+
+  async courseReyting(ctx: Context, course_id: number) {
+    const bot_id = ctx.from.id;
+
+    const user = await this.botRepo.findOne({ where: { bot_id } });
+
+    if (!user?.user_id) {
+      await ctx.reply('Foydalanuvchi topilmadi');
+      return;
+    }
+
+    let courses: any;
+    try {
+      courses = await this.subscriptionsService.getByUserId(user?.user_id);
+    } catch (error) { }
+
+    const subscription = (courses || []).find(
+      (item: any) => item.dataValues.course?.id == course_id,
+    );
+
+    if (!subscription) {
+      await ctx.reply('Kurs topilmadi.');
+      return;
+    }
+
+    const course = subscription.dataValues.course;
+
+    let reytings: any;
+    try {
+      reytings = await this.userService.getReyting(course.group_id, course.id);
+    } catch (error) {
+      console.log(error);
+    }
+
+    if (!reytings?.length) {
+      await ctx.reply(`📊 <b>${course.title}</b>\n\nReyting mavjud emas.`, {
+        parse_mode: 'HTML',
+      });
+      return;
+    }
+
+    const medals = ['🥇', '🥈', '🥉'];
+    const row = (item: any, index: number) => {
+      const place = medals[index] || `${index + 1}.`;
+      const name =
+        [item.name, item.surname].filter(Boolean).join(' ') || "Noma'lum";
+      const ball = item.dataValues.totalReyting || 0;
+
+      return `${place} ${name} — ${ball} ball${item.id == user.user_id ? ' 👈' : ''}`;
+    };
+
+    const rows = reytings.slice(0, 10).map(row);
+    const my_place = reytings.findIndex((item: any) => item.id == user.user_id);
+
+    if (my_place >= 10) {
+      rows.push('...');
+      rows.push(row(reytings[my_place], my_place));
+    }
+
+    await ctx.reply(`📊 <b>${course.title}</b>\n\n${rows.join('\n')}`, {
+      parse_mode: 'HTML',
+    });
   }
 
   async my_courses(ctx: Context) {
