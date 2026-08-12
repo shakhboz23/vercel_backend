@@ -58,6 +58,47 @@ export class UserService {
     private readonly sequelize: Sequelize,
   ) { }
 
+  private static readonly WEEK_DAY_INDEX: Record<string, number> = {
+    Sun: 0,
+    Mon: 1,
+    Tue: 2,
+    Wed: 3,
+    Thu: 4,
+    Fri: 5,
+    Sat: 6,
+  };
+
+  private sortScheduleHistory(schedules: CourseSchedule[]): CourseSchedule[] {
+    return (schedules || [])
+      .filter((schedule) => Array.isArray(schedule.attendance_day))
+      .sort(
+        (left, right) =>
+          new Date(left.createdAt).getTime() -
+            new Date(right.createdAt).getTime() || left.id - right.id,
+      );
+  }
+
+  // A schedule change applies from its calendar date and remains active
+  // until the next version, so we resolve whichever version was in effect
+  // on the given date rather than always using the latest one.
+  private getActiveWeekdays(
+    scheduleHistory: CourseSchedule[],
+    date: Date,
+  ): Set<number> {
+    const activeSchedule = scheduleHistory.reduce<CourseSchedule | undefined>(
+      (active, schedule) =>
+        new Date(schedule.createdAt).setHours(0, 0, 0, 0) <= date.getTime()
+          ? schedule
+          : active,
+      undefined,
+    );
+    return new Set(
+      (activeSchedule?.attendance_day || [])
+        .map((day) => UserService.WEEK_DAY_INDEX[day])
+        .filter((day): day is number => day !== undefined),
+    );
+  }
+
   private countScheduledClasses(
     subscriptionDate: Date | string,
     schedules: CourseSchedule[],
@@ -67,22 +108,7 @@ export class UserService {
       return 0;
     }
 
-    const weekDays: Record<string, number> = {
-      Sun: 0,
-      Mon: 1,
-      Tue: 2,
-      Wed: 3,
-      Thu: 4,
-      Fri: 5,
-      Sat: 6,
-    };
-    const scheduleHistory = schedules
-      .filter((schedule) => Array.isArray(schedule.attendance_day))
-      .sort(
-        (left, right) =>
-          new Date(left.createdAt).getTime() -
-            new Date(right.createdAt).getTime() || left.id - right.id,
-      );
+    const scheduleHistory = this.sortScheduleHistory(schedules);
     const date = new Date(startDate);
     date.setHours(0, 0, 0, 0);
     const today = new Date();
@@ -90,27 +116,151 @@ export class UserService {
 
     let scheduledClasses = 0;
     while (date <= today) {
-      // A change applies from its calendar date and remains active until the
-      // next version. This preserves the schedule that was valid on each date.
-      const activeSchedule = scheduleHistory.reduce<CourseSchedule | undefined>(
-        (active, schedule) =>
-          new Date(schedule.createdAt).setHours(0, 0, 0, 0) <= date.getTime()
-            ? schedule
-            : active,
-        undefined,
-      );
-      const scheduledWeekDays = new Set(
-        activeSchedule?.attendance_day
-          .map((day) => weekDays[day])
-          .filter((day): day is number => day !== undefined) || [],
-      );
-      if (scheduledWeekDays.has(date.getDay())) {
+      if (this.getActiveWeekdays(scheduleHistory, date).has(date.getDay())) {
         scheduledClasses += 1;
       }
       date.setDate(date.getDate() + 1);
     }
 
     return scheduledClasses;
+  }
+
+  // Builds the current-month attendance calendar for the given schedule
+  // histories (one per subscribed course), merged with the user's actual
+  // attendance records for that month.
+  private buildMonthlyAttendance(
+    scheduleHistories: CourseSchedule[][],
+    attendanceByDate: Map<string, number>,
+  ) {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const calendar: Array<{
+      day: number;
+      date: string;
+      status: 'present' | 'late' | 'absent' | 'upcoming' | 'none';
+    }> = [];
+    let present = 0;
+    let late = 0;
+    let absent = 0;
+    let scheduledClasses = 0;
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const date = new Date(year, month, day);
+      date.setHours(0, 0, 0, 0);
+      const isScheduled = scheduleHistories.some((history) =>
+        this.getActiveWeekdays(history, date).has(date.getDay()),
+      );
+      const key = this.formatDateKey(date);
+      let status: 'present' | 'late' | 'absent' | 'upcoming' | 'none' = 'none';
+
+      if (isScheduled) {
+        if (date > today) {
+          status = 'upcoming';
+        } else {
+          scheduledClasses += 1;
+          const rawStatus = attendanceByDate.get(key);
+          if (rawStatus === 2) {
+            status = 'present';
+            present += 1;
+          } else if (rawStatus === 1) {
+            status = 'late';
+            late += 1;
+          } else {
+            status = 'absent';
+            absent += 1;
+          }
+        }
+      }
+
+      calendar.push({ day, date: key, status });
+    }
+
+    const percentage = scheduledClasses
+      ? Number((((present + late) / scheduledClasses) * 100).toFixed(2))
+      : 0;
+
+    return {
+      year,
+      month: month + 1,
+      percentage,
+      present,
+      late,
+      absent,
+      scheduledClasses,
+      calendar,
+    };
+  }
+
+  // Builds the current week's activity (Mon..Sun), scoped to the days the
+  // subscribed courses actually meet on (their attendance_days schedule).
+  private buildWeeklyActivity(
+    scheduleHistories: CourseSchedule[][],
+    attendanceByDate: Map<string, number>,
+  ) {
+    const dayLabels = ['Du', 'Se', 'Ch', 'Pa', 'Ju', 'Sh', 'Ya'];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const dow = today.getDay();
+    const mondayOffset = dow === 0 ? -6 : 1 - dow;
+    const monday = new Date(today);
+    monday.setDate(today.getDate() + mondayOffset);
+
+    const days: Array<{
+      label: string;
+      date: string;
+      scheduled: boolean;
+      status: 'present' | 'late' | 'absent' | 'upcoming' | 'none';
+      intensity: number;
+    }> = [];
+
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(monday);
+      date.setDate(monday.getDate() + i);
+      const isScheduled = scheduleHistories.some((history) =>
+        this.getActiveWeekdays(history, date).has(date.getDay()),
+      );
+      const key = this.formatDateKey(date);
+      let status: 'present' | 'late' | 'absent' | 'upcoming' | 'none' = 'none';
+      let intensity = 0;
+
+      if (isScheduled) {
+        if (date > today) {
+          status = 'upcoming';
+          intensity = 0;
+        } else {
+          const rawStatus = attendanceByDate.get(key);
+          if (rawStatus === 2) {
+            status = 'present';
+            intensity = 100;
+          } else if (rawStatus === 1) {
+            status = 'late';
+            intensity = 55;
+          } else {
+            status = 'absent';
+            intensity = 20;
+          }
+        }
+      }
+
+      days.push({ label: dayLabels[i], date: key, scheduled: isScheduled, status, intensity });
+    }
+
+    return days;
+  }
+
+  // Uses local date components (not toISOString, which converts to UTC and
+  // would shift the date for timezones ahead of UTC) so the key matches the
+  // calendar day the date objects were built from.
+  private formatDateKey(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
   async register(
@@ -581,7 +731,6 @@ export class UserService {
                             [Op.gt]: new Date(),
                           },
                         },
-                        limit: 6,
                         required: false,
                       },
                     ],
@@ -603,11 +752,12 @@ export class UserService {
   WITH ranked AS (
     SELECT
       r.user_id,
-      ROW_NUMBER() OVER (ORDER BY r.ball DESC) AS position
+      ROW_NUMBER() OVER (ORDER BY SUM(r.ball) DESC) AS position
     FROM reyting r
     JOIN lesson l ON l.id = r.lesson_id
-    JOIN course c ON c.group_id = :groupId
+    JOIN course c ON c.id = l.course_id
     WHERE c.group_id = :groupId
+    GROUP BY r.user_id
   )
   SELECT position
   FROM ranked
@@ -628,22 +778,25 @@ export class UserService {
         `
   WITH ranked AS (
     SELECT
-      r.*,
+      r.user_id,
+      SUM(r.ball) AS ball,
       u.id AS "user.id",
       u.name AS "user.name",
       u.surname AS "user.surname",
       u.image AS "user.image",
-      ROW_NUMBER() OVER (ORDER BY r.ball DESC) AS position
+      ROW_NUMBER() OVER (ORDER BY SUM(r.ball) DESC) AS position
     FROM reyting r
     JOIN lesson l ON l.id = r.lesson_id
-    JOIN course c ON c.group_id = :groupId
+    JOIN course c ON c.id = l.course_id
     JOIN "user" u ON u.id = r.user_id
     WHERE c.group_id = :groupId
+    GROUP BY r.user_id, u.id, u.name, u.surname, u.image
   )
   SELECT *
   FROM ranked
   WHERE position BETWEEN :userPosition - 2
                      AND :userPosition + 2
+  ORDER BY position
   `,
         {
           replacements: {
@@ -674,8 +827,8 @@ export class UserService {
       ROW_NUMBER() OVER (ORDER BY SUM(r.ball) DESC) AS position
     FROM reyting r
     JOIN lesson l ON l.id = r.lesson_id
-    JOIN course c ON c.group_id = :groupId
-    WHERE c.group_id = :groupId 
+    JOIN course c ON c.id = l.course_id
+    WHERE c.group_id = :groupId
       AND EXTRACT(MONTH FROM r."createdAt") = :currentMonth
       AND EXTRACT(YEAR FROM r."createdAt") = :currentYear
     GROUP BY r.user_id
@@ -686,8 +839,8 @@ export class UserService {
       ROW_NUMBER() OVER (ORDER BY SUM(r.ball) DESC) AS position
     FROM reyting r
     JOIN lesson l ON l.id = r.lesson_id
-    JOIN course c ON c.group_id = :groupId
-    WHERE c.group_id = :groupId 
+    JOIN course c ON c.id = l.course_id
+    WHERE c.group_id = :groupId
       AND EXTRACT(MONTH FROM r."createdAt") = :lastMonth
       AND EXTRACT(YEAR FROM r."createdAt") = :lastMonthYear
     GROUP BY r.user_id
@@ -735,28 +888,57 @@ export class UserService {
 
       const userJSON = user.get({ plain: true });
 
+      // The "attendance" table only stores lesson_id, not course_id, so the
+      // course is resolved through the lesson it belongs to. The query is
+      // also scoped to this group so it doesn't pull in attendance from the
+      // user's other groups.
       const attendanceRows = await this.sequelize.query<{
         course_id: number;
-        attendance: number;
+        date: Date;
+        status: number;
       }>(
         `
-          SELECT "course_id", "attendance"
-          FROM "attendance"
-          WHERE "user_id" = :userId
+          SELECT l."course_id" AS course_id, a."date" AS date, a."attendance" AS status
+          FROM "attendance" a
+          JOIN "lesson" l ON l.id = a."lesson_id"
+          JOIN "course" c ON c.id = l."course_id"
+          WHERE a."user_id" = :userId AND c."group_id" = :groupId
         `,
         {
-          replacements: { userId: user_id },
+          replacements: { userId: user_id, groupId: group_id },
           type: QueryTypes.SELECT,
         },
       );
-      const attendanceByCourse = new Map(
-        attendanceRows.map((row) => [row.course_id, Number(row.attendance) || 0]),
-      );
+
+      // attendance status: 2 = present, 1 = late, 0 = absent (see Activity/Main.vue).
+      // Present and late both count as "attended" for percentage purposes.
+      const attendanceByCourse = new Map<number, number>();
+      const attendanceByDate = new Map<string, number>();
+      for (const row of attendanceRows) {
+        const status = Number(row.status) || 0;
+        if (status > 0) {
+          attendanceByCourse.set(
+            row.course_id,
+            (attendanceByCourse.get(row.course_id) || 0) + 1,
+          );
+        }
+        const dateKey = this.formatDateKey(new Date(row.date));
+        const prevStatus = attendanceByDate.get(dateKey);
+        if (prevStatus === undefined || status > prevStatus) {
+          attendanceByDate.set(dateKey, status);
+        }
+      }
+
+      const scheduleHistories = userJSON.subscriptions
+        .map((subscription: any) =>
+          this.sortScheduleHistory(subscription.course?.attendance_days || []),
+        )
+        .filter((history) => history.length);
 
       userJSON.subscriptions = userJSON.subscriptions.map((subscription: any) => {
         const scheduledClasses = this.countScheduledClasses(
           subscription.createdAt,
-          subscription.course?.schedule || [],
+          subscription.course?.attendance_days || [],
         );
         const attendedClasses = attendanceByCourse.get(subscription.course_id) || 0;
         const percentage = scheduledClasses
@@ -773,6 +955,61 @@ export class UserService {
         };
       });
 
+      const monthlyAttendance = this.buildMonthlyAttendance(
+        scheduleHistories,
+        attendanceByDate,
+      );
+      const weeklyActivity = this.buildWeeklyActivity(
+        scheduleHistories,
+        attendanceByDate,
+      );
+
+      const upcomingTests = userJSON.subscriptions
+        .flatMap((subscription: any) =>
+          (subscription.course?.lessons || []).flatMap((lesson: any) =>
+            (lesson.test_settings || []).map((setting: any) => ({
+              id: setting.id,
+              lesson_id: lesson.id,
+              lesson_title: lesson.title,
+              course_id: subscription.course_id,
+              course_title: subscription.course?.title,
+              test_type: setting.test_type,
+              start_date: setting.start_date,
+              end_date: setting.end_date,
+              duration: lesson.duration,
+              question_count: 0,
+            })),
+          ),
+        )
+        .sort(
+          (left: any, right: any) =>
+            new Date(left.start_date).getTime() - new Date(right.start_date).getTime(),
+        );
+
+      const upcomingLessonIds = [
+        ...new Set(upcomingTests.map((test: any) => test.lesson_id)),
+      ];
+      if (upcomingLessonIds.length) {
+        const questionCountRows: any = await this.sequelize.query(
+          `
+            SELECT "lesson_id", COUNT(*)::int AS count
+            FROM "tests"
+            WHERE "lesson_id" IN (:lessonIds) AND "type" != 'deleted'
+            GROUP BY "lesson_id"
+          `,
+          {
+            replacements: { lessonIds: upcomingLessonIds },
+            type: QueryTypes.SELECT,
+          },
+        );
+        const questionCounts = new Map(
+          questionCountRows.map((row: any) => [row.lesson_id, row.count]),
+        );
+        upcomingTests.forEach((test: any) => {
+          test.question_count = questionCounts.get(test.lesson_id) || 0;
+        });
+      }
+
       // ========== reyting ball ================== //
 
 
@@ -785,8 +1022,8 @@ export class UserService {
       ROW_NUMBER() OVER (ORDER BY SUM(r.ball) DESC) AS position
     FROM reyting r
     JOIN lesson l ON l.id = r.lesson_id
-    JOIN course c ON c.group_id = :groupId
-    WHERE c.group_id = :groupId 
+    JOIN course c ON c.id = l.course_id
+    WHERE c.group_id = :groupId
       AND EXTRACT(MONTH FROM r."createdAt") = :currentMonth
       AND EXTRACT(YEAR FROM r."createdAt") = :currentYear
     GROUP BY r.user_id
@@ -798,8 +1035,8 @@ export class UserService {
       ROW_NUMBER() OVER (ORDER BY SUM(r.ball) DESC) AS position
     FROM reyting r
     JOIN lesson l ON l.id = r.lesson_id
-    JOIN course c ON c.group_id = :groupId
-    WHERE c.group_id = :groupId 
+    JOIN course c ON c.id = l.course_id
+    WHERE c.group_id = :groupId
       AND EXTRACT(MONTH FROM r."createdAt") = :lastMonth
       AND EXTRACT(YEAR FROM r."createdAt") = :lastMonthYear
     GROUP BY r.user_id
@@ -832,22 +1069,7 @@ export class UserService {
       const currentBall = Number(positionsBall?.currentBall) || 0;
       const lastBall = Number(positionsBall?.lastBall) || 0;
 
-      // 1. Reyting (O'rin) o'zgarishi mantiqi
-      let rankBallStatus = "o'zgarishsiz";
-      let rankBallDifference = 0;
-
-      if (lastPosition === 0 && currentPosition > 0) {
-        rankStatus = "yangi";
-      } else if (currentPosition > 0 && lastPosition > 0) {
-        rankDifference = lastPosition - currentPosition; // O'rin kichrayishi — o'sish hisoblanadi
-        if (rankDifference > 0) rankStatus = "ko'tarildi";
-        else if (rankDifference < 0) {
-          rankStatus = "tushdi";
-          rankDifference = Math.abs(rankDifference);
-        }
-      }
-
-      // 2. Ball o'zgarishi mantiqi
+      // Ball o'zgarishi mantiqi
       let ballStatus = "o'zgarishsiz";
       let ballDifference = currentBall - lastBall; // Joriy balldan o'tgan oynikini ayiramiz
 
@@ -865,9 +1087,13 @@ export class UserService {
           status: rankStatus,
         }, ratingBallStats: {
           currentBall,
-          difference: rankBallDifference,
-          status: rankBallStatus,
-        }
+          difference: ballDifference,
+          status: ballStatus,
+        },
+        attendanceStats: monthlyAttendance,
+        weeklyActivity,
+        upcomingTests,
+        newTestsCount: upcomingTests.length,
       };
     } catch (error) {
       throw new BadRequestException(error.message);

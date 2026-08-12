@@ -62,7 +62,7 @@ export class BotService {
     try {
       console.log(update);
       await this.bot.handleUpdate(update);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error handling update:', error);
       throw new Error(`Failed to process update: ${error.message}`);
     }
@@ -465,6 +465,23 @@ export class BotService {
       `📚 Kurslar: ${course_titles.length ? course_titles.join(', ') : 'mavjud emas'}`,
       { parse_mode: 'HTML' },
     );
+
+    const groups = await this.getUserGroups(student_id);
+
+    if (!groups.size) return;
+
+    if (groups.size === 1) {
+      const [groupId] = groups.keys();
+      return this.sendStatistics(ctx, student_id, groupId);
+    }
+
+    const buttons = [...groups.entries()].map(([groupId, title]) => [
+      { text: title, callback_data: `child_stats_${student_id}_${groupId}` },
+    ]);
+
+    await ctx.reply("📊 Statistikani ko'rish uchun guruhni tanlang:", {
+      reply_markup: { inline_keyboard: buttons },
+    });
   }
 
   async handleText(ctx: Context) {
@@ -578,6 +595,294 @@ export class BotService {
     await ctx.reply(`📊 <b>${course.title}</b>\n\n${rows.join('\n')}`, {
       parse_mode: 'HTML',
     });
+  }
+
+  async statistics(ctx: Context) {
+    const bot_id = ctx.from.id;
+
+    const botUser = await this.botRepo.findOne({ where: { bot_id } });
+
+    if (!botUser?.user_id) {
+      await ctx.reply('Foydalanuvchi topilmadi');
+      return;
+    }
+
+    const groups = await this.getUserGroups(botUser.user_id);
+
+    if (!groups.size) {
+      await ctx.reply('Sizda hozircha guruhlar mavjud emas.');
+      return;
+    }
+
+    if (groups.size === 1) {
+      const [groupId] = groups.keys();
+      return this.sendStatistics(ctx, botUser.user_id, groupId);
+    }
+
+    const buttons = [...groups.entries()].map(([groupId, title]) => [
+      { text: title, callback_data: `stats_group_${groupId}` },
+    ]);
+
+    await ctx.reply("📊 Statistikani ko'rish uchun guruhni tanlang:", {
+      reply_markup: { inline_keyboard: buttons },
+    });
+  }
+
+  async statisticsForGroup(ctx: Context, group_id: number) {
+    const bot_id = ctx.from.id;
+
+    const botUser = await this.botRepo.findOne({ where: { bot_id } });
+
+    if (!botUser?.user_id) {
+      await ctx.reply('Foydalanuvchi topilmadi');
+      return;
+    }
+
+    return this.sendStatistics(ctx, botUser.user_id, group_id);
+  }
+
+  async childStatisticsForGroup(ctx: Context, student_id: number, group_id: number) {
+    return this.sendStatistics(ctx, student_id, group_id);
+  }
+
+  async attendance(ctx: Context) {
+    const bot_id = ctx.from.id;
+
+    const botUser = await this.botRepo.findOne({ where: { bot_id } });
+
+    if (!botUser?.user_id) {
+      await ctx.reply('Foydalanuvchi topilmadi');
+      return;
+    }
+
+    const groups = await this.getUserGroups(botUser.user_id);
+
+    if (!groups.size) {
+      await ctx.reply('Sizda hozircha guruhlar mavjud emas.');
+      return;
+    }
+
+    const buttons = [...groups.entries()].map(([groupId, title]) => [
+      { text: title, callback_data: `attendance_group_${groupId}` },
+    ]);
+
+    await ctx.reply("📅 Davomatni ko'rish uchun guruhni tanlang:", {
+      reply_markup: { inline_keyboard: buttons },
+    });
+  }
+
+  async attendanceGroupCourses(ctx: Context, group_id: number) {
+    const bot_id = ctx.from.id;
+
+    const botUser = await this.botRepo.findOne({ where: { bot_id } });
+
+    if (!botUser?.user_id) {
+      await ctx.reply('Foydalanuvchi topilmadi');
+      return;
+    }
+
+    let subscriptions: any;
+    try {
+      subscriptions = await this.subscriptionsService.getByUserId(botUser.user_id);
+    } catch (error) { }
+
+    const courses = ((subscriptions as any[]) || [])
+      .map((subscription: any) => subscription.dataValues.course)
+      .filter((course: any) => course?.group_id == group_id);
+
+    if (!courses.length) {
+      await ctx.reply('Bu guruhda kurslaringiz mavjud emas.');
+      return;
+    }
+
+    const buttons = courses.map((course: any) => [
+      { text: course.title, callback_data: `attendance_course_${course.id}` },
+    ]);
+
+    await ctx.reply("📚 Davomatni ko'rish uchun kursni tanlang:", {
+      reply_markup: { inline_keyboard: buttons },
+    });
+  }
+
+  async attendanceForCourse(ctx: Context, course_id: number) {
+    const bot_id = ctx.from.id;
+
+    const botUser = await this.botRepo.findOne({ where: { bot_id } });
+
+    if (!botUser?.user_id) {
+      await ctx.reply('Foydalanuvchi topilmadi');
+      return;
+    }
+
+    let subscriptions: any;
+    try {
+      subscriptions = await this.subscriptionsService.getByUserId(botUser.user_id);
+    } catch (error) { }
+
+    const subscription = ((subscriptions as any[]) || []).find(
+      (item: any) => item.dataValues.course?.id == course_id,
+    );
+
+    if (!subscription) {
+      await ctx.reply('Kurs topilmadi.');
+      return;
+    }
+
+    const course = subscription.dataValues.course;
+
+    let analytics: any;
+    try {
+      analytics = await this.userService.getUserAnalytics(botUser.user_id, course.group_id);
+    } catch (error) {
+      console.log(error);
+      await ctx.reply('Davomatni olishda xatolik yuz berdi.');
+      return;
+    }
+
+    const courseSubscription = (analytics?.subscriptions || []).find(
+      (item: any) => item.course_id == course_id,
+    );
+    const attendance = courseSubscription?.attendance || {
+      attended_classes: 0,
+      scheduled_classes: 0,
+      percentage: 0,
+    };
+
+    await ctx.reply(
+      `📅 <b>${course.title}</b> — Davomat\n\n` +
+      `✅ Qatnashgan darslar: <b>${attendance.attended_classes}</b>\n` +
+      `📚 Jami darslar: <b>${attendance.scheduled_classes}</b>\n` +
+      `📊 Foiz: <b>${attendance.percentage}%</b>`,
+      { parse_mode: 'HTML' },
+    );
+  }
+
+  private readonly roleLabels: Record<string, string> = {
+    student: "O'quvchi",
+    teacher: "O'qituvchi",
+    parent: 'Ota-ona',
+    admin: 'Admin',
+    super_admin: 'Super admin',
+  };
+
+  async profile(ctx: Context) {
+    const bot_id = ctx.from.id;
+
+    const botUser = await this.botRepo.findOne({ where: { bot_id } });
+
+    if (!botUser?.user_id) {
+      await ctx.reply('Foydalanuvchi topilmadi');
+      return;
+    }
+
+    let user: any;
+    try {
+      user = await this.userService.getById(botUser.user_id);
+    } catch (error) {
+      console.log(error);
+    }
+
+    if (!user) {
+      await ctx.reply('Foydalanuvchi topilmadi');
+      return;
+    }
+
+    const roleLabel = this.roleLabels[user.current_role] || user.current_role || "ko'rsatilmagan";
+
+    await ctx.reply(
+      `👤 <b>Profil ma'lumotlari</b>\n\n` +
+      `👤 Ism: <b>${user.name || "ko'rsatilmagan"}</b>\n` +
+      `👤 Familiya: <b>${user.surname || "ko'rsatilmagan"}</b>\n` +
+      `📞 Telefon: <b>${user.phone || "ko'rsatilmagan"}</b>\n` +
+      `🎓 Rol: <b>${roleLabel}</b>`,
+      {
+        parse_mode: 'HTML',
+        ...Markup.keyboard([
+          ["Parolni o'zgaritish", "Telefon raqamni o'zgartirish"],
+        ])
+          .oneTime()
+          .resize(),
+      },
+    );
+  }
+
+  private async getUserGroups(user_id: number): Promise<Map<number, string>> {
+    let subscriptions: any;
+    try {
+      subscriptions = await this.subscriptionsService.getByUserId(user_id);
+    } catch (error) { }
+
+    const groups = new Map<number, string>();
+    for (const subscription of (subscriptions as any[]) || []) {
+      const course = subscription.dataValues.course;
+      const groupId = course?.group_id;
+
+      if (!groupId || groups.has(groupId)) continue;
+      groups.set(groupId, course.group?.title || course.title);
+    }
+
+    return groups;
+  }
+
+  private readonly monthNames = [
+    'Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'Iyun',
+    'Iyul', 'Avgust', 'Sentabr', 'Oktabr', 'Noyabr', 'Dekabr',
+  ];
+
+  private statusIcon(status: string): string {
+    if (status === "ko'tarildi" || status === 'oshdi' || status === 'yangi') return '📈';
+    if (status === 'tushdi' || status === 'kamaydi') return '📉';
+    return '➖';
+  }
+
+  private async sendStatistics(ctx: Context, user_id: number, group_id: number) {
+    let analytics: any;
+    try {
+      analytics = await this.userService.getUserAnalytics(user_id, group_id);
+    } catch (error) {
+      console.log(error);
+      await ctx.reply('Statistikani olishda xatolik yuz berdi.');
+      return;
+    }
+
+    const ratingBall = analytics?.ratingBallStats || {};
+    const ratingPosition = analytics?.ratingStats || {};
+    const attendance = analytics?.attendanceStats || {};
+    const upcomingTests = analytics?.upcomingTests || [];
+
+    const monthLabel = attendance.month
+      ? `${this.monthNames[attendance.month - 1]} ${attendance.year}`
+      : '';
+
+    const lines = [
+      '📊 <b>Statistika</b>',
+      '',
+      `🏆 Umumiy ball: <b>${ratingBall.currentBall || 0}</b>` +
+      (ratingBall.difference
+        ? ` (${this.statusIcon(ratingBall.status)} ${ratingBall.difference} ball ${ratingBall.status})`
+        : ''),
+      `👥 Guruh reytingi: <b>#${ratingPosition.currentPosition || 0}</b>` +
+      (ratingPosition.difference
+        ? ` (${this.statusIcon(ratingPosition.status)} ${ratingPosition.difference} o'rin ${ratingPosition.status})`
+        : ''),
+      `📅 Davomat (${monthLabel}): <b>${attendance.percentage ?? 0}%</b>` +
+      ` (✅ ${attendance.present || 0}, ⏱ ${attendance.late || 0}, ❌ ${attendance.absent || 0})`,
+      `📝 Navbatdagi testlar: <b>${upcomingTests.length}</b>`,
+    ];
+
+    if (upcomingTests.length) {
+      lines.push('');
+      lines.push('<b>Yaqin orada:</b>');
+      for (const test of upcomingTests.slice(0, 5)) {
+        const startDate = new Date(test.start_date);
+        const dateStr = `${String(startDate.getDate()).padStart(2, '0')}.${String(startDate.getMonth() + 1).padStart(2, '0')}`;
+        const courseTitle = test.course_title ? ` (${test.course_title})` : '';
+
+        lines.push(`• ${test.lesson_title}${courseTitle} — ${dateStr}`);
+      }
+    }
+
+    await ctx.reply(lines.join('\n'), { parse_mode: 'HTML' });
   }
 
   async my_courses(ctx: Context) {

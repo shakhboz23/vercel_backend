@@ -34,7 +34,7 @@ export class BotUpdate {
 
   @Hears('Statistika')
   async statistics(@Ctx() ctx: Context) {
-    await ctx.reply('working...');
+    return this.botService.statistics(ctx);
   }
 
   @Hears('Reyting')
@@ -55,7 +55,12 @@ export class BotUpdate {
 
   @Hears('Davomat')
   async attendance(@Ctx() ctx: Context) {
-    await ctx.reply('working...');
+    return this.botService.attendance(ctx);
+  }
+
+  @Hears('Profil')
+  async profile(@Ctx() ctx: Context) {
+    return this.botService.profile(ctx);
   }
 
   @Hears("Telefon raqamni o'zgartirish")
@@ -106,6 +111,51 @@ export class BotUpdate {
     return this.botService.lessons(ctx, courseId);
   }
 
+  @Action(/^stats_group_(\d+)$/)
+  async selectStatsGroup(@Ctx() ctx: Context) {
+    const callbackQuery = ctx.callbackQuery;
+
+    if (!('data' in callbackQuery)) {
+      return;
+    }
+
+    await ctx.answerCbQuery();
+
+    const groupId = Number(callbackQuery.data.replace('stats_group_', ''));
+
+    return this.botService.statisticsForGroup(ctx, groupId);
+  }
+
+  @Action(/^attendance_group_(\d+)$/)
+  async selectAttendanceGroup(@Ctx() ctx: Context) {
+    const callbackQuery = ctx.callbackQuery;
+
+    if (!('data' in callbackQuery)) {
+      return;
+    }
+
+    await ctx.answerCbQuery();
+
+    const groupId = Number(callbackQuery.data.replace('attendance_group_', ''));
+
+    return this.botService.attendanceGroupCourses(ctx, groupId);
+  }
+
+  @Action(/^attendance_course_(\d+)$/)
+  async selectAttendanceCourse(@Ctx() ctx: Context) {
+    const callbackQuery = ctx.callbackQuery;
+
+    if (!('data' in callbackQuery)) {
+      return;
+    }
+
+    await ctx.answerCbQuery();
+
+    const courseId = Number(callbackQuery.data.replace('attendance_course_', ''));
+
+    return this.botService.attendanceForCourse(ctx, courseId);
+  }
+
   @Action(/^reyting_course_(\d+)$/)
   async handleCourseReyting(@Ctx() ctx: Context) {
     const callbackQuery = ctx.callbackQuery;
@@ -152,6 +202,21 @@ export class BotUpdate {
     const studentId = Number(callbackQuery.data.replace('child_', ''));
 
     return this.botService.childInfo(ctx, studentId);
+  }
+
+  @Action(/^child_stats_(\d+)_(\d+)$/)
+  async selectChildStatsGroup(@Ctx() ctx: Context) {
+    const callbackQuery = ctx.callbackQuery;
+
+    if (!('data' in callbackQuery)) {
+      return;
+    }
+
+    await ctx.answerCbQuery();
+
+    const [, studentId, groupId] = callbackQuery.data.match(/^child_stats_(\d+)_(\d+)$/) || [];
+
+    return this.botService.childStatisticsForGroup(ctx, Number(studentId), Number(groupId));
   }
 
   @Action(/^lesson_test_(\d+)$/)

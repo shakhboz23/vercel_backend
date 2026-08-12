@@ -11,6 +11,7 @@ import { Tests } from '../test/models/test.models';
 import { Uploaded } from '../uploaded/models/uploaded.models';
 import { UserService } from '../user/user.service';
 import { Course } from '../course/models/course.models';
+import { Group } from '../group/models/group.models';
 import { UploadedService } from '../uploaded/uploaded.service';
 import { CreateSubscriptionsDto } from './dto/create_subscriptions.dto';
 import { Response } from 'express';
@@ -125,7 +126,7 @@ export class SubscriptionsService {
         where: {
           user_id,
         },
-        include: [{ model: Course }],
+        include: [{ model: Course, include: [{ model: Group, required: false }] }],
       });
       if (!subscriptionss.length) {
         throw new NotFoundException('Subscriptionss not found');
