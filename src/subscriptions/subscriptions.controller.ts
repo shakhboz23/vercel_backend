@@ -90,10 +90,13 @@ export class SubscriptionsController {
     return this.subscriptionsService.update(id, subscriptionsDto);
   }
 
-  @ApiOperation({ summary: 'Delete subscriptions' })
+  @ApiOperation({ summary: 'Delete subscription' })
   // @UseGuards(AuthGuard)
-  @Delete(':id')
-  deleteSubscriptions(@Param('id') id: number) {
-    // return this.subscriptionsService.delete(id);
+  @Delete('/deleteSubscription/:course_id/:user_id')
+  deleteSubscription(
+    @Param('course_id') course_id: number,
+    @Param('user_id') user_id: number,
+  ) {
+    return this.subscriptionsService.delete(user_id, course_id);
   }
 }
