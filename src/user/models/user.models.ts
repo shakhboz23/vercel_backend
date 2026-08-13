@@ -31,6 +31,7 @@ interface UserAttributes {
   image: string;
   hashed_password: string;
   hashed_refresh_token: string;
+  student_id: string;
 }
 
 export enum RoleName {
@@ -108,6 +109,12 @@ export class User extends Model<User, UserAttributes> {
     type: DataType.STRING,
   })
   activation_link: string;
+
+  @Column({
+    type: DataType.STRING(4),
+    unique: true,
+  })
+  student_id: string;
 
   @HasMany(() => Chat, {
     onDelete: 'CASCADE',

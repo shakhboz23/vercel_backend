@@ -204,7 +204,7 @@ export class BotService {
         ])
           .oneTime()
           .resize(),
-      }, 
+      },
     );
   }
 
@@ -477,8 +477,8 @@ export class BotService {
 
     await ctx.reply(
       `👤 <b>${student.name || ''} ${student.surname || ''}</b>\n` +
-      `🆔 ID: ${student.id}\n` +
-      `📞 Telefon: ${student.phone || "ko'rsatilmagan"}\n` +
+        (student.student_id ? `🆔 ID: ${student.student_id}\n` : ``) +
+        // `📞 Telefon: ${student.phone || "ko'rsatilmagan"}\n` +
       `📚 Kurslar: ${course_titles.length ? course_titles.join(', ') : 'mavjud emas'}`,
       { parse_mode: 'HTML' },
     );
@@ -817,9 +817,10 @@ export class BotService {
 
     await ctx.reply(
       `👤 <b>Profil ma'lumotlari</b>\n\n` +
-      `👤 Ism: <b>${user.name || "ko'rsatilmagan"}</b>\n` +
-      `👤 Familiya: <b>${user.surname || "ko'rsatilmagan"}</b>\n` +
-      `📞 Telefon: <b>${user.phone || "ko'rsatilmagan"}</b>\n` +
+        (user.student_id ? `🆔 ID: ${user.student_id}\n` : ``) +
+        `👤 Ism: <b>${user.name || "ko'rsatilmagan"}</b>\n` +
+        `👤 Familiya: <b>${user.surname || "ko'rsatilmagan"}</b>\n` +
+        `📞 Telefon: <b>${user.phone || "ko'rsatilmagan"}</b>\n` +
       `🎓 Rol: <b>${roleLabel}</b>`,
       {
         parse_mode: 'HTML',

@@ -314,9 +314,11 @@ export class UserService {
           token: access_token,
         };
       } else {
+        const student_id = await this.generateUniqueStudentId();
         user = await this.userRepository.create({
           ...registerUserDto,
           hashed_password,
+          student_id,
         });
         const { access_token, refresh_token } = await generateToken(
           { id: user.id, is_active: user.is_active },
@@ -396,6 +398,16 @@ export class UserService {
       password += chars[randomIndex];
     }
     return password;
+  }
+
+  private async generateUniqueStudentId(): Promise<string> {
+    let student_id: string;
+    let exists: User | null;
+    do {
+      student_id = String(Math.floor(1000 + Math.random() * 9000));
+      exists = await this.userRepository.findOne({ where: { student_id } });
+    } while (exists);
+    return student_id;
   }
 
   async activateLink(activation_link: string) {
