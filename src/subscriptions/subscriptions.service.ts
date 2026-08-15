@@ -101,6 +101,12 @@ export class SubscriptionsService {
     }
   }
 
+  async getAllForBilling(): Promise<Subscriptions[]> {
+    return this.subscriptionsRepository.findAll({
+      include: [{ model: Course }],
+    });
+  }
+
   async getAll(): Promise<object> {
     try {
       // const user_data: any = await this.userService.getById(user_id);

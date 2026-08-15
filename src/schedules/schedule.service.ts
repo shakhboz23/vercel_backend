@@ -1,18 +1,32 @@
-import { Injectable } from '@nestjs/common';
-import { Cron, Interval } from '@nestjs/schedule';
+import { Injectable, Logger } from '@nestjs/common';
+import { Cron, CronExpression } from '@nestjs/schedule';
+import { PaymentService } from 'src/payment/payment.service';
 
 @Injectable()
 export class MyService {
-    // Bu funksiya har kuni soat 00:00da ishga tushadi
-    // @Cron('0 0 0 * * *') // Cron ifodasi
-    // handleCron() {
-    //     console.log('Har kuni soat 00:00da ishlaydi');
-    //     // Bu yerda har kuni bajariladigan ishni qo'shing
-    // }
+    private readonly logger = new Logger(MyService.name);
 
-    // @Interval(60000) // Har 1 daqiqada ishga tushadi
-    // handleInterval() {
-    //     console.log('Har 1 daqiqada ishlaydi');
-    // }
+    constructor(private readonly paymentService: PaymentService) { }
 
+    // Creates the next monthly Payment row for every subscription whose
+    // billing period has come due (start_date + N months <= today).
+    @Cron(CronExpression.EVERY_DAY_AT_6AM)
+    async handleMonthlyPaymentGeneration() {
+        try {
+            await this.paymentService.generateDuePayments();
+        } catch (error) {
+            this.logger.error('generateDuePayments failed', error);
+        }
+    }
+
+    // Reminds students and parents once a day during the last 7 days before
+    // an unpaid monthly payment's due date.
+    @Cron(CronExpression.EVERY_DAY_AT_7AM)
+    async handlePaymentReminders() {
+        try {
+            await this.paymentService.sendPaymentReminders();
+        } catch (error) {
+            this.logger.error('sendPaymentReminders failed', error);
+        }
+    }
 }

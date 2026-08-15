@@ -409,22 +409,23 @@ export class CourseService {
         endOfMonth = new Date(date?.getFullYear(), date?.getMonth() + 1, 1);
       }
 
+      const paymentWhere: any = { course_id: id };
+      if (startOfMonth && endOfMonth) {
+        paymentWhere.due_date = {
+          [Op.gte]: startOfMonth,
+          [Op.lt]: endOfMonth,
+        };
+      }
+
       const course = await this.courseRepository.findOne({
         where: { id },
         include: [{ model: CourseSchedule, as: 'attendance_days' }, { model: User, as: 'teacher', }, {
           model: Subscriptions, include: [{
             model: User, include: [{
-              model: Payment, where:
-                startOfMonth && endOfMonth
-                  ? {
-                    createdAt: {
-                      [Op.gte]: startOfMonth,
-                      [Op.lt]: endOfMonth,
-                    },
-                  }
-                  : undefined,
+              model: Payment,
+              where: paymentWhere,
               required: false,
-              order: [['createdAt', 'ASC']]
+              order: [['due_date', 'DESC']]
             }]
           }]
         }],

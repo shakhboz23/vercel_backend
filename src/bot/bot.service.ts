@@ -341,6 +341,39 @@ export class BotService {
     return this.handlePassword(ctx);
   }
 
+  async notifyPaymentDue(
+    user_id: number,
+    courseTitle: string,
+    amount: number,
+    dueDate: Date,
+  ): Promise<void> {
+    const date = new Date(dueDate);
+    const dateStr = `${String(date.getDate()).padStart(2, '0')}.${String(date.getMonth() + 1).padStart(2, '0')}.${date.getFullYear()}`;
+
+    const text =
+      `⏰ <b>Eslatma!</b>\n\n` +
+      `"<b>${courseTitle}</b>" kursi bo'yicha oylik to'lov muddati yaqinlashmoqda.\n\n` +
+      `📅 To'lov sanasi: <b>${dateStr}</b>\n` +
+      `💰 To'lanishi kerak: <b>${amount.toLocaleString('ru-RU')} so'm</b>\n\n` +
+      `Iltimos, o'z vaqtida to'lovni amalga oshiring.`;
+
+    const studentBot = await this.botRepo.findOne({ where: { user_id } });
+    if (studentBot?.status) {
+      await this.bot.telegram
+        .sendMessage(studentBot.bot_id, text, { parse_mode: 'HTML' })
+        .catch((error) => console.log(error));
+    }
+
+    const parents = await this.botChildRepo.findAll({
+      where: { student_id: user_id },
+    });
+    for (const parent of parents) {
+      await this.bot.telegram
+        .sendMessage(parent.parent_bot_id, text, { parse_mode: 'HTML' })
+        .catch((error) => console.log(error));
+    }
+  }
+
   async onStop(ctx: Context) { }
 
   async sendOTP(phone: string, OTP: string): Promise<boolean> {

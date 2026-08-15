@@ -28,6 +28,8 @@ interface PaymentAttributes {
   comment?: string;
   monthly_payment: number;
   debt: number;
+  due_date: Date;
+  last_reminder_at: Date;
 }
 
 @Table({ tableName: 'payments' })
@@ -94,4 +96,16 @@ export class Payment extends Model<Payment, PaymentAttributes> {
     allowNull: true,
   })
   comment: string;
+
+  @Column({
+    type: DataType.DATEONLY,
+    allowNull: true,
+  })
+  due_date: Date;
+
+  @Column({
+    type: DataType.DATEONLY,
+    allowNull: true,
+  })
+  last_reminder_at: Date;
 }

@@ -15,50 +15,81 @@ import { UserStreakService } from 'src/user_streak/user_streak.service';
 import { Lesson } from 'src/lesson/models/lesson.models';
 import { Course } from 'src/course/models/course.models';
 import { CourseSchedule } from 'src/course_schedule/models/course_schedule.models';
+import { SubscriptionsService } from 'src/subscriptions/subscriptions.service';
+import { BotService } from 'src/bot/bot.service';
+import * as dayjs from 'dayjs';
 
 @Injectable()
 export class PaymentService {
   constructor(
     @InjectModel(Payment) private paymentRepository: typeof Payment,
+    @InjectModel(Course) private courseRepository: typeof Course,
     private userStreakService: UserStreakService,
+    private subscriptionsService: SubscriptionsService,
+    private botService: BotService,
   ) { }
 
   async create(paymentDto: PaymentDto): Promise<object> {
     let data: any;
     try {
+      if (!paymentDto.amount || paymentDto.amount <= 0) {
+        throw new BadRequestException("To'lov miqdori musbat bo'lishi kerak");
+      }
+
       const payment = await this.paymentRepository.findOne({
         where: {
           user_id: paymentDto.user_id,
           course_id: paymentDto.course_id,
+          status: { [Op.ne]: PaymentStatus.SUCCESS },
         },
-        include: [{ model: Course }]
+        order: [['due_date', 'ASC']],
+        include: [{ model: Course }],
       });
 
       if (payment) {
-        if ((payment.monthly_payment || payment.course.price) - paymentDto.amount - (payment.debt || 0) < 0 && paymentDto.amount > 0) {
-          throw new BadRequestException("To'lov miqdordan oshiqcha")
+        const monthlyPayment = Number(payment.monthly_payment ?? payment.course.price);
+        const newAmount = Number(payment.amount || 0) + Number(paymentDto.amount);
+
+        if (newAmount > monthlyPayment) {
+          throw new BadRequestException("To'lov miqdordan oshiqcha");
         }
+
+        const newDebt = monthlyPayment - newAmount;
         const update = await this.paymentRepository.update(
           {
-            ...paymentDto,
-            monthly_payment: payment.course.price,
-            debt: (payment.monthly_payment || payment.course.price) - paymentDto.amount - (payment.debt || 0),
-            status: PaymentStatus.SUCCESS,
+            amount: newAmount,
+            debt: newDebt,
+            status: newDebt <= 0 ? PaymentStatus.SUCCESS : PaymentStatus.PENDING,
             payment_method: PaymentMethod.CASH,
+            comment: paymentDto.comment ?? payment.comment,
           },
           {
-            where: {
-              user_id: paymentDto.user_id,
-              course_id: paymentDto.course_id,
-            },
+            where: { id: payment.id },
             returning: true,
           },
         );
         data = update[1][0];
       } else {
+        const course = await this.courseRepository.findByPk(paymentDto.course_id);
+
+        if (!course) {
+          throw new NotFoundException('Course not found');
+        }
+
+        if (paymentDto.amount > course.price) {
+          throw new BadRequestException("To'lov miqdordan oshiqcha");
+        }
+
+        const debt = course.price - paymentDto.amount;
         data = await this.paymentRepository.create({
-          ...paymentDto,
-          status: PaymentStatus.SUCCESS,
+          user_id: paymentDto.user_id,
+          course_id: paymentDto.course_id,
+          comment: paymentDto.comment,
+          amount: paymentDto.amount,
+          monthly_payment: course.price,
+          debt,
+          due_date: dayjs().startOf('day').toDate(),
+          status: debt <= 0 ? PaymentStatus.SUCCESS : PaymentStatus.PENDING,
           payment_method: PaymentMethod.CASH,
         });
       }
@@ -70,6 +101,75 @@ export class PaymentService {
       };
     } catch (error: any) {
       throw new BadRequestException(error.message);
+    }
+  }
+
+  // Runs daily: for every subscription, ensures a Payment row exists for every
+  // monthly period that has come due since the student's start_date.
+  async generateDuePayments(): Promise<void> {
+    const subscriptions = await this.subscriptionsService.getAllForBilling();
+    const today = dayjs().startOf('day');
+
+    for (const subscription of subscriptions as any[]) {
+      if (!subscription.start_date || !subscription.course) continue;
+
+      let dueDate = dayjs(subscription.start_date).add(1, 'month').startOf('day');
+
+      while (!dueDate.isAfter(today)) {
+        await this.paymentRepository.findOrCreate({
+          where: {
+            user_id: subscription.user_id,
+            course_id: subscription.course_id,
+            due_date: dueDate.toDate(),
+          },
+          defaults: {
+            user_id: subscription.user_id,
+            course_id: subscription.course_id,
+            due_date: dueDate.toDate(),
+            monthly_payment: subscription.course.price,
+            amount: 0,
+            debt: subscription.course.price,
+            status: PaymentStatus.PENDING,
+            payment_method: PaymentMethod.CASH,
+          } as any,
+        });
+
+        dueDate = dueDate.add(1, 'month');
+      }
+    }
+  }
+
+  // Runs daily: reminds the student and their parent(s) once a day during the
+  // last 7 days before an unpaid payment's due date.
+  async sendPaymentReminders(): Promise<void> {
+    const today = dayjs().startOf('day');
+    const weekOut = today.add(7, 'day');
+
+    const payments = await this.paymentRepository.findAll({
+      where: {
+        status: { [Op.ne]: PaymentStatus.SUCCESS },
+        due_date: { [Op.gte]: today.toDate(), [Op.lte]: weekOut.toDate() },
+        [Op.or]: [
+          { last_reminder_at: null },
+          { last_reminder_at: { [Op.lt]: today.toDate() } },
+        ],
+      },
+      include: [{ model: Course }],
+    });
+
+    for (const payment of payments as any[]) {
+      try {
+        const remaining = Number(payment.debt ?? payment.monthly_payment ?? 0);
+        await this.botService.notifyPaymentDue(
+          payment.user_id,
+          payment.course?.title || '',
+          remaining,
+          payment.due_date,
+        );
+        await payment.update({ last_reminder_at: today.toDate() });
+      } catch (error) {
+        console.log(error);
+      }
     }
   }
 
