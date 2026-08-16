@@ -182,7 +182,7 @@ export class BotService {
           Markup.inlineKeyboard([
             Markup.button.webApp(
               'Academic Success Hub',
-              'https://ilmnur-front.vercel.app/',
+              'https://ashacademy.uz/',
             ),
           ]),
         );
@@ -302,7 +302,7 @@ export class BotService {
         where: { bot_id: user.bot_id },
         returning: true
       })
-      const url = `https://ilmnur-front.vercel.app/login?token=${bot_user.token}`;
+      const url = `https://ashacademy.uz/login?token=${bot_user.token}`;
       await ctx.reply(
         'Academic Success Hub saytiga kirish uchun shu yerga bosing',
         Markup.inlineKeyboard([
@@ -1094,7 +1094,7 @@ export class BotService {
     await ctx.reply(
       'Test javoblarini yuborish:',
       Markup.inlineKeyboard([
-        Markup.button.webApp('Academic Success Hub', `https://ilmnur-front.vercel.app/test/${lessonId}?pdf=true`),
+        Markup.button.webApp('Academic Success Hub', `https://ashacademy.uz/test/${lessonId}?pdf=true`),
       ]),
     );
   }
