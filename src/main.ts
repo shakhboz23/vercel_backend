@@ -1,3 +1,14 @@
+import { webcrypto } from 'crypto';
+
+// @nestjs/schedule (>= v3) calls the global `crypto.randomUUID()` to name
+// unnamed @Cron/@Interval jobs. That global was only added to Node without a
+// flag starting in later Node 18 patch releases, so on older Node 18 builds
+// (e.g. Render's default 18.15.0) bootstrap crashes with
+// "ReferenceError: crypto is not defined". Polyfill it before Nest starts.
+if (!(globalThis as any).crypto) {
+  (globalThis as any).crypto = webcrypto;
+}
+
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
@@ -68,7 +79,7 @@ async function bootstrap() {
     await app.listen(PORT, () => {
       console.log('Server listening on port', PORT);
     });
-  } catch (error) {
+  } catch (error: any) {
     throw new BadRequestException(error.message);
   }
 }
