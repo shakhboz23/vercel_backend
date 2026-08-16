@@ -469,8 +469,8 @@ export class BotService {
     }
 
     const [, created] = await this.botChildRepo.findOrCreate({
-      where: { parent_bot_id: bot_id, student_id },
-      defaults: { parent_bot_id: bot_id, student_id },
+      where: { parent_bot_id: bot_id, student_id: student.id },
+      defaults: { parent_bot_id: bot_id, student_id: student.id },
     });
 
     await this.botRepo.update({ step: null }, { where: { bot_id } });
