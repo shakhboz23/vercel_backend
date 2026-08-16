@@ -696,7 +696,7 @@ export class UserService {
     }
   }
 
-  async getStudentById(student_id: number): Promise<any> {
+  async getStudentById(student_id: string): Promise<any> {
     try {
       if (!student_id) {
         return null;
