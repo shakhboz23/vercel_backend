@@ -162,9 +162,9 @@ import { CourseSubgroupModule } from './course_subgroup/course_subgroup.module';
         Payment,
         CourseSubgroup,
       ],
-      autoLoadModels: true,
-      synchronize: true,
-      sync: { alter: true },
+      // autoLoadModels: true,
+      // synchronize: true,
+      // sync: { alter: true },
       logging: true,
       dialectModule: pg,
       dialectOptions: process.env.NODE_ENV == 'production' ? {
