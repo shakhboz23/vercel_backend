@@ -12,7 +12,7 @@ import {
   On,
   Hears,
 } from 'nestjs-telegraf';
-import { Context, Telegraf, Markup } from 'telegraf';
+import { Context, Telegraf, Markup, Input } from 'telegraf';
 import { Message } from 'telegraf/typings/core/types/typegram';
 import { UserService } from 'src/user/user.service';
 import { RoleName } from 'src/activity/models/activity.models';
@@ -1083,7 +1083,10 @@ export class BotService {
         },
       ]];
 
-    await ctx.replyWithDocument(tests.test?.[0]?.question, {
+    const pdfUrl: string = tests.test?.[0]?.question;
+    const fileName = `${(tests.lesson?.title || 'test').replace(/[\\/:*?"<>|]/g, '').trim() || 'test'}.pdf`;
+
+    await ctx.replyWithDocument(Input.fromURLStream(pdfUrl, fileName), {
       caption: `Testni yechib bo'lgach javoblarni "Test javoblarini yuborish" tugmasi orqali yuborishingiz mumkin`,
     });
     console.log(lessonId, 'lessonId');

@@ -207,8 +207,14 @@ export class TestsService {
       const test_settings: any = await this.test_settingsService.getByLessonId(lesson_id);
       let randomizedVariants: any;
       if (lesson.course.user_id != user_id) {
+        // "Aralash savollar" (mix) faqat savollar tartibini tasodifiylashtiradi.
+        // pdf_file testlarda savol raqamlari faylning o'zidagi raqamlarga bog'liq
+        // bo'lgani uchun ularni hech qachon aralashtirmaymiz.
+        const shouldShuffleOrder =
+          !!test_settings?.mix && test_settings?.test_type != 'pdf_file';
+        const orderedTests = shouldShuffleOrder ? this.shuffle(tests) : tests;
         if (test_settings?.test_type != 'vocabulary') {
-          randomizedVariants = this.shuffle(tests).map((variant) => {
+          randomizedVariants = orderedTests.map((variant) => {
             let variants = variant.get('variants');
             const withIndex = variants.map((item, index) => ({
               value: item,
@@ -228,7 +234,7 @@ export class TestsService {
             };
           });
         } else {
-          randomizedVariants = this.shuffle(tests).map((variant) => {
+          randomizedVariants = orderedTests.map((variant) => {
             const testL: number = tests.length || 2;
             const randomVariants = [variant.get('variants')[0]];
             const currentVariant = variant.get('variants')[0];
