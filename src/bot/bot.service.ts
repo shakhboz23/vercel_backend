@@ -445,7 +445,7 @@ export class BotService {
   async saveChild(ctx: Context) {
     const bot_id = ctx.from.id;
     const message = ctx.message as Message.TextMessage;
-    const student_id = Number(message.text.trim());
+    const student_id = message.text.trim();
 
     if (!Number.isInteger(student_id) || student_id <= 0) {
       await ctx.reply(
