@@ -77,6 +77,8 @@ import { UserStreakModule } from './user_streak/user_streak.module';
 import { CourseScheduleModule } from './course_schedule/course_schedule.module';
 import { Payment } from './payment/models/payment.models';
 import { PaymentModule } from './payment/payment.module';
+import { CourseSubgroup } from './course_subgroup/models/course_subgroup.models';
+import { CourseSubgroupModule } from './course_subgroup/course_subgroup.module';
 
 @Module({
   imports: [
@@ -158,10 +160,11 @@ import { PaymentModule } from './payment/payment.module';
         CourseSchedule,
         UserStreak,
         Payment,
+        CourseSubgroup,
       ],
-      // autoLoadModels: true,
-      // synchronize: true,
-      // sync: { alter: true },
+      autoLoadModels: true,
+      synchronize: true,
+      sync: { alter: true },
       logging: true,
       dialectModule: pg,
       dialectOptions: process.env.NODE_ENV == 'production' ? {
@@ -209,6 +212,7 @@ import { PaymentModule } from './payment/payment.module';
     AttendanceModule,
     UserStreakModule,
     CourseScheduleModule,
+    CourseSubgroupModule,
     PaymentModule,
   ],
   controllers: [AppController],

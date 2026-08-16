@@ -18,6 +18,7 @@ import { SubCategory } from 'src/subcategory/models/subcategory.models';
 import { PaymentStripe } from 'src/stripe/models/stripe.models';
 import { CourseSchedule } from 'src/course_schedule/models/course_schedule.models';
 import { Payment } from 'src/payment/models/payment.models';
+import { CourseSubgroup } from 'src/course_subgroup/models/course_subgroup.models';
 
 interface CourseAttributes {
   title: string;
@@ -171,6 +172,13 @@ export class Course extends Model<Course, CourseAttributes> {
     hooks: true,
   })
   attendance_days: CourseSchedule[];
+
+  @HasMany(() => CourseSubgroup, {
+    onDelete: 'CASCADE',
+    as: 'subgroups',
+    hooks: true,
+  })
+  subgroups: CourseSubgroup[];
 
   //   @HasMany(() => PaymentStripe, {
   //     onDelete: 'CASCADE',

@@ -34,12 +34,18 @@ import {
 } from 'src/course_schedule/models/course_schedule.models';
 import { CourseScheduleService } from 'src/course_schedule/course_schedule.service';
 import { Payment } from 'src/payment/models/payment.models';
+import { CourseSubgroup } from 'src/course_subgroup/models/course_subgroup.models';
+import {
+  CourseSubgroupInput,
+  CourseSubgroupService,
+} from 'src/course_subgroup/course_subgroup.service';
 
 @Injectable()
 export class CourseService {
   constructor(
     @InjectModel(Course) private courseRepository: typeof Course,
     private readonly courseScheduleService: CourseScheduleService,
+    private readonly courseSubgroupService: CourseSubgroupService,
     private readonly userService: UserService,
     private readonly groupService: GroupService,
     private readonly chatGroupService: ChatGroupService,
@@ -89,10 +95,52 @@ export class CourseService {
     return [...new Set(normalizedDays)];
   }
 
+  private parseSubgroups(subgroupsRaw?: string): CourseSubgroupInput[] | undefined {
+    if (subgroupsRaw === undefined || subgroupsRaw === null || subgroupsRaw === '') {
+      return undefined;
+    }
+
+    let parsed: unknown;
+    try {
+      parsed = Array.isArray(subgroupsRaw) ? subgroupsRaw : JSON.parse(subgroupsRaw);
+    } catch {
+      throw new BadRequestException(
+        'subgroups must be a JSON array, for example [{"name":"1-guruh","attendance_days":["Mon","Wed","Fri"]}]',
+      );
+    }
+
+    if (!Array.isArray(parsed) || !parsed.length) {
+      throw new BadRequestException('subgroups must be a non-empty JSON array');
+    }
+
+    return parsed.map((item: any) => {
+      const name = typeof item?.name === 'string' ? item.name.trim() : '';
+      if (!name) {
+        throw new BadRequestException('Each subgroup requires a name');
+      }
+
+      const attendanceDays = this.parseAttendanceDays(
+        Array.isArray(item?.attendance_days)
+          ? JSON.stringify(item.attendance_days)
+          : item?.attendance_days,
+      );
+      if (!attendanceDays?.length) {
+        throw new BadRequestException(`"${name}" subgroup requires at least one attendance day`);
+      }
+
+      return {
+        id: item?.id ? Number(item.id) : undefined,
+        name,
+        attendance_days: attendanceDays,
+      };
+    });
+  }
+
   async create(courseDto: CourseDto, cover: any, user_id: number): Promise<object> {
     try {
-      const { title, attendance_days, ...courseData } = courseDto;
+      const { title, attendance_days, subgroups, ...courseData } = courseDto;
       const attendanceDays = this.parseAttendanceDays(attendance_days);
+      const parsedSubgroups = this.parseSubgroups(subgroups);
       const exist = await this.courseRepository.findOne({
         where: { title },
       });
@@ -115,7 +163,9 @@ export class CourseService {
         cover,
         title,
       });
-      if (attendanceDays?.length) {
+      if (parsedSubgroups?.length) {
+        await this.courseSubgroupService.sync(course.id, parsedSubgroups);
+      } else if (attendanceDays?.length) {
         await this.courseScheduleService.create(course.id, attendanceDays);
       }
       await this.chatGroupService.create({ course_id: course.id, chat_type: ChatGroupType.group, group_id: courseDto.group_id })
@@ -161,6 +211,21 @@ export class CourseService {
       const courses: any = await this.courseRepository.findAll({
         ...subcategory,
         ...categoryInclude,
+        include: [
+          {
+            model: CourseSchedule,
+            as: 'attendance_days',
+            separate: true,
+            limit: 1,
+            order: [['createdAt', 'DESC']],
+          },
+          {
+            model: CourseSubgroup,
+            as: 'subgroups',
+            include: [{ model: CourseSchedule, as: 'schedules', separate: true, limit: 1, order: [['createdAt', 'DESC']] }],
+            required: false,
+          },
+        ],
         attributes: {
           include: [
             [
@@ -267,6 +332,12 @@ export class CourseService {
             separate: true,
             limit: 1,
             order: [['createdAt', 'DESC']],
+          },
+          {
+            model: CourseSubgroup,
+            as: 'subgroups',
+            include: [{ model: CourseSchedule, as: 'schedules', separate: true, limit: 1, order: [['createdAt', 'DESC']] }],
+            required: false,
           },
         ],
         attributes: {
@@ -419,16 +490,26 @@ export class CourseService {
 
       const course = await this.courseRepository.findOne({
         where: { id },
-        include: [{ model: CourseSchedule, as: 'attendance_days' }, { model: User, as: 'teacher', }, {
-          model: Subscriptions, include: [{
-            model: User, include: [{
-              model: Payment,
-              where: paymentWhere,
-              required: false,
-              order: [['due_date', 'DESC']]
+        include: [
+          { model: CourseSchedule, as: 'attendance_days' },
+          {
+            model: CourseSubgroup,
+            as: 'subgroups',
+            include: [{ model: CourseSchedule, as: 'schedules', separate: true, limit: 1, order: [['createdAt', 'DESC']] }],
+            required: false,
+          },
+          { model: User, as: 'teacher', },
+          {
+            model: Subscriptions, include: [{
+              model: User, include: [{
+                model: Payment,
+                where: paymentWhere,
+                required: false,
+                order: [['due_date', 'DESC']]
+              }]
             }]
-          }]
-        }],
+          }
+        ],
         attributes: {
           include: [
             [
@@ -556,8 +637,9 @@ export class CourseService {
       if (course.user_id != user_id) {
         throw new ForbiddenException("You don't have an access");
       }
-      const { attendance_days, ...courseData } = courseDto;
+      const { attendance_days, subgroups, ...courseData } = courseDto;
       const attendanceDays = this.parseAttendanceDays(attendance_days);
+      const parsedSubgroups = this.parseSubgroups(subgroups);
       const file_type: string = 'image';
       if (cover) {
         if (course.cover) {
@@ -570,7 +652,9 @@ export class CourseService {
         where: { id },
         returning: true,
       });
-      if (attendanceDays !== undefined) {
+      if (parsedSubgroups) {
+        await this.courseSubgroupService.sync(id, parsedSubgroups);
+      } else if (attendanceDays !== undefined) {
         const hasSameAttendanceDays =
           await this.courseScheduleService.hasSameAttendanceDays(
             id,

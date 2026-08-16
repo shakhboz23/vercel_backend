@@ -9,29 +9,66 @@ import { InjectModel } from '@nestjs/sequelize';
 import { AttendanceDto } from './dto/attendance.dto';
 import { Op } from 'sequelize';
 import { Role } from '../role/models/role.models';
-import { ReytingService } from 'src/reyting/reyting.service';
-import { ReytingDto } from 'src/reyting/dto/reyting.dto';
 import { UserStreakService } from 'src/user_streak/user_streak.service';
 import { Lesson } from 'src/lesson/models/lesson.models';
 import { Course } from 'src/course/models/course.models';
 import { CourseSchedule } from 'src/course_schedule/models/course_schedule.models';
+import { Subscriptions } from 'src/subscriptions/models/subscriptions.models';
 
 @Injectable()
 export class AttendanceService {
   constructor(
     @InjectModel(Attendance) private attendanceRepository: typeof Attendance,
+    @InjectModel(Lesson) private lessonRepository: typeof Lesson,
     private userStreakService: UserStreakService,
   ) { }
+
+  // A course can be split into subgroups that meet on different weekdays
+  // (e.g. because one physical classroom can't fit everyone). Resolves the
+  // weekday schedule that actually applies to this user: the schedule tied
+  // to their subgroup, or the course-wide one if the course isn't split.
+  private resolveAttendanceDays(course: any): string[] {
+    const subgroupId = course?.subscriptions?.[0]?.subgroup_id ?? null;
+    const schedules: any[] = course?.attendance_days || [];
+    const matching = schedules.filter(
+      (schedule) => (schedule.subgroup_id ?? null) === subgroupId,
+    );
+    const latest = matching.sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    )[0];
+    return latest?.attendance_day || [];
+  }
 
   async create(attendanceDto: AttendanceDto): Promise<object> {
     let data: any;
     try {
+      const lesson = await this.lessonRepository.findByPk(
+        attendanceDto.lesson_id,
+        {
+          include: [
+            {
+              model: Course,
+              include: [
+                { model: CourseSchedule, as: 'attendance_days', required: false },
+                {
+                  model: Subscriptions,
+                  where: { user_id: attendanceDto.user_id },
+                  attributes: ['subgroup_id'],
+                  required: false,
+                },
+              ],
+            },
+          ],
+        },
+      );
+      const attendanceDays = this.resolveAttendanceDays(lesson?.course as any);
+
       const attendance = await this.attendanceRepository.findOne({
         where: {
           user_id: attendanceDto.user_id,
           lesson_id: attendanceDto.lesson_id,
         },
-        include: [{ model: Lesson, include: [{ model: Course, include: [{ model: CourseSchedule, attributes: ['attendance_day'], required: false }] },] }],
       });
 
       if (attendance) {
@@ -48,27 +85,14 @@ export class AttendanceService {
           },
         );
         data = update[1][0];
-
-        await this.userStreakService.create(
-          {
-            ...attendanceDto,
-            attendance_days:  (attendance.lesson?.course as any)?.attendance_days[0]?.attendance_day,
-          }
-        );
       } else {
         data = await this.attendanceRepository.create(attendanceDto);
-        const reyting: ReytingDto = {
-          // role_id,
-          ball: attendanceDto.attendance,
-          lesson_id: attendanceDto.lesson_id,
-        };
-        await this.userStreakService.create(
-          {
-            ...attendanceDto,
-            attendance_days: [data.attendace_day],
-          }
-        );
       }
+
+      await this.userStreakService.create({
+        ...attendanceDto,
+        attendance_days: attendanceDays,
+      });
 
       return {
         statusCode: HttpStatus.OK,

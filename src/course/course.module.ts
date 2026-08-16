@@ -10,12 +10,14 @@ import { WatchedModule } from 'src/watched/watched.module';
 import { FilesModule } from 'src/files/files.module';
 import { GroupModule } from 'src/group/group.module';
 import { CourseScheduleModule } from 'src/course_schedule/course_schedule.module';
+import { CourseSubgroupModule } from 'src/course_subgroup/course_subgroup.module';
 
 @Module({
   imports: [
     SequelizeModule.forFeature([Course]),
     UserModule, UploadedModule, ChatGroupModule, WatchedModule, FilesModule, GroupModule,
     CourseScheduleModule,
+    CourseSubgroupModule,
   ],
   controllers: [CourseController],
   providers: [CourseService],

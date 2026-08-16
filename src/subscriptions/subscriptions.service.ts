@@ -32,7 +32,7 @@ export class SubscriptionsService {
     try {
       console.log(subscriptionsDto, '===');
       
-      const { course_id } = subscriptionsDto;
+      const { course_id, subgroup_id } = subscriptionsDto;
       const exist = await this.subscriptionsRepository.findOne({
         where: { user_id, course_id },
       });
@@ -40,7 +40,7 @@ export class SubscriptionsService {
         return this.delete(user_id, subscriptionsDto.course_id);
         // throw new BadRequestException('Already created');
       }
-      return this.subscriptionsRepository.create({ course_id, user_id, is_active: SubscribeActive.requested, start_date: subscriptionsDto.start_date });
+      return this.subscriptionsRepository.create({ course_id, user_id, subgroup_id, is_active: SubscribeActive.requested, start_date: subscriptionsDto.start_date });
     } catch (error) {
       console.log(error);
       throw new BadRequestException(error.message);
@@ -56,8 +56,21 @@ export class SubscriptionsService {
       //   { ...creaetSubscriptionsDto, role: 'student' },
       // );
       // console.log(user);
-      const { course_ids, role } = creaetSubscriptionsDto;
+      const { course_ids, role, subgroups } = creaetSubscriptionsDto;
       user_id = creaetSubscriptionsDto?.user_id;
+      // Map of course_id -> subgroup_id, for courses split into weekday
+      // subgroups. Courses missing from the map (or when the field is
+      // omitted entirely) are enrolled with no subgroup.
+      let subgroupByCourse: Record<number, number> = {};
+      if (subgroups) {
+        try {
+          subgroupByCourse = JSON.parse(subgroups);
+        } catch {
+          throw new BadRequestException(
+            'subgroups must be a JSON object, for example {"3":12,"5":14}',
+          );
+        }
+      }
       // if (exist) {
       //   throw new BadRequestException('Already created');
       // }
@@ -70,7 +83,14 @@ export class SubscriptionsService {
         if (exist) {
           await this.deleteSubscription(exist.id, i, user_id)
         }
-        subcription = await this.subscriptionsRepository.create({ course_id: i, user_id, role, is_active: SubscribeActive.pending, start_date: creaetSubscriptionsDto.start_date });
+        subcription = await this.subscriptionsRepository.create({
+          course_id: i,
+          user_id,
+          role,
+          subgroup_id: subgroupByCourse[i] || null,
+          is_active: SubscribeActive.pending,
+          start_date: creaetSubscriptionsDto.start_date,
+        });
       }
       return subcription;
     } catch (error) {

@@ -12,13 +12,14 @@ export class CourseScheduleService {
   async create(
     course_id: number,
     attendanceDays: AttendanceDay[],
+    subgroup_id: number | null = null,
   ): Promise<CourseSchedule | null> {
     if (!attendanceDays.length) {
       return null;
     }
 
     const currentSchedule = await this.courseScheduleRepository.findOne({
-      where: { course_id },
+      where: { course_id, subgroup_id },
       order: [
         ['createdAt', 'DESC'],
         ['id', 'DESC'],
@@ -35,6 +36,7 @@ export class CourseScheduleService {
     // Schedules are immutable so createdAt records when this version took effect.
     return this.courseScheduleRepository.create({
       course_id,
+      subgroup_id,
       attendance_day: attendanceDays,
     });
   }
@@ -42,9 +44,10 @@ export class CourseScheduleService {
   async hasSameAttendanceDays(
     course_id: number,
     attendanceDays: AttendanceDay[],
+    subgroup_id: number | null = null,
   ): Promise<boolean> {
     const currentSchedule = await this.courseScheduleRepository.findOne({
-      where: { course_id },
+      where: { course_id, subgroup_id },
       order: [
         ['createdAt', 'DESC'],
         ['id', 'DESC'],

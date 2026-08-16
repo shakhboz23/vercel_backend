@@ -12,6 +12,7 @@ import {
 import { Course } from '../../course/models/course.models';
 import { SubscriptionActivity } from 'src/subscription_activity/models/subscription_activity.models';
 import { RoleName } from 'src/activity/models/activity.models';
+import { CourseSubgroup } from 'src/course_subgroup/models/course_subgroup.models';
 
 interface SubscriptionsAttributes {
   course_id: number;
@@ -19,6 +20,7 @@ interface SubscriptionsAttributes {
   role: RoleName;
   is_active: SubscribeActive;
   start_date: Date;
+  subgroup_id?: number | null;
 }
 
 
@@ -70,6 +72,19 @@ export class Subscriptions extends Model<Subscriptions, SubscriptionsAttributes>
 
   @BelongsTo(() => User)
   user: User[];
+
+  // Which weekday-schedule (subgroup) of the course this student follows.
+  // NULL means the course has no subgroup split — the single course-wide
+  // schedule applies.
+  @ForeignKey(() => CourseSubgroup)
+  @Column({
+    type: DataType.INTEGER,
+    allowNull: true,
+  })
+  subgroup_id: number | null;
+
+  @BelongsTo(() => CourseSubgroup)
+  subgroup: CourseSubgroup;
 
   @Column(
     DataType.ENUM({

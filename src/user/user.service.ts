@@ -68,6 +68,22 @@ export class UserService {
     Sat: 6,
   };
 
+  // A course can be split into subgroups meeting on different weekdays
+  // (e.g. "1-guruh" Mon/Wed/Fri vs "2-guruh" Tue/Thu/Sat because one
+  // classroom can't fit everyone). Narrows a course's full schedule history
+  // down to the version history of the subgroup this subscription belongs
+  // to, so attendance/analytics only count the days that actually apply to
+  // this student rather than merging both subgroups' schedules together.
+  private schedulesForSubgroup(
+    schedules: CourseSchedule[],
+    subgroup_id?: number | null,
+  ): CourseSchedule[] {
+    const target = subgroup_id ?? null;
+    return (schedules || []).filter(
+      (schedule: any) => (schedule.subgroup_id ?? null) === target,
+    );
+  }
+
   private sortScheduleHistory(schedules: CourseSchedule[]): CourseSchedule[] {
     return (schedules || [])
       .filter((schedule) => Array.isArray(schedule.attendance_day))
@@ -680,13 +696,13 @@ export class UserService {
     }
   }
 
-  async getStudentById(id: number): Promise<any> {
+  async getStudentById(student_id: number): Promise<any> {
     try {
-      if (!id) {
+      if (!student_id) {
         return null;
       }
       const student = await this.userRepository.findOne({
-        where: { id },
+        where: { student_id },
         include: [
           {
             model: Role,
@@ -943,14 +959,22 @@ export class UserService {
 
       const scheduleHistories = userJSON.subscriptions
         .map((subscription: any) =>
-          this.sortScheduleHistory(subscription.course?.attendance_days || []),
+          this.sortScheduleHistory(
+            this.schedulesForSubgroup(
+              subscription.course?.attendance_days || [],
+              subscription.subgroup_id,
+            ),
+          ),
         )
         .filter((history) => history.length);
 
       userJSON.subscriptions = userJSON.subscriptions.map((subscription: any) => {
         const scheduledClasses = this.countScheduledClasses(
           subscription.createdAt,
-          subscription.course?.attendance_days || [],
+          this.schedulesForSubgroup(
+            subscription.course?.attendance_days || [],
+            subscription.subgroup_id,
+          ),
         );
         const attendedClasses = attendanceByCourse.get(subscription.course_id) || 0;
         const percentage = scheduledClasses

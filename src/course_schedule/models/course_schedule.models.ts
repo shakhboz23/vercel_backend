@@ -7,6 +7,7 @@ import {
   Table,
 } from 'sequelize-typescript';
 import { Course } from 'src/course/models/course.models';
+import { CourseSubgroup } from 'src/course_subgroup/models/course_subgroup.models';
 
 export enum AttendanceDay {
   mon = 'Mon',
@@ -20,6 +21,7 @@ export enum AttendanceDay {
 
 interface CourseScheduleAttributes {
   course_id: number;
+  subgroup_id?: number | null;
   attendance_day: AttendanceDay[];
 }
 
@@ -42,6 +44,19 @@ export class CourseSchedule extends Model<
     onDelete: 'CASCADE',
   })
   course_id: number;
+
+  // NULL means this schedule applies to the whole course. Set when the
+  // course is split into subgroups that each meet on different weekdays.
+  @ForeignKey(() => CourseSubgroup)
+  @Column({
+    type: DataType.INTEGER,
+    allowNull: true,
+    onDelete: 'CASCADE',
+  })
+  subgroup_id: number | null;
+
+  @BelongsTo(() => CourseSubgroup)
+  subgroup: CourseSubgroup;
 
   @Column({
     type: DataType.ARRAY(DataType.STRING(3)),
