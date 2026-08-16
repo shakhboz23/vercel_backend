@@ -4,7 +4,7 @@ import { User } from "src/user/models/user.models";
 
 interface BotChildAttr {
     parent_bot_id: number;
-    student_id: number;
+    student_id: string;
 }
 
 @Table({ tableName: 'bot_child' })

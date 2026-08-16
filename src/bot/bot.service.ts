@@ -447,7 +447,7 @@ export class BotService {
     const message = ctx.message as Message.TextMessage;
     const student_id = message.text.trim();
 
-    if (!Number.isInteger(student_id) || student_id <= 0) {
+    if (!Number.isInteger(+student_id) || +student_id <= 0) {
       await ctx.reply(
         "Iltimos, faqat raqamlardan iborat ID yuboring. \n\nMasalan: 125",
       );
@@ -486,7 +486,7 @@ export class BotService {
     return this.my_children(ctx);
   }
 
-  async childInfo(ctx: Context, student_id: number) {
+  async childInfo(ctx: Context, student_id: string) {
     let student: any;
     try {
       student = await this.userService.getStudentById(student_id);
@@ -516,13 +516,13 @@ export class BotService {
       { parse_mode: 'HTML' },
     );
 
-    const groups = await this.getUserGroups(student_id);
+    const groups = await this.getUserGroups(student.id);
 
     if (!groups.size) return;
 
     if (groups.size === 1) {
       const [groupId] = groups.keys();
-      return this.sendStatistics(ctx, student_id, groupId);
+      return this.sendStatistics(ctx, student.id, groupId);
     }
 
     const buttons = [...groups.entries()].map(([groupId, title]) => [

@@ -196,7 +196,7 @@ export class BotUpdate {
 
     await ctx.answerCbQuery();
 
-    const studentId = Number(callbackQuery.data.replace('child_', ''));
+    const studentId = callbackQuery.data.replace('child_', '');
 
     return this.botService.childInfo(ctx, studentId);
   }
