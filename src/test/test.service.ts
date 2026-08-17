@@ -138,6 +138,10 @@ export class TestsService {
     }
   }
 
+  async hasCompletedTest(lesson_id: number, user_id: number): Promise<boolean> {
+    return this.reytingService.exists(lesson_id, user_id);
+  }
+
   async getLessonTestsCount(lesson_id: number): Promise<number> {
     try {
       const tests_count = await this.testsRepository.count({

@@ -64,6 +64,13 @@ export class ReytingService {
     }
   }
 
+  async exists(lesson_id: number, user_id: number): Promise<boolean> {
+    const reyting = await this.reytingRepository.findOne({
+      where: { lesson_id, user_id },
+    });
+    return !!reyting;
+  }
+
   async markAsRead(user_id: number, lesson_id: number) {
     const testsCount = await this.testsService.getLessonTestsCount(lesson_id);
 

@@ -179,6 +179,19 @@ export class BotUpdate {
     return this.botService.lessonInfo(ctx, lessonId);
   }
 
+  @Action(/^lesson_locked_(\d+)$/)
+  async selectLockedLesson(ctx: Context) {
+    const callbackQuery = ctx.callbackQuery;
+
+    if (!('data' in callbackQuery)) {
+      return;
+    }
+
+    const lessonId = Number(callbackQuery.data.replace('lesson_locked_', ''));
+
+    return this.botService.lessonLocked(ctx, lessonId);
+  }
+
   @Action('add_child')
   async addChild(ctx: Context) {
     await ctx.answerCbQuery();

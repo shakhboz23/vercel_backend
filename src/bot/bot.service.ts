@@ -983,6 +983,34 @@ export class BotService {
     });
   }
 
+  private async getPublishedLessonsSorted(courseId: number): Promise<any[]> {
+    const course: any = await this.courseService.getAllLessons(courseId);
+    const data = course.dataValues;
+
+    return (data?.lessons || [])
+      .filter((lesson: any) => lesson.published)
+      .sort((a: any, b: any) => (a.position ?? a.id) - (b.position ?? b.id));
+  }
+
+  private async isLessonLocked(
+    courseId: number,
+    lessonId: number,
+    user_id: number,
+  ): Promise<boolean> {
+    const publishedLessons = await this.getPublishedLessonsSorted(courseId);
+    const index = publishedLessons.findIndex(
+      (lesson: any) => lesson.id == lessonId,
+    );
+
+    if (index <= 0) return false;
+
+    const previousLesson = publishedLessons[index - 1];
+    return !(await this.testsService.hasCompletedTest(
+      previousLesson.id,
+      user_id,
+    ));
+  }
+
   async lessons(ctx: Context, courseId: number) {
     const bot_id = ctx.from.id;
 
@@ -993,28 +1021,75 @@ export class BotService {
       return;
     }
 
-    const course: any = await this.courseService.getAllLessons(courseId);
-    const data = course.dataValues;
+    const publishedLessons = await this.getPublishedLessonsSorted(courseId);
 
-    if (!data?.lessons?.length) {
+    if (!publishedLessons.length) {
       await ctx.reply('Sizda hozircha kurslar mavjud emas.');
       return;
     }
 
-    const buttons = data?.lessons.map((lesson) => {
-      return [
+    const buttons = [];
+    let previousCompleted = true;
+
+    for (const lesson of publishedLessons) {
+      const isCompleted = await this.testsService.hasCompletedTest(
+        lesson.id,
+        user.user_id,
+      );
+      const isLocked = !previousCompleted;
+
+      buttons.push([
         {
-          text: lesson.title,
-          callback_data: `lesson_${lesson.id}`,
+          text: `${lesson.title}${isCompleted ? ' ✅' : isLocked ? ' 🔒' : ''}`,
+          callback_data: isLocked
+            ? `lesson_locked_${lesson.id}`
+            : `lesson_${lesson.id}`,
         },
-      ];
-    });
+      ]);
+
+      previousCompleted = isCompleted;
+    }
 
     await ctx.reply('📚 Darslar:', {
       reply_markup: {
         inline_keyboard: buttons,
       },
     });
+  }
+
+  async lessonLocked(ctx: Context, lessonId: number) {
+    const bot_id = ctx.from.id;
+
+    const user = await this.botRepo.findOne({ where: { bot_id } });
+
+    if (!user?.user_id) {
+      await ctx.answerCbQuery('Foydalanuvchi topilmadi', { show_alert: true });
+      return;
+    }
+
+    const lesson: any = await this.lessonService.getById(lessonId);
+
+    if (!lesson) {
+      await ctx.answerCbQuery('Dars mavjud emas.', { show_alert: true });
+      return;
+    }
+
+    const stillLocked = await this.isLessonLocked(
+      lesson.course_id,
+      lessonId,
+      user.user_id,
+    );
+
+    if (stillLocked) {
+      await ctx.answerCbQuery(
+        '❌ Siz hali oldingi testni yechmagansiz!',
+        { show_alert: true },
+      );
+      return;
+    }
+
+    await ctx.answerCbQuery();
+    return this.lessonInfo(ctx, lessonId);
   }
 
   async lessonInfo(ctx: Context, lessonId: number) {
@@ -1034,18 +1109,28 @@ export class BotService {
       return;
     }
 
-    const buttons =
-      [[
-        {
-          text: 'Test yechish',
-          callback_data: `lesson_test_${lesson.id}`,
-        },
-        {
-          text: 'Vazifa yuborish',
-          callback_data: `lesson_task_${lesson.id}`,
-        },
-      ]];
+    const isCompleted = await this.testsService.hasCompletedTest(
+      lesson.id,
+      user.user_id,
+    );
 
+    const buttons = isCompleted
+      ? [[
+          {
+            text: 'Vazifa yuborish',
+            callback_data: `lesson_task_${lesson.id}`,
+          },
+        ]]
+      : [[
+          {
+            text: 'Test yechish',
+            callback_data: `lesson_test_${lesson.id}`,
+          },
+          {
+            text: 'Vazifa yuborish',
+            callback_data: `lesson_task_${lesson.id}`,
+          },
+        ]];
 
     await ctx.reply(`📚 Dars: ${lesson.title}`, {
       reply_markup: {
