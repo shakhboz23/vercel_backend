@@ -11,6 +11,7 @@ import { ReytingService } from 'src/reyting/reyting.service';
 import * as dayjs from 'dayjs';
 import { UserStreakDto } from './dto/user_streak.dto';
 import { ReytingDto } from 'src/reyting/dto/reyting.dto';
+import { FinishedType } from 'src/reyting/models/reyting.models';
 import { login } from 'node_modules/telegraf/typings/button';
 
 @Injectable()
@@ -28,7 +29,7 @@ export class UserStreakService {
       const user = await this.userStreakRepository.findOne({
         where: {
           user_id: userStreakDto.user_id,
-          lesson_id: userStreakDto.lesson_id,
+          course_id: userStreakDto.course_id,
         },
       });
 
@@ -68,22 +69,32 @@ export class UserStreakService {
       console.log(attendanceDays);
       console.log(user);
 
-      const expectedLessons = user ? this.expectedLessonsBetween(
-        user?.lastActivityDate,
-        today.toDate(),
-        attendanceDays,
-      ) : 1;
-      console.log("Hi1");
-      console.log(expectedLessons);
+      // If the streak row was already touched today (e.g. a teacher
+      // corrects an attendance mark later the same day), lastActivityDate
+      // is today, so expectedLessonsBetween finds no scheduled day after it
+      // and returns 0. That's not a "no activity expected" case, it's a
+      // same-day re-save, so skip the streak recalculation entirely instead
+      // of bailing out.
+      const alreadyUpdatedToday = !!user && dayjs(user.lastActivityDate).isSame(today, 'day');
 
-      if (expectedLessons === 0) {
-        return;
-      }
+      if (!alreadyUpdatedToday) {
+        const expectedLessons = user ? this.expectedLessonsBetween(
+          user?.lastActivityDate,
+          today.toDate(),
+          attendanceDays,
+        ) : 1;
+        console.log("Hi1");
+        console.log(expectedLessons);
 
-      if (expectedLessons === 1 && user) {
-        user.currentStreak++;
-      } else {
-        currentStreak = 1;
+        if (expectedLessons === 0) {
+          return;
+        }
+
+        if (expectedLessons === 1 && user) {
+          user.currentStreak += userStreakDto.attendance ? 1 : 0;
+        } else {
+          currentStreak = userStreakDto.attendance ? 1 : 0;
+        }
       }
       console.log('go1');
 
@@ -99,7 +110,7 @@ export class UserStreakService {
           {
             where: {
               user_id: userStreakDto.user_id,
-              lesson_id: userStreakDto.lesson_id,
+              course_id: userStreakDto.course_id,
             },
             returning: true,
           },
@@ -107,7 +118,8 @@ export class UserStreakService {
         data = update[1][0];
         const reyting: ReytingDto = {
           ball: user?.currentStreak || currentStreak,
-          lesson_id: userStreakDto.lesson_id,
+          finished_type: FinishedType.attendance,
+          course_id: userStreakDto.course_id,
         };
         await this.reytingService.create(
           reyting,
@@ -119,7 +131,8 @@ export class UserStreakService {
         data = await this.userStreakRepository.create(userStreakDto);
         const reyting: ReytingDto = {
           ball: user?.currentStreak || currentStreak,
-          lesson_id: userStreakDto.lesson_id,
+          finished_type: FinishedType.attendance,
+          course_id: userStreakDto.course_id,
         };
         await this.reytingService.create(
           reyting,

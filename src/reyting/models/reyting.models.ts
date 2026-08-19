@@ -3,11 +3,13 @@ import { Role } from '../../role/models/role.models';
 import { Tests } from '../../test/models/test.models';
 import { User } from 'src/user/models/user.models';
 import { Lesson } from 'src/lesson/models/lesson.models';
+import { Course } from 'src/course/models/course.models';
 
 interface ReytingAttributes {
   user_id: number;
   ball: number;
   lesson_id: number;
+  course_id: number;
   step: number;
   is_finished: boolean;
   finished_type: FinishedType;
@@ -73,4 +75,15 @@ export class Reyting extends Model<Reyting, ReytingAttributes> {
 
   @BelongsTo(() => Lesson)
   test: Lesson[];
+
+  @ForeignKey(() => Course)
+  @Column({
+    type: DataType.INTEGER,
+    allowNull: true,
+    onDelete: 'SET NULL',
+  })
+  course_id: number;
+
+  @BelongsTo(() => Course)
+  course: Course[];
 }

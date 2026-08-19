@@ -916,9 +916,7 @@ export class UserService {
 
       const userJSON = user.get({ plain: true });
 
-      // The "attendance" table only stores lesson_id, not course_id, so the
-      // course is resolved through the lesson it belongs to. The query is
-      // also scoped to this group so it doesn't pull in attendance from the
+      // Scoped to this group so it doesn't pull in attendance from the
       // user's other groups.
       const attendanceRows = await this.sequelize.query<{
         course_id: number;
@@ -926,10 +924,9 @@ export class UserService {
         status: number;
       }>(
         `
-          SELECT l."course_id" AS course_id, a."date" AS date, a."attendance" AS status
+          SELECT a."course_id" AS course_id, a."date" AS date, a."attendance" AS status
           FROM "attendance" a
-          JOIN "lesson" l ON l.id = a."lesson_id"
-          JOIN "course" c ON c.id = l."course_id"
+          JOIN "course" c ON c.id = a."course_id"
           WHERE a."user_id" = :userId AND c."group_id" = :groupId
         `,
         {

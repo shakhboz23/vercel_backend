@@ -24,12 +24,34 @@ export class ReytingService {
 
   async create(reytingDto: ReytingDto, user_id: number): Promise<object> {
     try {
-      const is_reyting = await this.reytingRepository.findOne({
-        where: {
-          user_id,
-          lesson_id: reytingDto.lesson_id,
-        },
-      });
+      console.log('goo');
+      
+      let is_reyting: any;
+
+      if (reytingDto.finished_type === FinishedType.attendance) {
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
+        const todayEnd = new Date();
+        todayEnd.setHours(23, 59, 59, 999);
+
+        is_reyting = await this.reytingRepository.findOne({
+          where: {
+            user_id,
+            finished_type: FinishedType.attendance,
+            course_id: reytingDto.course_id,
+            createdAt: { [Op.between]: [todayStart, todayEnd] },
+          },
+        });
+      } else {
+        is_reyting = await this.reytingRepository.findOne({
+          where: {
+            user_id,
+            lesson_id: reytingDto.lesson_id ?? null,
+          },
+        });
+      }
+      console.log(is_reyting, '====');
+      
       if (!is_reyting) {
         const reyting = await this.reytingRepository.create({
           ...reytingDto,
@@ -42,6 +64,8 @@ export class ReytingService {
           data: reyting,
         };
       } else {
+        console.log('------------------');
+        
         const reyting = await this.reytingRepository.update({
           ...reytingDto,
           user_id,

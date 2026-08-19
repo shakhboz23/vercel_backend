@@ -229,6 +229,96 @@ export class BotUpdate {
     return this.botService.childStatisticsForGroup(ctx, Number(studentId), Number(groupId));
   }
 
+  @Action(/^child_results_(\d+)$/)
+  async selectChildResults(@Ctx() ctx: Context) {
+    const callbackQuery = ctx.callbackQuery;
+
+    if (!('data' in callbackQuery)) {
+      return;
+    }
+
+    await ctx.answerCbQuery();
+
+    const studentId = callbackQuery.data.replace('child_results_', '');
+
+    return this.botService.childResults(ctx, studentId);
+  }
+
+  @Action(/^child_attendance_(\d+)$/)
+  async selectChildAttendance(@Ctx() ctx: Context) {
+    const callbackQuery = ctx.callbackQuery;
+
+    if (!('data' in callbackQuery)) {
+      return;
+    }
+
+    await ctx.answerCbQuery();
+
+    const studentId = callbackQuery.data.replace('child_attendance_', '');
+
+    return this.botService.childAttendance(ctx, studentId);
+  }
+
+  @Action(/^child_attendance_group_(\d+)_(\d+)$/)
+  async selectChildAttendanceGroup(@Ctx() ctx: Context) {
+    const callbackQuery = ctx.callbackQuery;
+
+    if (!('data' in callbackQuery)) {
+      return;
+    }
+
+    await ctx.answerCbQuery();
+
+    const [, studentId, groupId] = callbackQuery.data.match(/^child_attendance_group_(\d+)_(\d+)$/) || [];
+
+    return this.botService.childAttendanceGroupCourses(ctx, studentId, Number(groupId));
+  }
+
+  @Action(/^child_attendance_course_(\d+)_(\d+)$/)
+  async selectChildAttendanceCourse(@Ctx() ctx: Context) {
+    const callbackQuery = ctx.callbackQuery;
+
+    if (!('data' in callbackQuery)) {
+      return;
+    }
+
+    await ctx.answerCbQuery();
+
+    const [, studentId, courseId] = callbackQuery.data.match(/^child_attendance_course_(\d+)_(\d+)$/) || [];
+
+    return this.botService.childAttendanceForCourse(ctx, studentId, Number(courseId));
+  }
+
+  @Action(/^child_tasks_(\d+)$/)
+  async selectChildTasks(@Ctx() ctx: Context) {
+    const callbackQuery = ctx.callbackQuery;
+
+    if (!('data' in callbackQuery)) {
+      return;
+    }
+
+    await ctx.answerCbQuery();
+
+    const studentId = callbackQuery.data.replace('child_tasks_', '');
+
+    return this.botService.childTasks(ctx, studentId);
+  }
+
+  @Action(/^child_tasks_course_(\d+)_(\d+)$/)
+  async selectChildTasksCourse(@Ctx() ctx: Context) {
+    const callbackQuery = ctx.callbackQuery;
+
+    if (!('data' in callbackQuery)) {
+      return;
+    }
+
+    await ctx.answerCbQuery();
+
+    const [, studentId, courseId] = callbackQuery.data.match(/^child_tasks_course_(\d+)_(\d+)$/) || [];
+
+    return this.botService.childTasksForCourse(ctx, studentId, Number(courseId));
+  }
+
   @Action(/^lesson_test_(\d+)$/)
   async lessonTest(ctx: Context) {
     const callbackQuery = ctx.callbackQuery;

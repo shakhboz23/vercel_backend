@@ -19,11 +19,19 @@ export class UserStreakDto {
 
   @ApiProperty({
     example: 5,
-    description: 'Lesson id',
+    description: 'Course id',
   })
   @IsOptional()
   @IsNumber()
-  lesson_id: number;
+  course_id?: number;
+
+  @ApiProperty({
+    example: 1,
+    description: 'Attendance',
+  })
+  @IsOptional()
+  @IsNumber()
+  attendance?: number;
 
   @ApiProperty({
     example: ['Mon', 'Tue', 'Wed'],

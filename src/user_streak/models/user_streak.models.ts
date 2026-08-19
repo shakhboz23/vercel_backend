@@ -8,11 +8,11 @@ import {
   Table,
 } from 'sequelize-typescript';
 import { User } from '../../user/models/user.models';
-import { Lesson } from 'src/lesson/models/lesson.models';
+import { Course } from 'src/course/models/course.models';
 
 interface UserStreakAttributes {
   user_id: number;
-  lesson_id: number;
+  course_id: number;
   currentStreak: number;
   lastActivityDate: Date;
   season: number;
@@ -61,12 +61,12 @@ export class UserStreak extends Model<UserStreak, UserStreakAttributes> {
   @BelongsTo(() => User)
   user: User;
 
-  @ForeignKey(() => Lesson)
+  @ForeignKey(() => Course)
   @Column({
     type: DataType.INTEGER,
   })
-  lesson_id: number;
+  course_id: number;
 
-  @BelongsTo(() => Lesson)
-  lesson: Lesson;
+  @BelongsTo(() => Course)
+  course: Course;
 }

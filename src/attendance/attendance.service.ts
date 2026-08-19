@@ -10,17 +10,18 @@ import { AttendanceDto } from './dto/attendance.dto';
 import { Op } from 'sequelize';
 import { Role } from '../role/models/role.models';
 import { UserStreakService } from 'src/user_streak/user_streak.service';
-import { Lesson } from 'src/lesson/models/lesson.models';
 import { Course } from 'src/course/models/course.models';
 import { CourseSchedule } from 'src/course_schedule/models/course_schedule.models';
 import { Subscriptions } from 'src/subscriptions/models/subscriptions.models';
+import { BotService } from 'src/bot/bot.service';
 
 @Injectable()
 export class AttendanceService {
   constructor(
     @InjectModel(Attendance) private attendanceRepository: typeof Attendance,
-    @InjectModel(Lesson) private lessonRepository: typeof Lesson,
+    @InjectModel(Course) private courseRepository: typeof Course,
     private userStreakService: UserStreakService,
+    private botService: BotService,
   ) { }
 
   // A course can be split into subgroups that meet on different weekdays
@@ -43,44 +44,41 @@ export class AttendanceService {
   async create(attendanceDto: AttendanceDto): Promise<object> {
     let data: any;
     try {
-      const lesson = await this.lessonRepository.findByPk(
-        attendanceDto.lesson_id,
+      const course: any = await this.courseRepository.findByPk(
+        attendanceDto.course_id,
         {
           include: [
+            { model: CourseSchedule, as: 'attendance_days', required: false },
             {
-              model: Course,
-              include: [
-                { model: CourseSchedule, as: 'attendance_days', required: false },
-                {
-                  model: Subscriptions,
-                  where: { user_id: attendanceDto.user_id },
-                  attributes: ['subgroup_id'],
-                  required: false,
-                },
-              ],
+              model: Subscriptions,
+              where: { user_id: attendanceDto.user_id },
+              attributes: ['subgroup_id'],
+              required: false,
             },
           ],
         },
       );
-      const attendanceDays = this.resolveAttendanceDays(lesson?.course as any);
+      const attendanceDays = this.resolveAttendanceDays(course);
+
+      const targetDate = new Date(attendanceDto.date);
+      const startOfDay = new Date(targetDate.setHours(0, 0, 0, 0));
+      const endOfDay = new Date(targetDate.setHours(23, 59, 59, 999));
+
+      const attendanceWhere = {
+        user_id: attendanceDto.user_id,
+        course_id: attendanceDto.course_id,
+        date: { [Op.between]: [startOfDay, endOfDay] },
+      };
 
       const attendance = await this.attendanceRepository.findOne({
-        where: {
-          user_id: attendanceDto.user_id,
-          lesson_id: attendanceDto.lesson_id,
-        },
+        where: attendanceWhere,
       });
 
       if (attendance) {
         const update = await this.attendanceRepository.update(
+          attendanceDto,
           {
-            ...attendanceDto,
-          },
-          {
-            where: {
-              user_id: attendanceDto.user_id,
-              lesson_id: attendanceDto.lesson_id,
-            },
+            where: attendanceWhere,
             returning: true,
           },
         );
@@ -93,6 +91,14 @@ export class AttendanceService {
         ...attendanceDto,
         attendance_days: attendanceDays,
       });
+
+      this.botService
+        .notifyAttendance(
+          attendanceDto.user_id,
+          course?.title || '',
+          attendanceDto.attendance,
+        )
+        .catch((error) => console.log(error));
 
       return {
         statusCode: HttpStatus.OK,

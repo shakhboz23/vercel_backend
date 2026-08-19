@@ -394,7 +394,7 @@ export class CourseService {
     }
   }
 
-  async getUsersByGroupId(group_id: number, date: Date, user_id: number, course_id: number, lesson_id: number, page: string): Promise<object> {
+  async getUsersByGroupId(group_id: number, date: Date, user_id: number, course_id: number, page: string): Promise<object> {
     try {
       course_id = +course_id || null;
       let id: any;
@@ -421,10 +421,21 @@ export class CourseService {
       //   }],
       //   order: [[{ model: Subscriptions, as: 'subscriptions' }, { model: User, as: 'user' }, 'name', 'ASC']],
       // });      
+      const attendanceWhere: any = { date: { [Op.between]: [startOfDay, endOfDay] } };
+      if (course_id) {
+        attendanceWhere.course_id = course_id;
+      }
+
       let user: any = await this.courseRepository.findAll({
         where: { group_id },
         include: [{
-          model: Subscriptions, include: [{ model: User, required: false, include: [{ model: Attendance, where: { lesson_id, date: { [Op.between]: [startOfDay, endOfDay] } }, required: false }] }, { model: Course }]
+          model: Subscriptions, include: [{
+            model: User, required: false, include: [{
+              model: Attendance,
+              where: attendanceWhere,
+              required: false,
+            }]
+          }, { model: Course }]
         }],
       });
       // if (!users) {

@@ -42,9 +42,9 @@ export class AttendanceDto {
 
   @ApiProperty({
     example: 5,
-    description: 'Lesson id',
+    description: 'Course id',
   })
   @IsOptional()
   @IsNumber()
-  lesson_id: number;
+  course_id: number;
 }

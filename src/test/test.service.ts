@@ -353,10 +353,12 @@ export class TestsService {
       const percentage = (ball / Object.keys(results)?.length) * 100;
       console.log(percentage);
       // if (percentage >= 70) {
+      const lesson: any = await this.lessonService.getById(lesson_id);
       const data: ReytingDto = {
         // role_id,
         ball,
         lesson_id,
+        course_id: lesson?.course_id,
       };
       const reyting_data: any = await this.reytingService.create(
         data,
@@ -390,9 +392,11 @@ export class TestsService {
     try {
       const ball: number = +answers?.filter(item => item.isTrue === true)?.reduce((total: number) => +total + 1, 0);
       const percentage = Math.round(ball / answers?.length * 100);
+      const lesson: any = await this.lessonService.getById(lesson_id);
       const data: ReytingDto = {
         ball,
         lesson_id,
+        course_id: lesson?.course_id,
       };
       const reyting_data: any = await this.reytingService.create(
         data,

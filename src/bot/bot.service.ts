@@ -304,6 +304,15 @@ export class BotService {
       })
       const url = `https://ashacademy.uz/login?token=${bot_user.token}`;
       await ctx.reply(
+        'Ro\'yxatdan muvaffaqiyatli o\'tdingiz!',
+        {
+          parse_mode: 'HTML',
+          ...Markup.keyboard(this.mainMenuButtons(user.role))
+            .oneTime()
+            .resize(),
+        },
+      );
+      await ctx.reply(
         'Academic Success Hub saytiga kirish uchun shu yerga bosing',
         Markup.inlineKeyboard([
           Markup.button.webApp('Academic Success Hub', url),
@@ -367,6 +376,43 @@ export class BotService {
     const parents = await this.botChildRepo.findAll({
       where: { student_id: user_id },
     });
+    for (const parent of parents) {
+      await this.bot.telegram
+        .sendMessage(parent.parent_bot_id, text, { parse_mode: 'HTML' })
+        .catch((error) => console.log(error));
+    }
+  }
+
+  private readonly attendanceStatusLabels: Record<number, { text: string; icon: string }> = {
+    0: { text: 'kelmadi', icon: '❌' },
+    1: { text: 'kechikdi', icon: '⏰' },
+    2: { text: 'keldi', icon: '✅' },
+  };
+
+  async notifyAttendance(
+    user_id: number,
+    courseTitle: string,
+    status: number,
+  ): Promise<void> {
+    const parents = await this.botChildRepo.findAll({
+      where: { student_id: user_id },
+    });
+    if (!parents.length) return;
+
+    let student: any;
+    try {
+      student = await this.userService.getById(user_id);
+    } catch (error) { }
+
+    const studentName = [student?.name, student?.surname].filter(Boolean).join(' ') || "O'quvchi";
+    const statusInfo = this.attendanceStatusLabels[status] || { text: "noma'lum", icon: 'ℹ️' };
+
+    const text =
+      `${statusInfo.icon} <b>Davomat xabari</b>\n\n` +
+      `👤 O'quvchi: <b>${studentName}</b>\n` +
+      `📚 Kurs: <b>${courseTitle}</b>\n` +
+      `📌 Holat: <b>${statusInfo.text}</b>`;
+
     for (const parent of parents) {
       await this.bot.telegram
         .sendMessage(parent.parent_bot_id, text, { parse_mode: 'HTML' })
@@ -501,7 +547,7 @@ export class BotService {
 
     let courses: any;
     try {
-      courses = await this.subscriptionsService.getByUserId(student_id);
+      courses = await this.subscriptionsService.getByUserId(student.id);
     } catch (error) { }
 
     const course_titles = (courses || [])
@@ -516,9 +562,34 @@ export class BotService {
       { parse_mode: 'HTML' },
     );
 
+    await ctx.reply("Nimani ko'rmoqchisiz?", {
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: '📅 Davomat', callback_data: `child_attendance_${student_id}` }],
+          [{ text: '📊 Natijalar', callback_data: `child_results_${student_id}` }],
+          [{ text: '📝 Vazifalar', callback_data: `child_tasks_${student_id}` }],
+        ],
+      },
+    });
+  }
+
+  async childResults(ctx: Context, student_id: string) {
+    let student: any;
+    try {
+      student = await this.userService.getStudentById(student_id);
+    } catch (error) { }
+
+    if (!student) {
+      await ctx.reply("O'quvchi topilmadi");
+      return;
+    }
+
     const groups = await this.getUserGroups(student.id);
 
-    if (!groups.size) return;
+    if (!groups.size) {
+      await ctx.reply('Farzandingizda hozircha guruhlar mavjud emas.');
+      return;
+    }
 
     if (groups.size === 1) {
       const [groupId] = groups.keys();
@@ -529,9 +600,196 @@ export class BotService {
       { text: title, callback_data: `child_stats_${student_id}_${groupId}` },
     ]);
 
-    await ctx.reply("📊 Statistikani ko'rish uchun guruhni tanlang:", {
+    await ctx.reply("📊 Natijalarni ko'rish uchun guruhni tanlang:", {
       reply_markup: { inline_keyboard: buttons },
     });
+  }
+
+  async childAttendance(ctx: Context, student_id: string) {
+    let student: any;
+    try {
+      student = await this.userService.getStudentById(student_id);
+    } catch (error) { }
+
+    if (!student) {
+      await ctx.reply("O'quvchi topilmadi");
+      return;
+    }
+
+    const groups = await this.getUserGroups(student.id);
+
+    if (!groups.size) {
+      await ctx.reply('Farzandingizda hozircha guruhlar mavjud emas.');
+      return;
+    }
+
+    const buttons = [...groups.entries()].map(([groupId, title]) => [
+      { text: title, callback_data: `child_attendance_group_${student_id}_${groupId}` },
+    ]);
+
+    await ctx.reply("📅 Davomatni ko'rish uchun guruhni tanlang:", {
+      reply_markup: { inline_keyboard: buttons },
+    });
+  }
+
+  async childAttendanceGroupCourses(ctx: Context, student_id: string, group_id: number) {
+    let student: any;
+    try {
+      student = await this.userService.getStudentById(student_id);
+    } catch (error) { }
+
+    if (!student) {
+      await ctx.reply("O'quvchi topilmadi");
+      return;
+    }
+
+    let subscriptions: any;
+    try {
+      subscriptions = await this.subscriptionsService.getByUserId(student.id);
+    } catch (error) { }
+
+    const courses = ((subscriptions as any[]) || [])
+      .map((subscription: any) => subscription.dataValues.course)
+      .filter((course: any) => course?.group_id == group_id);
+
+    if (!courses.length) {
+      await ctx.reply('Bu guruhda farzandingizning kurslari mavjud emas.');
+      return;
+    }
+
+    const buttons = courses.map((course: any) => [
+      { text: course.title, callback_data: `child_attendance_course_${student_id}_${course.id}` },
+    ]);
+
+    await ctx.reply("📚 Davomatni ko'rish uchun kursni tanlang:", {
+      reply_markup: { inline_keyboard: buttons },
+    });
+  }
+
+  async childAttendanceForCourse(ctx: Context, student_id: string, course_id: number) {
+    let student: any;
+    try {
+      student = await this.userService.getStudentById(student_id);
+    } catch (error) { }
+
+    if (!student) {
+      await ctx.reply("O'quvchi topilmadi");
+      return;
+    }
+
+    let subscriptions: any;
+    try {
+      subscriptions = await this.subscriptionsService.getByUserId(student.id);
+    } catch (error) { }
+
+    const subscription = ((subscriptions as any[]) || []).find(
+      (item: any) => item.dataValues.course?.id == course_id,
+    );
+
+    if (!subscription) {
+      await ctx.reply('Kurs topilmadi.');
+      return;
+    }
+
+    const course = subscription.dataValues.course;
+
+    let analytics: any;
+    try {
+      analytics = await this.userService.getUserAnalytics(student.id, course.group_id);
+    } catch (error) {
+      console.log(error);
+      await ctx.reply('Davomatni olishda xatolik yuz berdi.');
+      return;
+    }
+
+    const courseSubscription = (analytics?.subscriptions || []).find(
+      (item: any) => item.course_id == course_id,
+    );
+    const attendance = courseSubscription?.attendance || {
+      attended_classes: 0,
+      scheduled_classes: 0,
+      percentage: 0,
+    };
+
+    await ctx.reply(
+      `📅 <b>${course.title}</b> — Davomat\n\n` +
+      `✅ Qatnashgan darslar: <b>${attendance.attended_classes}</b>\n` +
+      `📚 Jami darslar: <b>${attendance.scheduled_classes}</b>\n` +
+      `📊 Foiz: <b>${attendance.percentage}%</b>`,
+      { parse_mode: 'HTML' },
+    );
+  }
+
+  async childTasks(ctx: Context, student_id: string) {
+    let student: any;
+    try {
+      student = await this.userService.getStudentById(student_id);
+    } catch (error) { }
+
+    if (!student) {
+      await ctx.reply("O'quvchi topilmadi");
+      return;
+    }
+
+    let courses: any;
+    try {
+      courses = await this.subscriptionsService.getByUserId(student.id);
+    } catch (error) { }
+
+    if (!courses?.length) {
+      await ctx.reply('Farzandingizda hozircha kurslar mavjud emas.');
+      return;
+    }
+
+    const buttons = courses.map((subscription: any) => {
+      const course = subscription.dataValues.course;
+
+      return [
+        {
+          text: course.title,
+          callback_data: `child_tasks_course_${student_id}_${course.id}`,
+        },
+      ];
+    });
+
+    await ctx.reply("📝 Vazifalarni ko'rish uchun kursni tanlang:", {
+      reply_markup: { inline_keyboard: buttons },
+    });
+  }
+
+  async childTasksForCourse(ctx: Context, student_id: string, course_id: number) {
+    let student: any;
+    try {
+      student = await this.userService.getStudentById(student_id);
+    } catch (error) { }
+
+    if (!student) {
+      await ctx.reply("O'quvchi topilmadi");
+      return;
+    }
+
+    const publishedLessons = await this.getPublishedLessonsSorted(course_id);
+
+    if (!publishedLessons.length) {
+      await ctx.reply('Bu kursda hozircha darslar mavjud emas.');
+      return;
+    }
+
+    const lines = ['📝 <b>Vazifalar holati</b>', ''];
+    let previousCompleted = true;
+
+    for (const lesson of publishedLessons) {
+      const isCompleted = await this.testsService.hasCompletedTest(
+        lesson.id,
+        student.id,
+      );
+      const isLocked = !previousCompleted;
+
+      lines.push(`${isCompleted ? '✅' : isLocked ? '🔒' : '⏳'} ${lesson.title}`);
+      previousCompleted = isCompleted;
+    }
+
+    await ctx.reply(lines.join('\n'), { parse_mode: 'HTML' });
   }
 
   async handleText(ctx: Context) {
