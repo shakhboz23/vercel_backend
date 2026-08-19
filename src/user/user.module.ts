@@ -5,7 +5,6 @@ import { SequelizeModule } from '@nestjs/sequelize';
 import { User } from './models/user.models';
 import { NotificationModule } from '../notification/notification.module';
 import { RoleModule } from '../role/role.module';
-import { MailModule } from '../mail/mail.module';
 import { ResetpasswordModule } from '../resetpassword/resetpassword.module';
 import { JwtModule } from '@nestjs/jwt';
 import { FilesModule } from 'src/files/files.module';
@@ -15,7 +14,6 @@ import { OtpModule } from 'src/otp/otp.module';
   imports: [
     SequelizeModule.forFeature([User]),
     forwardRef(() => RoleModule),
-    MailModule,
     ResetpasswordModule,
     JwtModule,
     FilesModule,

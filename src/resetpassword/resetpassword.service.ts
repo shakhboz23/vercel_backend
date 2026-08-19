@@ -11,14 +11,12 @@ import { InjectModel } from '@nestjs/sequelize';
 import { JwtService } from '@nestjs/jwt';
 import { ResetpasswordDto } from './dto/resetpassword.dto';
 import * as uuid from 'uuid';
-import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class ResetpasswordService {
   constructor(
     @InjectModel(Resetpassword)
     private resetpasswordRepository: typeof Resetpassword,
-    private readonly mailService: MailService,
     private readonly jwtService: JwtService,
   ) {}
 
@@ -36,7 +34,7 @@ export class ResetpasswordService {
         email,
         activate_link,
       });
-      await this.mailService.sendUserActivationLink(activate_link, email);
+      // await this.mailService.sendUserActivationLink(activate_link, email);
       return {
         statusCode: HttpStatus.OK,
         message: 'Created successfully',

@@ -14,13 +14,11 @@ import { VerifyOtpDto } from './dto/verifyOtp.dto';
 import { otpCodeSMSSchema, sendSMS } from '../utils/sendSMS';
 import { newTokenForSMS } from '../utils/newTokenForSMS';
 import { NewTokenDto } from './dto/newToken.dto';
-import { MailService } from 'src/mail/mail.service';
 
 @Injectable()
 export class OtpService {
   constructor(@InjectModel(Otp) 
   private otpRepository: typeof Otp,
-  private readonly mailService: MailService,
 ) { }
 
   async sendOTP(phoneDto: PhoneDto): Promise<object> {
@@ -38,7 +36,7 @@ export class OtpService {
       }
 
       // await sendSMS(email, otpCodeSMSSchema(code));
-      await this.mailService.sendConfirmationCode(email, code);
+      // await this.mailService.sendConfirmationCode(email, code);
       const expire_time = Date.now() + 120000;
       const exist = await this.otpRepository.findOne({
         where: { email },

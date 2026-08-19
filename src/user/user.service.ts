@@ -20,7 +20,6 @@ import { RoleService } from '../role/role.service';
 import { RoleDto } from '../role/dto/role.dto';
 import { Role } from '../role/models/role.models';
 import { CheckDto } from '../role/dto/check.dto';
-import { MailService } from '../mail/mail.service';
 import { compareSync, hash } from 'bcrypt';
 import * as uuid from 'uuid';
 import { Sequelize } from 'sequelize-typescript';
@@ -51,7 +50,6 @@ export class UserService {
     @InjectModel(User) private userRepository: typeof User,
     private readonly jwtService: JwtService,
     private readonly roleService: RoleService,
-    private readonly mailService: MailService,
     private readonly resetpasswordService: ResetpasswordService,
     private readonly filesService: FilesService,
     private readonly otpService: OtpService,
@@ -1439,7 +1437,7 @@ export class UserService {
         { activation_link },
         { where: { phone }, returning: true },
       );
-      await this.mailService.sendUserActivationLink(activation_link, phone);
+      // await this.mailService.sendUserActivationLink(activation_link, phone);
 
       return {
         statusCode: HttpStatus.OK,

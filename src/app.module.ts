@@ -20,7 +20,6 @@ import { ReytingModule } from './reyting/reyting.module';
 import { NewsModule } from './news/news.module';
 import { OtpModule } from './otp/otp.module';
 import { UserStepModule } from './user_step/class.module';
-import { MailModule } from './mail/mail.module';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { ResetpasswordModule } from './resetpassword/resetpassword.module';
 import { CategoryModule } from './category/category.module';
@@ -165,21 +164,20 @@ import { CourseSubgroupModule } from './course_subgroup/course_subgroup.module';
       // autoLoadModels: true,
       // synchronize: true,
       // sync: { alter: true },
-      logging: true,
-      dialectModule: pg,
-      dialectOptions: process.env.NODE_ENV == 'production' ? {
-        ssl: {
-          require: true,
-          rejectUnauthorized: false,
-        },
-      } : {},
+      // logging: true,
+      // dialectModule: pg,
+      // dialectOptions: process.env.NODE_ENV == 'production' ? {
+      //   ssl: {
+      //     require: true,
+      //     rejectUnauthorized: false,
+      //   },
+      // } : {},
     }),
     ServeStaticModule.forRoot({
       rootPath: resolve(__dirname, '..', 'static'),
       serveRoot: '/static',
     }),
     JwtModule.register({ global: true }),
-    MailModule,
     FilesModule,
     CategoryModule,
     SubCategoryModule,
