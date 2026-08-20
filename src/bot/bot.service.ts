@@ -50,11 +50,11 @@ export class BotService {
         { command: 'help', description: 'Yordam ko‘rsatish' },
       ]);
 
-      // const webhookInfo = await this.bot.telegram.getWebhookInfo();
-      // console.log('Webhook Info:', webhookInfo);
-      // const webhookUrl = `https://jellyfish-app-9syay.ondigitalocean.app/bot`; // Replace SERVER_URL with your public server URL
-      // console.log(`Webhook registered at: ${webhookUrl}`);
-      // await this.bot.telegram.setWebhook(webhookUrl);
+      if (process.env.NODE_ENV === 'production') {
+        const webhookUrl = 'https://api.ashacademy.uz/api/webhook/bot';
+        await this.bot.telegram.setWebhook(webhookUrl);
+        console.log(`Webhook registered at: ${webhookUrl}`);
+      }
     } catch (error) {
       console.log(error)
     }

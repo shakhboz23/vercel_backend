@@ -234,12 +234,22 @@ export class UserController {
     return this.userService.changeEmail(user_id, changeUserEmailDto);
   }
 
-  // @ApiOperation({ summary: 'Update user profile by ID' })
-  // // @UseGuards(AuthGuard)
-  // @Put('profile/:id')
-  // update(@Param('id') id: string, @Body() updateDto: UpdateDto) {
-  //   return this.userService.update(id, updateDto);
-  // }
+  @ApiOperation({ summary: 'Update current role of user by ID' })
+  // @UseGuards(AuthGuard)
+  @Put('current-role/:id')
+  updateCurrentRole(
+    @Param('id') id: number,
+    @Body() { current_role }: { current_role: string },
+  ) {
+    return this.userService.updateCurrentRole(id, current_role);
+  }
+
+  @ApiOperation({ summary: 'Update user profile by ID' })
+  // @UseGuards(AuthGuard)
+  @Put('profile/:id')
+  update(@Param('id') id: number, @Body() updateDto: UpdateDto) {
+    return this.userService.update(id, updateDto);
+  }
 
   // create_app(
   //   @Body() chatDto: ChatDto,

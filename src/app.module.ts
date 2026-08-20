@@ -85,35 +85,25 @@ import { CourseSubgroupModule } from './course_subgroup/course_subgroup.module';
       botName: BOT_NAME,
       useFactory: () => {
 
-        return {
+        return process.env.NODE_ENV !== 'production' ? {
           token: process.env.BOT_TOKEN,
           includes: [BotModule],
           // launchOptions: {
           //   webhook: {
-          //     domain: 'https://vercel-backend-bay.vercel.app',
-          //     hookPath: '/api/webhook/bot',
+          //     domain: 'https://vercelbackend-production.up.railway.app',
+          //     hookPath: '/api/webhook',
           //   }
           // }
+        } : {
+          token: process.env.BOT_TOKEN,
+          includes: [BotModule],
+          // Don't let Telegraf spin up its own webhook HTTP server (bot.launch()
+          // binds to a random, unexposed port) — updates are received through
+          // AppController's POST /webhook/bot instead, which calls
+          // bot.handleUpdate() directly. The webhook URL is registered with
+          // Telegram in BotService.onModuleInit().
+          launchOptions: false,
         }
-        // return process.env.NODE_ENV !== 'production' ? {
-        //   token: process.env.BOT_TOKEN,
-        //   includes: [BotModule],
-        //   // launchOptions: {
-        //   //   webhook: {
-        //   //     domain: 'https://vercelbackend-production.up.railway.app',
-        //   //     hookPath: '/api/webhook',
-        //   //   }
-        //   // }
-        // } : {
-        //   token: process.env.BOT_TOKEN,
-        //   includes: [BotModule],
-        //   launchOptions: {
-        //     webhook: {
-        //       domain: 'https://vercel-backend-bay.vercel.app',
-        //       hookPath: '/api/webhook/bot',
-        //     }
-        //   }
-        // }
       },
     }),
     ScheduleModule.forRoot(),
