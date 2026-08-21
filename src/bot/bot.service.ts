@@ -182,7 +182,7 @@ export class BotService {
           Markup.inlineKeyboard([
             Markup.button.webApp(
               'Academic Success Hub',
-              'https://ashacademy.uz/',
+              'https://www.ashacademy.uz/',
             ),
           ]),
         );
@@ -302,7 +302,7 @@ export class BotService {
         where: { bot_id: user.bot_id },
         returning: true
       })
-      const url = `https://ashacademy.uz/login?token=${bot_user.token}`;
+      const url = `https://www.ashacademy.uz/login?token=${bot_user.token}`;
       await ctx.reply(
         'Ro\'yxatdan muvaffaqiyatli o\'tdingiz!',
         {
@@ -1437,7 +1437,7 @@ export class BotService {
     await ctx.reply(
       'Test javoblarini yuborish:',
       Markup.inlineKeyboard([
-        Markup.button.webApp('Academic Success Hub', `https://ashacademy.uz/test/${lessonId}?pdf=true`),
+        Markup.button.webApp('Academic Success Hub', `https://www.ashacademy.uz/test/${lessonId}?pdf=true`),
       ]),
     );
   }

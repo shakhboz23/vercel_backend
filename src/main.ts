@@ -42,6 +42,7 @@ async function bootstrap() {
         'http://localhost:3000',
         'https://vercel-backend-bay.vercel.app',
         'https://ilmnur.online',
+        'https://ashacademy.uz',
         'https://www.ashacademy.uz',
       ],
       methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
