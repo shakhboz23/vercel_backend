@@ -90,6 +90,11 @@ export class BotUpdate {
     return this.botService.onContact(ctx);
   }
 
+  @On('photo')
+  async onPhoto(@Ctx() ctx: Context) {
+    return this.botService.handlePhoto(ctx);
+  }
+
   @On('message')
   async handleMessages(@Ctx() ctx: Context) {
     return this.botService.handleText(ctx);
@@ -330,5 +335,43 @@ export class BotUpdate {
     const lessonId = Number(callbackQuery.data.replace('lesson_test_', ''));
 
     return this.botService.lessonTest(ctx, lessonId);
+  }
+
+  @Action(/^lesson_task_(\d+)$/)
+  async lessonTask(ctx: Context) {
+    const callbackQuery = ctx.callbackQuery;
+
+    if (!('data' in callbackQuery)) {
+      return;
+    }
+
+    await ctx.answerCbQuery();
+
+    const lessonId = Number(callbackQuery.data.replace('lesson_task_', ''));
+
+    return this.botService.lessonTask(ctx, lessonId);
+  }
+
+  @Action(/^task_status_(full|partial|none)_(\d+)_(\d+)$/)
+  async gradeTask(ctx: Context) {
+    const callbackQuery = ctx.callbackQuery;
+
+    if (!('data' in callbackQuery)) {
+      return;
+    }
+
+    const [, status, lessonId, studentUserId] =
+      callbackQuery.data.match(/^task_status_(full|partial|none)_(\d+)_(\d+)$/) || [];
+
+    if (!status) {
+      return;
+    }
+
+    return this.botService.gradeTask(
+      ctx,
+      status as 'full' | 'partial' | 'none',
+      Number(lessonId),
+      Number(studentUserId),
+    );
   }
 }

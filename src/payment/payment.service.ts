@@ -139,16 +139,15 @@ export class PaymentService {
     }
   }
 
-  // Runs daily: reminds the student and their parent(s) once a day during the
-  // last 7 days before an unpaid payment's due date.
+  // Runs daily: reminds the student and their parent(s) once a day, starting
+  // the day a payment becomes due and repeating every day until it's paid.
   async sendPaymentReminders(): Promise<void> {
     const today = dayjs().startOf('day');
-    const weekOut = today.add(7, 'day');
 
     const payments = await this.paymentRepository.findAll({
       where: {
         status: { [Op.ne]: PaymentStatus.SUCCESS },
-        due_date: { [Op.gte]: today.toDate(), [Op.lte]: weekOut.toDate() },
+        due_date: { [Op.lte]: today.toDate() },
         [Op.or]: [
           { last_reminder_at: null },
           { last_reminder_at: { [Op.lt]: today.toDate() } },

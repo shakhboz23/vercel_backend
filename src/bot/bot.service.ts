@@ -2,7 +2,7 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Bot } from './models/bot.model';
 import { BotChild } from './models/bot_child.model';
-import { BOT_NAME } from '../app.constants';
+import { BOT_NAME, TASK_GROUP_ID } from '../app.constants';
 import {
   InjectBot,
   Update,
@@ -21,23 +21,29 @@ import { CourseService } from 'src/course/course.service';
 import { LessonService } from 'src/lesson/lesson.service';
 import { TestsService } from 'src/test/test.service';
 import { User } from 'src/user/models/user.models';
+import { Group } from 'src/group/models/group.models';
+import { ReytingService } from 'src/reyting/reyting.service';
+import { FinishedType } from 'src/reyting/models/reyting.models';
 
 const CHILD_ID_STEP = 'child_id';
 const NAME_STEP = 'name';
 const SURNAME_STEP = 'surname';
 const PASSWORD_STEP = 'password';
+const TASK_STEP = 'task';
 
 @Injectable()
 export class BotService {
   constructor(
     @InjectModel(Bot) private botRepo: typeof Bot,
     @InjectModel(BotChild) private botChildRepo: typeof BotChild,
+    @InjectModel(Group) private groupRepo: typeof Group,
     @InjectBot(BOT_NAME) private readonly bot: Telegraf<Context>,
     private readonly userService: UserService,
     private readonly subscriptionsService: SubscriptionsService,
     private readonly courseService: CourseService,
     private readonly lessonService: LessonService,
     private readonly testsService: TestsService,
+    private readonly reytingService: ReytingService,
   ) { }
 
   async onModuleInit() {
@@ -807,6 +813,8 @@ export class BotService {
           return this.setSurname(ctx);
         case PASSWORD_STEP:
           return this.setPassword(ctx);
+        case TASK_STEP:
+          return this.submitTaskText(ctx, botUser);
       }
     }
 
@@ -1440,5 +1448,250 @@ export class BotService {
         Markup.button.webApp('Academic Success Hub', `https://www.ashacademy.uz/test/${lessonId}?pdf=true`),
       ]),
     );
+  }
+
+  async lessonTask(ctx: Context, lessonId: number) {
+    const bot_id = ctx.from.id;
+
+    const user = await this.botRepo.findOne({ where: { bot_id } });
+
+    if (!user?.user_id) {
+      await ctx.reply('Foydalanuvchi topilmadi');
+      return;
+    }
+
+    const lesson: any = await this.lessonService.getById(lessonId);
+
+    if (!lesson) {
+      await ctx.reply('Dars mavjud emas.');
+      return;
+    }
+
+    await this.botRepo.update(
+      { step: TASK_STEP, step_data: String(lessonId) },
+      { where: { bot_id } },
+    );
+
+    await ctx.reply(
+      '📎 Vazifangizni yuboring (matn va/yoki rasm shaklida). Yuborilgan xabaringiz guruhga yetkaziladi.',
+    );
+  }
+
+  private async buildTaskInfo(
+    botUser: Bot,
+    lessonId: number,
+  ): Promise<{ header: string; courseId: number }> {
+    let student: any;
+    try {
+      student = await this.userService.getById(botUser.user_id);
+    } catch (error) { }
+
+    let lesson: any;
+    try {
+      lesson = await this.lessonService.getById(lessonId);
+    } catch (error) { }
+
+    let groupTitle = '';
+    const groupId = lesson?.course?.group_id;
+    if (groupId) {
+      try {
+        const group = await this.groupRepo.findOne({ where: { id: groupId } });
+        groupTitle = group?.title || '';
+      } catch (error) { }
+    }
+
+    const studentName =
+      [student?.name, student?.surname].filter(Boolean).join(' ') ||
+      botUser.username ||
+      "Noma'lum";
+
+    const header =
+      `📝 <b>Yangi vazifa</b>\n` +
+      `👤 ${studentName}` +
+      (student?.student_id ? ` (ID: ${student.student_id})` : '') +
+      `\n👥 Guruh: ${groupTitle || "noma'lum"}` +
+      `\n📚 Kurs: ${lesson?.course?.title || "noma'lum"}` +
+      `\n📖 Dars: ${lesson?.title || lessonId}` +
+      `\n🧪 Test: ${lesson?.title || lessonId}`;
+
+    return { header, courseId: lesson?.course_id };
+  }
+
+  private readonly taskStatusLabels: Record<
+    'full' | 'partial' | 'none',
+    { text: string; icon: string; ball: number }
+  > = {
+    full: { text: "To'liq bajarildi", icon: '✅', ball: 10 },
+    partial: { text: "To'liq emas", icon: '🟡', ball: 8 },
+    none: { text: 'Bajarilmagan', icon: '❌', ball: 0 },
+  };
+
+  private taskStatusButtons(lessonId: number, studentUserId: number) {
+    return {
+      inline_keyboard: (
+        Object.keys(this.taskStatusLabels) as Array<'full' | 'partial' | 'none'>
+      ).map((status) => [
+        {
+          text: `${this.taskStatusLabels[status].icon} ${this.taskStatusLabels[status].text}`,
+          callback_data: `task_status_${status}_${lessonId}_${studentUserId}`,
+        },
+      ]),
+    };
+  }
+
+  async submitTaskText(ctx: Context, botUser: Bot) {
+    const message = ctx.message as Message.TextMessage;
+    const text = message.text.trim();
+    const lessonId = Number(botUser.step_data);
+
+    const { header } = await this.buildTaskInfo(botUser, lessonId);
+
+    try {
+      await this.bot.telegram.sendMessage(
+        TASK_GROUP_ID,
+        `${header}\n\n${text}`,
+        {
+          parse_mode: 'HTML',
+          reply_markup: this.taskStatusButtons(lessonId, botUser.user_id),
+        },
+      );
+      await this.botRepo.update(
+        { step: null, step_data: null },
+        { where: { bot_id: botUser.bot_id } },
+      );
+      await ctx.reply('✅ Vazifangiz yuborildi');
+      await this.lessonInfo(ctx, lessonId);
+    } catch (error) {
+      console.log(error);
+      await ctx.reply('❌ Vazifani yuborishda xatolik yuz berdi');
+    }
+  }
+
+  async handlePhoto(ctx: Context) {
+    const bot_id = ctx.from.id;
+    const botUser = await this.botRepo.findOne({ where: { bot_id } });
+
+    if (botUser?.step !== TASK_STEP || !ctx.message || !('photo' in ctx.message)) {
+      await ctx.reply(`Noto'g'ri ma'lumot!`);
+      return;
+    }
+
+    const lessonId = Number(botUser.step_data);
+    const photos = ctx.message.photo;
+    const fileId = photos[photos.length - 1].file_id;
+    const caption = (ctx.message as Message.PhotoMessage).caption?.trim();
+
+    const { header } = await this.buildTaskInfo(botUser, lessonId);
+
+    try {
+      await this.bot.telegram.sendPhoto(TASK_GROUP_ID, fileId, {
+        caption: caption ? `${header}\n\n${caption}` : header,
+        parse_mode: 'HTML',
+        reply_markup: this.taskStatusButtons(lessonId, botUser.user_id),
+      });
+      await this.botRepo.update(
+        { step: null, step_data: null },
+        { where: { bot_id } },
+      );
+      await ctx.reply('✅ Vazifangiz yuborildi');
+      await this.lessonInfo(ctx, lessonId);
+    } catch (error) {
+      console.log(error);
+      await ctx.reply('❌ Vazifani yuborishda xatolik yuz berdi');
+    }
+  }
+
+  async gradeTask(
+    ctx: Context,
+    status: 'full' | 'partial' | 'none',
+    lessonId: number,
+    studentUserId: number,
+  ) {
+    const statusInfo = this.taskStatusLabels[status];
+
+    if (!statusInfo) {
+      return;
+    }
+
+    let lesson: any;
+    try {
+      lesson = await this.lessonService.getById(lessonId);
+    } catch (error) { }
+
+    if (!lesson) {
+      await ctx.answerCbQuery('Dars topilmadi', { show_alert: true });
+      return;
+    }
+
+    try {
+      await this.reytingService.create(
+        {
+          ball: statusInfo.ball,
+          lesson_id: lessonId,
+          course_id: lesson.course_id,
+          finished_type: FinishedType.task,
+        },
+        studentUserId,
+      );
+    } catch (error) {
+      console.log(error);
+      await ctx.answerCbQuery('❌ Xatolik yuz berdi', { show_alert: true });
+      return;
+    }
+
+    await ctx.answerCbQuery(
+      `${statusInfo.icon} ${statusInfo.text} (${statusInfo.ball} ball)`,
+    );
+
+    try {
+      await ctx.editMessageReplyMarkup({
+        inline_keyboard: [
+          [
+            {
+              text: `${statusInfo.icon} ${statusInfo.text} (${statusInfo.ball} ball)`,
+              callback_data: 'task_graded',
+            },
+          ],
+        ],
+      });
+    } catch (error) { }
+
+    await this.notifyTaskResult(studentUserId, lesson, statusInfo);
+  }
+
+  private async notifyTaskResult(
+    studentUserId: number,
+    lesson: any,
+    statusInfo: { text: string; icon: string; ball: number },
+  ): Promise<void> {
+    const parents = await this.botChildRepo.findAll({
+      where: { student_id: studentUserId },
+    });
+    if (!parents.length) return;
+
+    let student: any;
+    try {
+      student = await this.userService.getById(studentUserId);
+    } catch (error) { }
+
+    const studentName =
+      [student?.name, student?.surname].filter(Boolean).join(' ') ||
+      "O'quvchi";
+
+    const text =
+      `${statusInfo.icon} <b>Vazifa natijasi</b>\n\n` +
+      `👤 O'quvchi: <b>${studentName}</b>\n` +
+      (lesson?.course?.title
+        ? `📚 Kurs: <b>${lesson.course.title}</b>\n`
+        : '') +
+      `📖 Dars: <b>${lesson?.title || ''}</b>\n` +
+      `📌 Holat: <b>${statusInfo.text}</b>\n` +
+      `🏆 Ball: <b>${statusInfo.ball}</b>`;
+
+    for (const parent of parents) {
+      await this.bot.telegram
+        .sendMessage(parent.parent_bot_id, text, { parse_mode: 'HTML' })
+        .catch((error) => console.log(error));
+    }
   }
 }

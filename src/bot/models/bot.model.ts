@@ -11,6 +11,7 @@ interface BotAttr {
     phone: string;
     status: boolean;
     step?: string;
+    step_data?: string;
     role?: string;
 }
 
@@ -52,6 +53,10 @@ export class Bot extends Model<Bot, BotAttr> {
     @ApiProperty({ example: "child_id", description: 'kutilayotgan javob turi' })
     @Column({ type: DataType.STRING, allowNull: true })
     step: string;
+
+    @ApiProperty({ example: "12", description: "step bilan bog'liq qo'shimcha ma'lumot (masalan, dars ID)" })
+    @Column({ type: DataType.STRING, allowNull: true })
+    step_data: string;
 
     @ApiProperty({ example: "parent", description: "ro'yhatdan o'tayotgan rol: parent | student" })
     @Column({ type: DataType.STRING, allowNull: true })
