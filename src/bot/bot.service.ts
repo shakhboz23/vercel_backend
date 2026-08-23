@@ -455,13 +455,13 @@ export class BotService {
       return this.askChildId(ctx);
     }
 
-    const buttons = children.map((child) => {
+    const buttons = children.map((child, index) => {
       const student: any = child.student;
       const name = [student?.name, student?.surname].filter(Boolean).join(' ');
 
       return [
         {
-          text: `${child.student_id}.${name || "Noma'lum"}`,
+          text: `${index + 1}.${name || "Noma'lum"}`,
           callback_data: `child_${child.student_id}`,
         },
       ];
