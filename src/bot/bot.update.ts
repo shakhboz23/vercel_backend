@@ -92,7 +92,17 @@ export class BotUpdate {
 
   @On('photo')
   async onPhoto(@Ctx() ctx: Context) {
-    return this.botService.handlePhoto(ctx);
+    return this.botService.handleMedia(ctx);
+  }
+
+  @On('document')
+  async onDocument(@Ctx() ctx: Context) {
+    return this.botService.handleMedia(ctx);
+  }
+
+  @On('video')
+  async onVideo(@Ctx() ctx: Context) {
+    return this.botService.handleMedia(ctx);
   }
 
   @On('message')

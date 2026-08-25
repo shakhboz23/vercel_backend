@@ -31,6 +31,12 @@ const SURNAME_STEP = 'surname';
 const PASSWORD_STEP = 'password';
 const TASK_STEP = 'task';
 
+interface TaskMediaEntry {
+  type: 'photo' | 'document' | 'video';
+  fileId: string;
+  caption?: string;
+}
+
 @Injectable()
 export class BotService {
   constructor(
@@ -1473,7 +1479,7 @@ export class BotService {
     );
 
     await ctx.reply(
-      '📎 Vazifangizni yuboring (matn va/yoki rasm shaklida). Yuborilgan xabaringiz guruhga yetkaziladi.',
+      '📎 Vazifangizni yuboring (matn, bir nechta rasm va/yoki fayl shaklida). Yuborilgan xabaringiz guruhga yetkaziladi.',
     );
   }
 
@@ -1567,37 +1573,182 @@ export class BotService {
     }
   }
 
-  async handlePhoto(ctx: Context) {
+  private readonly taskMediaGroups = new Map<
+    string,
+    {
+      botId: number;
+      lessonId: number;
+      botUser: Bot;
+      entries: TaskMediaEntry[];
+      timer: ReturnType<typeof setTimeout>;
+    }
+  >();
+
+  private readonly TASK_MEDIA_GROUP_DELAY = 1200;
+
+  async handleMedia(ctx: Context) {
     const bot_id = ctx.from.id;
     const botUser = await this.botRepo.findOne({ where: { bot_id } });
 
-    if (botUser?.step !== TASK_STEP || !ctx.message || !('photo' in ctx.message)) {
+    if (botUser?.step !== TASK_STEP || !ctx.message) {
       await ctx.reply(`Noto'g'ri ma'lumot!`);
       return;
     }
 
-    const lessonId = Number(botUser.step_data);
-    const photos = ctx.message.photo;
-    const fileId = photos[photos.length - 1].file_id;
-    const caption = (ctx.message as Message.PhotoMessage).caption?.trim();
+    const message = ctx.message as any;
 
-    const { header } = await this.buildTaskInfo(botUser, lessonId);
+    let type: TaskMediaEntry['type'] | null = null;
+    let fileId: string | null = null;
+
+    if ('photo' in message) {
+      type = 'photo';
+      const photos = message.photo;
+      fileId = photos[photos.length - 1].file_id;
+    } else if ('document' in message) {
+      type = 'document';
+      fileId = message.document.file_id;
+    } else if ('video' in message) {
+      type = 'video';
+      fileId = message.video.file_id;
+    }
+
+    if (!type || !fileId) {
+      await ctx.reply(`Noto'g'ri ma'lumot!`);
+      return;
+    }
+
+    const caption = (message.caption as string | undefined)?.trim();
+    const lessonId = Number(botUser.step_data);
+    const mediaGroupId = message.media_group_id as string | undefined;
+
+    if (!mediaGroupId) {
+      try {
+        await this.sendTaskMedia(botUser, lessonId, [{ type, fileId, caption }]);
+        await this.botRepo.update(
+          { step: null, step_data: null },
+          { where: { bot_id } },
+        );
+        await ctx.reply('✅ Vazifangiz yuborildi');
+        await this.lessonInfo(ctx, lessonId);
+      } catch (error) {
+        console.log(error);
+        await ctx.reply('❌ Vazifani yuborishda xatolik yuz berdi');
+      }
+      return;
+    }
+
+    const key = `${bot_id}_${mediaGroupId}`;
+    const existing = this.taskMediaGroups.get(key);
+
+    if (existing) {
+      clearTimeout(existing.timer);
+      existing.entries.push({ type, fileId, caption });
+      existing.timer = setTimeout(
+        () => this.flushTaskMediaGroup(ctx, key),
+        this.TASK_MEDIA_GROUP_DELAY,
+      );
+      return;
+    }
+
+    this.taskMediaGroups.set(key, {
+      botId: bot_id,
+      lessonId,
+      botUser,
+      entries: [{ type, fileId, caption }],
+      timer: setTimeout(
+        () => this.flushTaskMediaGroup(ctx, key),
+        this.TASK_MEDIA_GROUP_DELAY,
+      ),
+    });
+  }
+
+  private async flushTaskMediaGroup(ctx: Context, key: string) {
+    const group = this.taskMediaGroups.get(key);
+
+    if (!group) {
+      return;
+    }
+
+    this.taskMediaGroups.delete(key);
 
     try {
-      await this.bot.telegram.sendPhoto(TASK_GROUP_ID, fileId, {
-        caption: caption ? `${header}\n\n${caption}` : header,
-        parse_mode: 'HTML',
-        reply_markup: this.taskStatusButtons(lessonId, botUser.user_id),
-      });
+      await this.sendTaskMedia(group.botUser, group.lessonId, group.entries);
       await this.botRepo.update(
         { step: null, step_data: null },
-        { where: { bot_id } },
+        { where: { bot_id: group.botId } },
       );
       await ctx.reply('✅ Vazifangiz yuborildi');
-      await this.lessonInfo(ctx, lessonId);
+      await this.lessonInfo(ctx, group.lessonId);
     } catch (error) {
       console.log(error);
       await ctx.reply('❌ Vazifani yuborishda xatolik yuz berdi');
+    }
+  }
+
+  private async sendTaskMedia(
+    botUser: Bot,
+    lessonId: number,
+    entries: TaskMediaEntry[],
+  ) {
+    const { header } = await this.buildTaskInfo(botUser, lessonId);
+    const captionText = entries.find((entry) => entry.caption)?.caption;
+    const fullCaption = captionText ? `${header}\n\n${captionText}` : header;
+    const buttons = this.taskStatusButtons(lessonId, botUser.user_id);
+
+    // Telegram doesn't allow mixing documents with photos/videos in one album,
+    // so send visual media and documents as separate groups.
+    const visualEntries = entries.filter((entry) => entry.type !== 'document');
+    const documentEntries = entries.filter((entry) => entry.type === 'document');
+    const groups = [visualEntries, documentEntries].filter((group) => group.length > 0);
+
+    let captionUsed = false;
+
+    for (let i = 0; i < groups.length; i++) {
+      const group = groups[i];
+      const isLastGroup = i === groups.length - 1;
+      const caption = !captionUsed ? fullCaption : undefined;
+
+      if (group.length === 1) {
+        const [entry] = group;
+        const options: any = { parse_mode: 'HTML' };
+
+        if (caption) {
+          options.caption = caption;
+          captionUsed = true;
+        }
+
+        if (isLastGroup) {
+          options.reply_markup = buttons;
+        }
+
+        if (entry.type === 'photo') {
+          await this.bot.telegram.sendPhoto(TASK_GROUP_ID, entry.fileId, options);
+        } else if (entry.type === 'video') {
+          await this.bot.telegram.sendVideo(TASK_GROUP_ID, entry.fileId, options);
+        } else {
+          await this.bot.telegram.sendDocument(TASK_GROUP_ID, entry.fileId, options);
+        }
+      } else {
+        const media = group.map((entry, idx) => ({
+          type: entry.type,
+          media: entry.fileId,
+          ...(idx === 0 && caption ? { caption, parse_mode: 'HTML' as const } : {}),
+        }));
+
+        if (caption) {
+          captionUsed = true;
+        }
+
+        await this.bot.telegram.sendMediaGroup(TASK_GROUP_ID, media as any);
+
+        if (isLastGroup) {
+          await this.bot.telegram.sendMessage(
+            TASK_GROUP_ID,
+            '⬆️ Vazifani baholang',
+            { reply_markup: buttons },
+          );
+        }
+      }
     }
   }
 
