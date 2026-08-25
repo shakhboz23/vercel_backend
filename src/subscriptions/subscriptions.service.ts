@@ -1,6 +1,8 @@
 import {
   BadRequestException,
+  forwardRef,
   HttpStatus,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -15,14 +17,19 @@ import { Group } from '../group/models/group.models';
 import { UploadedService } from '../uploaded/uploaded.service';
 import { CreateSubscriptionsDto } from './dto/create_subscriptions.dto';
 import { Response } from 'express';
+import { BotService } from '../bot/bot.service';
 
 @Injectable()
 export class SubscriptionsService {
   constructor(
     @InjectModel(Subscriptions)
     private subscriptionsRepository: typeof Subscriptions,
+    @InjectModel(Course)
+    private courseRepository: typeof Course,
     private readonly userService: UserService,
     private uploadedService: UploadedService,
+    @Inject(forwardRef(() => BotService))
+    private readonly botService: BotService,
   ) { }
 
   async create(
@@ -91,6 +98,15 @@ export class SubscriptionsService {
           is_active: SubscribeActive.pending,
           start_date: creaetSubscriptionsDto.start_date,
         });
+
+        if (!exist) {
+          const course = await this.courseRepository.findByPk(i);
+          if (course) {
+            this.botService
+              .notifySubscriptionAdded(user_id, course.title)
+              .catch((error) => console.log(error));
+          }
+        }
       }
       return subcription;
     } catch (error) {

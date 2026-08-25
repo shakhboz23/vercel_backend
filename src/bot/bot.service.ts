@@ -1,4 +1,4 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { forwardRef, Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Bot } from './models/bot.model';
 import { BotChild } from './models/bot_child.model';
@@ -45,6 +45,7 @@ export class BotService {
     @InjectModel(Group) private groupRepo: typeof Group,
     @InjectBot(BOT_NAME) private readonly bot: Telegraf<Context>,
     private readonly userService: UserService,
+    @Inject(forwardRef(() => SubscriptionsService))
     private readonly subscriptionsService: SubscriptionsService,
     private readonly courseService: CourseService,
     private readonly lessonService: LessonService,
@@ -391,6 +392,23 @@ export class BotService {
     for (const parent of parents) {
       await this.bot.telegram
         .sendMessage(parent.parent_bot_id, text, { parse_mode: 'HTML' })
+        .catch((error) => console.log(error));
+    }
+  }
+
+  async notifySubscriptionAdded(
+    user_id: number,
+    courseTitle: string,
+  ): Promise<void> {
+    const text =
+      `🎉 Tabriklaymiz!\n\n` +
+      `Siz "<b>${courseTitle}</b>" kursiga qo'shildingiz.\n\n` +
+      `Pastdagi <b>Kurslar</b> tugmasi orqali uni ko'rishingiz mumkin.`;
+
+    const studentBot = await this.botRepo.findOne({ where: { user_id } });
+    if (studentBot?.status) {
+      await this.bot.telegram
+        .sendMessage(studentBot.bot_id, text, { parse_mode: 'HTML' })
         .catch((error) => console.log(error));
     }
   }

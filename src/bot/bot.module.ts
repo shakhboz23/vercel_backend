@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { BotService } from './bot.service';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { Bot } from './models/bot.model';
@@ -17,7 +17,7 @@ import { ReytingModule } from 'src/reyting/reyting.module';
 import { Group } from 'src/group/models/group.models';
 
 @Module({
-  imports: [SequelizeModule.forFeature([Bot, BotChild, Group]), UserModule, SubscriptionsModule, CourseModule, LessonModule, TestsModule, ReytingModule,
+  imports: [SequelizeModule.forFeature([Bot, BotChild, Group]), UserModule, forwardRef(() => SubscriptionsModule), CourseModule, LessonModule, TestsModule, ReytingModule,
   // TelegrafModule.forRootAsync({
   //   botName: BOT_NAME,
   //   useFactory: async (configService: ConfigService) => ({
