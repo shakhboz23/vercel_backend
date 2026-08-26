@@ -23,7 +23,6 @@ import { TestsService } from 'src/test/test.service';
 import { User } from 'src/user/models/user.models';
 import { Group } from 'src/group/models/group.models';
 import { ReytingService } from 'src/reyting/reyting.service';
-import { FinishedType } from 'src/reyting/models/reyting.models';
 
 const CHILD_ID_STEP = 'child_id';
 const NAME_STEP = 'name';
@@ -57,10 +56,10 @@ export class BotService {
     try {
       await this.bot.telegram.setMyCommands([
         { command: 'start', description: 'Botni boshlash' },
-        { command: 'my_tests', description: 'Mening testlarim' },
-        { command: 'new_test', description: 'Yangi test yaratish' },
-        { command: 'reyting', description: 'Test reytingi' },
-        { command: 'help', description: 'Yordam ko‘rsatish' },
+        // { command: 'my_tests', description: 'Mening testlarim' },
+        // { command: 'new_test', description: 'Yangi test yaratish' },
+        // { command: 'reyting', description: 'Test reytingi' },
+        // { command: 'help', description: 'Yordam ko‘rsatish' },
       ]);
 
       if (process.env.NODE_ENV === 'production') {
@@ -1404,29 +1403,67 @@ export class BotService {
       user.user_id,
     );
 
+    const taskButtons = await this.buildTaskButtons(lesson.id, user.user_id);
+
     const buttons = isCompleted
-      ? [[
-          {
-            text: 'Vazifa yuborish',
-            callback_data: `lesson_task_${lesson.id}`,
-          },
-        ]]
-      : [[
-          {
-            text: 'Test yechish',
-            callback_data: `lesson_test_${lesson.id}`,
-          },
-          {
-            text: 'Vazifa yuborish',
-            callback_data: `lesson_task_${lesson.id}`,
-          },
-        ]];
+      ? [taskButtons]
+      : [
+          [
+            {
+              text: 'Test yechish',
+              callback_data: `lesson_test_${lesson.id}`,
+            },
+            ...taskButtons,
+          ],
+        ];
 
     await ctx.reply(`📚 Dars: ${lesson.title}`, {
       reply_markup: {
         inline_keyboard: buttons,
       },
     });
+  }
+
+  // Returns the row of task-related buttons shown to a student for a lesson:
+  // "Vazifa yuborish" if nothing submitted yet, "Tekshirilmoqda" while pending
+  // admin review, or the final grade (with a resend option if graded "none").
+  private async buildTaskButtons(lessonId: number, studentUserId: number) {
+    const taskReyting = await this.reytingService.getTaskStatus(
+      studentUserId,
+      lessonId,
+    );
+
+    if (!taskReyting) {
+      return [
+        { text: 'Vazifa yuborish', callback_data: `lesson_task_${lessonId}` },
+      ];
+    }
+
+    if (!taskReyting.is_finished) {
+      return [{ text: '🕐 Tekshirilmoqda', callback_data: 'task_pending' }];
+    }
+
+    const statusKey =
+      (Object.keys(this.taskStatusLabels) as Array<'full' | 'partial' | 'none'>).find(
+        (key) => this.taskStatusLabels[key].ball === taskReyting.ball,
+      ) || 'none';
+    const statusInfo = this.taskStatusLabels[statusKey];
+
+    const buttons = [
+      {
+        text: `${statusInfo.icon} ${statusInfo.text} (${statusInfo.ball} ball)`,
+        callback_data: 'task_graded',
+      },
+    ];
+
+    if (statusKey === 'none') {
+      buttons.push({
+        text: '🔁 Qayta yuborish',
+        callback_data: `lesson_task_${lessonId}`,
+      });
+    }
+
+    return buttons;
   }
 
   async lessonTest(ctx: Context, lessonId: number) {
@@ -1489,6 +1526,25 @@ export class BotService {
     if (!lesson) {
       await ctx.reply('Dars mavjud emas.');
       return;
+    }
+
+    const taskReyting = await this.reytingService.getTaskStatus(
+      user.user_id,
+      lessonId,
+    );
+
+    if (taskReyting) {
+      if (!taskReyting.is_finished) {
+        await ctx.reply(
+          '⏳ Vazifangiz allaqachon yuborilgan, tekshirilmoqda. Natijasini kuting.',
+        );
+        return;
+      }
+
+      if (taskReyting.ball !== this.taskStatusLabels.none.ball) {
+        await ctx.reply('✅ Vazifangiz allaqachon baholangan.');
+        return;
+      }
     }
 
     await this.botRepo.update(
@@ -1568,7 +1624,7 @@ export class BotService {
     const text = message.text.trim();
     const lessonId = Number(botUser.step_data);
 
-    const { header } = await this.buildTaskInfo(botUser, lessonId);
+    const { header, courseId } = await this.buildTaskInfo(botUser, lessonId);
 
     try {
       await this.bot.telegram.sendMessage(
@@ -1582,6 +1638,11 @@ export class BotService {
       await this.botRepo.update(
         { step: null, step_data: null },
         { where: { bot_id: botUser.bot_id } },
+      );
+      await this.reytingService.markTaskPending(
+        botUser.user_id,
+        lessonId,
+        courseId,
       );
       await ctx.reply('✅ Vazifangiz yuborildi');
       await this.lessonInfo(ctx, lessonId);
@@ -1708,7 +1769,7 @@ export class BotService {
     lessonId: number,
     entries: TaskMediaEntry[],
   ) {
-    const { header } = await this.buildTaskInfo(botUser, lessonId);
+    const { header, courseId } = await this.buildTaskInfo(botUser, lessonId);
     const captionText = entries.find((entry) => entry.caption)?.caption;
     const fullCaption = captionText ? `${header}\n\n${captionText}` : header;
     const buttons = this.taskStatusButtons(lessonId, botUser.user_id);
@@ -1768,6 +1829,12 @@ export class BotService {
         }
       }
     }
+
+    await this.reytingService.markTaskPending(
+      botUser.user_id,
+      lessonId,
+      courseId,
+    );
   }
 
   async gradeTask(
@@ -1793,14 +1860,11 @@ export class BotService {
     }
 
     try {
-      await this.reytingService.create(
-        {
-          ball: statusInfo.ball,
-          lesson_id: lessonId,
-          course_id: lesson.course_id,
-          finished_type: FinishedType.task,
-        },
+      await this.reytingService.setTaskResult(
         studentUserId,
+        lessonId,
+        lesson.course_id,
+        statusInfo.ball,
       );
     } catch (error) {
       console.log(error);
@@ -1825,7 +1889,32 @@ export class BotService {
       });
     } catch (error) { }
 
+    await this.notifyStudentTaskResult(studentUserId, lessonId, statusInfo);
     await this.notifyTaskResult(studentUserId, lesson, statusInfo);
+  }
+
+  private async notifyStudentTaskResult(
+    studentUserId: number,
+    lessonId: number,
+    statusInfo: { text: string; icon: string; ball: number },
+  ): Promise<void> {
+    const studentBot = await this.botRepo.findOne({
+      where: { user_id: studentUserId },
+    });
+    if (!studentBot) return;
+
+    const buttons = await this.buildTaskButtons(lessonId, studentUserId);
+
+    await this.bot.telegram
+      .sendMessage(
+        studentBot.bot_id,
+        `${statusInfo.icon} <b>Vazifa natijasi:</b> ${statusInfo.text} (${statusInfo.ball} ball)`,
+        {
+          parse_mode: 'HTML',
+          reply_markup: { inline_keyboard: [buttons] },
+        },
+      )
+      .catch((error) => console.log(error));
   }
 
   private async notifyTaskResult(

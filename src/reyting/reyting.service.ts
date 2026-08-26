@@ -95,6 +95,73 @@ export class ReytingService {
     return !!reyting;
   }
 
+  async getTaskStatus(user_id: number, lesson_id: number): Promise<Reyting | null> {
+    return this.reytingRepository.findOne({
+      where: { user_id, lesson_id, finished_type: FinishedType.task },
+    });
+  }
+
+  async markTaskPending(
+    user_id: number,
+    lesson_id: number,
+    course_id: number,
+  ): Promise<void> {
+    const existing = await this.reytingRepository.findOne({
+      where: { user_id, lesson_id, finished_type: FinishedType.task },
+    });
+
+    if (existing) {
+      await this.reytingRepository.update(
+        {
+          course_id,
+          is_finished: false,
+          ball: null,
+        },
+        { where: { id: existing.id } },
+      );
+    } else {
+      await this.reytingRepository.create({
+        user_id,
+        lesson_id,
+        course_id,
+        finished_type: FinishedType.task,
+        is_finished: false,
+        ball: null,
+      } as any);
+    }
+  }
+
+  async setTaskResult(
+    user_id: number,
+    lesson_id: number,
+    course_id: number,
+    ball: number,
+  ): Promise<void> {
+    const existing = await this.reytingRepository.findOne({
+      where: { user_id, lesson_id, finished_type: FinishedType.task },
+    });
+
+    if (existing) {
+      await this.reytingRepository.update(
+        {
+          ball,
+          course_id,
+          is_finished: true,
+        },
+        { where: { id: existing.id } },
+      );
+    } else {
+      await this.reytingRepository.create({
+        user_id,
+        lesson_id,
+        course_id,
+        ball,
+        finished_type: FinishedType.task,
+        is_finished: true,
+      } as any);
+    }
+  }
+
   async markAsRead(user_id: number, lesson_id: number) {
     const testsCount = await this.testsService.getLessonTestsCount(lesson_id);
 

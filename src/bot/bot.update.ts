@@ -362,6 +362,16 @@ export class BotUpdate {
     return this.botService.lessonTask(ctx, lessonId);
   }
 
+  @Action('task_pending')
+  async taskPending(ctx: Context) {
+    await ctx.answerCbQuery('⏳ Vazifangiz hali tekshirilmoqda');
+  }
+
+  @Action('task_graded')
+  async taskGraded(ctx: Context) {
+    await ctx.answerCbQuery('✅ Vazifa allaqachon baholangan');
+  }
+
   @Action(/^task_status_(full|partial|none)_(\d+)_(\d+)$/)
   async gradeTask(ctx: Context) {
     const callbackQuery = ctx.callbackQuery;

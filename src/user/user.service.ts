@@ -602,9 +602,9 @@ export class UserService {
             [Op.in]: Sequelize.literal(`(
               SELECT DISTINCT "Reyting"."user_id"
               FROM "reyting" AS "Reyting"
-              INNER JOIN "lesson" AS "Lesson" ON "Lesson"."id" = "Reyting"."lesson_id"
-              INNER JOIN "course" AS "Course" ON "Course"."id" = "Lesson"."course_id"
-              ${whereConditions.length ? `WHERE ${whereConditions.join(' AND ')}` : ''}            
+              LEFT JOIN "lesson" AS "Lesson" ON "Lesson"."id" = "Reyting"."lesson_id"
+              INNER JOIN "course" AS "Course" ON "Course"."id" = COALESCE("Lesson"."course_id", "Reyting"."course_id")
+              ${whereConditions.length ? `WHERE ${whereConditions.join(' AND ')}` : ''}
             )`),
           },
         },
@@ -614,12 +614,11 @@ export class UserService {
               Sequelize.literal(`(
                 SELECT SUM("reyting"."ball")
                 FROM "reyting"
-                INNER JOIN "lesson" ON "lesson"."id" = "reyting"."lesson_id"
-                INNER JOIN "course" ON "course"."id" = "lesson"."course_id"
-                ${group_id == 0 ? 'INNER JOIN "group" ON "group"."id" = "course"."group_id"' : ''}
+                LEFT JOIN "lesson" ON "lesson"."id" = "reyting"."lesson_id"
+                INNER JOIN "course" ON "course"."id" = COALESCE("lesson"."course_id", "reyting"."course_id")
                 WHERE "reyting"."user_id" = "User"."id"
-                ${group_id == 0 ? ' AND "group"."id" = :group_id' : ''}
-                ${course_id ? ' AND "course"."id" = :course_id' : ''}         
+                ${group_id != 0 ? ' AND "course"."group_id" = :group_id' : ''}
+                ${course_id ? ' AND "course"."id" = :course_id' : ''}
               )::int`),
               'totalReyting',
             ],
