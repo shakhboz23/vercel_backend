@@ -23,6 +23,7 @@ import { TestsService } from 'src/test/test.service';
 import { User } from 'src/user/models/user.models';
 import { Group } from 'src/group/models/group.models';
 import { ReytingService } from 'src/reyting/reyting.service';
+import { RoleService } from 'src/role/role.service';
 
 const CHILD_ID_STEP = 'child_id';
 const NAME_STEP = 'name';
@@ -50,6 +51,7 @@ export class BotService {
     private readonly lessonService: LessonService,
     private readonly testsService: TestsService,
     private readonly reytingService: ReytingService,
+    private readonly roleService: RoleService,
   ) { }
 
   async onModuleInit() {
@@ -143,7 +145,26 @@ export class BotService {
   async setRole(ctx: Context, role: 'parent' | 'student') {
     const bot_id = ctx.from.id;
     await this.botRepo.update({ role }, { where: { bot_id } });
+
+    const botUser = await this.botRepo.findOne({ where: { bot_id } });
+    if (botUser?.user_id) {
+      await this.ensureUserRole(botUser.user_id, role);
+    }
+
     return this.continueAfterRole(ctx);
+  }
+
+  // Creates the Role record for the picked role if the user doesn't already
+  // have it; if it exists, does nothing so the flow just continues.
+  private async ensureUserRole(user_id: number, role: string): Promise<void> {
+    try {
+      const existing: any = await this.roleService.getUserRoles(user_id, role);
+      if (!existing?.data?.length) {
+        await this.roleService.create({ user_id, role });
+      }
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   async continueAfterRole(ctx: Context) {

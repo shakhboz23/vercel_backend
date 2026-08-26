@@ -15,9 +15,10 @@ import { LessonModule } from 'src/lesson/lesson.module';
 import { TestsModule } from 'src/test/test.module';
 import { ReytingModule } from 'src/reyting/reyting.module';
 import { Group } from 'src/group/models/group.models';
+import { RoleModule } from 'src/role/role.module';
 
 @Module({
-  imports: [SequelizeModule.forFeature([Bot, BotChild, Group]), UserModule, forwardRef(() => SubscriptionsModule), CourseModule, LessonModule, TestsModule, ReytingModule,
+  imports: [SequelizeModule.forFeature([Bot, BotChild, Group]), UserModule, RoleModule, forwardRef(() => SubscriptionsModule), CourseModule, LessonModule, TestsModule, ReytingModule,
   // TelegrafModule.forRootAsync({
   //   botName: BOT_NAME,
   //   useFactory: async (configService: ConfigService) => ({
