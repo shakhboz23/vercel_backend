@@ -46,13 +46,13 @@ export class Tests extends Model<Tests, TestsAttributes> {
   lesson: Lesson[];
 
   @Column({
-    type: DataType.STRING,
+    type: DataType.TEXT,
     allowNull: false,
   })
   question: string;
 
   @Column({
-    type: DataType.ARRAY(DataType.STRING),
+    type: DataType.ARRAY(DataType.TEXT),
     allowNull: false,
   })
   variants: string[];

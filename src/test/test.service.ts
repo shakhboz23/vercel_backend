@@ -295,12 +295,12 @@ export class TestsService {
       let t = 0;
       let true_list = [];
       console.log(answer);
-      if (!answer || !answer?.length || !answer[0]) {
+      if (!answer || !answer?.length) {
         return [id, [false], test];
       }
       if (test.type == 'fill') {
         for (let i of test.variants) {
-          if (this.containsAnswer(i.toString()) == this.containsAnswer(answer[0])) {
+          if (this.containsAnswer(i.toString()) == this.containsAnswer(answer)) {
             return [id, [true]];
           }
         }
@@ -523,7 +523,63 @@ export class TestsService {
   }
 
   private containsAnswer(htmlString: string) {
-    const textContent = htmlString.replace(/<[^>]*>/g, '').trim();
+    const withoutMath = this.stripMathNodes(htmlString);
+    const textContent = withoutMath.replace(/<[^>]*>/g, '').trim();
     return textContent.toLowerCase();
+  }
+
+  // Formula nodes (see ilmnur_front EditorTiptapEditor's math extension) are
+  // saved as KaTeX-rendered markup, e.g.
+  // <span data-type="math-inline" data-latex="\frac{44}{4}"><span class="katex">...nested spans...</span></span>
+  // Their rendered text has no meaningful content (a fraction's text is just
+  // "44" and "4" with no "/"), so stripping tags alone can't compare them.
+  // Replace each formula node with its underlying LaTeX source instead,
+  // scanning span depth to find the true matching closing tag since the
+  // KaTeX markup nests many <span> elements inside.
+  private stripMathNodes(html: string): string {
+    const openTagRegex =
+      /<span[^>]*data-type="math-inline"[^>]*data-latex="([^"]*)"[^>]*>/g;
+    let result = '';
+    let cursor = 0;
+    let match: RegExpExecArray | null;
+
+    while ((match = openTagRegex.exec(html))) {
+      const openStart = match.index;
+      const contentStart = openStart + match[0].length;
+
+      const spanTagRegex = /<span\b[^>]*>|<\/span>/g;
+      spanTagRegex.lastIndex = contentStart;
+      let depth = 1;
+      let closeEnd = html.length;
+      let tagMatch: RegExpExecArray | null;
+      while ((tagMatch = spanTagRegex.exec(html))) {
+        depth += tagMatch[0] === '</span>' ? -1 : 1;
+        if (depth === 0) {
+          closeEnd = spanTagRegex.lastIndex;
+          break;
+        }
+      }
+
+      result +=
+        html.slice(cursor, openStart) +
+        this.normalizeLatex(this.decodeHtmlEntities(match[1]));
+      cursor = closeEnd;
+      openTagRegex.lastIndex = closeEnd;
+    }
+
+    return result + html.slice(cursor);
+  }
+
+  private normalizeLatex(latex: string): string {
+    return latex.replace(/\s+/g, '');
+  }
+
+  private decodeHtmlEntities(str: string): string {
+    return str
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#0?39;/g, "'");
   }
 }
