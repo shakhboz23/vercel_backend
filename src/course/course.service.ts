@@ -28,6 +28,7 @@ import { Category } from 'src/category/models/category.models';
 import { GroupService } from 'src/group/group.service';
 import { group } from 'console';
 import { Attendance } from 'src/attendance/models/attendance.models';
+import { FinishedType, Reyting } from 'src/reyting/models/reyting.models';
 import {
   AttendanceDay,
   CourseSchedule,
@@ -394,9 +395,10 @@ export class CourseService {
     }
   }
 
-  async getUsersByGroupId(group_id: number, date: Date, user_id: number, course_id: number, page: string): Promise<object> {
+  async getUsersByGroupId(group_id: number, date: Date, user_id: number, course_id: number, page: string, lesson_id?: number): Promise<object> {
     try {
       course_id = +course_id || null;
+      lesson_id = +lesson_id || null;
       let id: any;
       course_id ? id = { id: course_id } : {};
       // let id = {};
@@ -426,15 +428,29 @@ export class CourseService {
         attendanceWhere.course_id = course_id;
       }
 
+      const userInclude: any[] = [{
+        model: Attendance,
+        where: attendanceWhere,
+        required: false,
+      }];
+
+      // Only join task (vazifa) status for a specific lesson - otherwise a
+      // student would show one Reyting row per task-graded lesson in the
+      // course, which the per-lesson "submitted/not submitted" table can't use.
+      if (lesson_id) {
+        userInclude.push({
+          model: Reyting,
+          as: 'reyting',
+          where: { lesson_id, finished_type: FinishedType.task },
+          required: false,
+        });
+      }
+
       let user: any = await this.courseRepository.findAll({
         where: { group_id },
         include: [{
           model: Subscriptions, include: [{
-            model: User, required: false, include: [{
-              model: Attendance,
-              where: attendanceWhere,
-              required: false,
-            }]
+            model: User, required: false, include: userInclude
           }, { model: Course }]
         }],
       });
