@@ -224,7 +224,7 @@ export class BotUpdate {
 
     await ctx.answerCbQuery();
 
-    const studentId = callbackQuery.data.replace('child_', '');
+    const studentId = +callbackQuery.data.replace('child_', '');
 
     return this.botService.childInfo(ctx, studentId);
   }
@@ -256,7 +256,7 @@ export class BotUpdate {
 
     const studentId = callbackQuery.data.replace('child_results_', '');
 
-    return this.botService.childResults(ctx, studentId);
+    return this.botService.childResults(ctx, +studentId);
   }
 
   @Action(/^child_attendance_(\d+)$/)
@@ -271,7 +271,7 @@ export class BotUpdate {
 
     const studentId = callbackQuery.data.replace('child_attendance_', '');
 
-    return this.botService.childAttendance(ctx, studentId);
+    return this.botService.childAttendance(ctx, +studentId);
   }
 
   @Action(/^child_attendance_group_(\d+)_(\d+)$/)
@@ -286,7 +286,7 @@ export class BotUpdate {
 
     const [, studentId, groupId] = callbackQuery.data.match(/^child_attendance_group_(\d+)_(\d+)$/) || [];
 
-    return this.botService.childAttendanceGroupCourses(ctx, studentId, Number(groupId));
+    return this.botService.childAttendanceGroupCourses(ctx, +studentId, Number(groupId));
   }
 
   @Action(/^child_attendance_course_(\d+)_(\d+)$/)
@@ -301,7 +301,7 @@ export class BotUpdate {
 
     const [, studentId, courseId] = callbackQuery.data.match(/^child_attendance_course_(\d+)_(\d+)$/) || [];
 
-    return this.botService.childAttendanceForCourse(ctx, studentId, Number(courseId));
+    return this.botService.childAttendanceForCourse(ctx, +studentId, Number(courseId));
   }
 
   @Action(/^child_tasks_(\d+)$/)
@@ -314,7 +314,7 @@ export class BotUpdate {
 
     await ctx.answerCbQuery();
 
-    const studentId = callbackQuery.data.replace('child_tasks_', '');
+    const studentId = +callbackQuery.data.replace('child_tasks_', '');
 
     return this.botService.childTasks(ctx, studentId);
   }
@@ -331,7 +331,7 @@ export class BotUpdate {
 
     const [, studentId, courseId] = callbackQuery.data.match(/^child_tasks_course_(\d+)_(\d+)$/) || [];
 
-    return this.botService.childTasksForCourse(ctx, studentId, Number(courseId));
+    return this.botService.childTasksForCourse(ctx, +studentId, Number(courseId));
   }
 
   @Action(/^lesson_test_(\d+)$/)

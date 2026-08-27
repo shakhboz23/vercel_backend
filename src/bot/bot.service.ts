@@ -541,7 +541,7 @@ export class BotService {
   async saveChild(ctx: Context) {
     const bot_id = ctx.from.id;
     const message = ctx.message as Message.TextMessage;
-    const student_id = message.text.trim();
+    const student_id = +message.text.trim();
 
     if (!Number.isInteger(+student_id) || +student_id <= 0) {
       await ctx.reply(
@@ -552,7 +552,7 @@ export class BotService {
 
     let student: any;
     try {
-      student = await this.userService.getStudentById(student_id);
+      student = await this.userService.getById(student_id);
     } catch (error) {
       console.log(error);
     }
@@ -582,10 +582,10 @@ export class BotService {
     return this.my_children(ctx);
   }
 
-  async childInfo(ctx: Context, student_id: string) {
+  async childInfo(ctx: Context, student_id: number) {
     let student: any;
     try {
-      student = await this.userService.getStudentById(student_id);
+      student = await this.userService.getById(student_id);
     } catch (error) {
       console.log(error);
     }
@@ -623,10 +623,10 @@ export class BotService {
     });
   }
 
-  async childResults(ctx: Context, student_id: string) {
+  async childResults(ctx: Context, student_id: number) {
     let student: any;
     try {
-      student = await this.userService.getStudentById(student_id);
+      student = await this.userService.getById(student_id);
     } catch (error) { }
 
     if (!student) {
@@ -655,10 +655,10 @@ export class BotService {
     });
   }
 
-  async childAttendance(ctx: Context, student_id: string) {
+  async childAttendance(ctx: Context, id: number) {
     let student: any;
     try {
-      student = await this.userService.getStudentById(student_id);
+      student = await this.userService.getById(id);
     } catch (error) { }
 
     if (!student) {
@@ -674,7 +674,7 @@ export class BotService {
     }
 
     const buttons = [...groups.entries()].map(([groupId, title]) => [
-      { text: title, callback_data: `child_attendance_group_${student_id}_${groupId}` },
+      { text: title, callback_data: `child_attendance_group_${id}_${groupId}` },
     ]);
 
     await ctx.reply("📅 Davomatni ko'rish uchun guruhni tanlang:", {
@@ -682,10 +682,10 @@ export class BotService {
     });
   }
 
-  async childAttendanceGroupCourses(ctx: Context, student_id: string, group_id: number) {
+  async childAttendanceGroupCourses(ctx: Context, id: number, group_id: number) {
     let student: any;
     try {
-      student = await this.userService.getStudentById(student_id);
+      student = await this.userService.getById(id);
     } catch (error) { }
 
     if (!student) {
@@ -708,7 +708,7 @@ export class BotService {
     }
 
     const buttons = courses.map((course: any) => [
-      { text: course.title, callback_data: `child_attendance_course_${student_id}_${course.id}` },
+      { text: course.title, callback_data: `child_attendance_course_${id}_${course.id}` },
     ]);
 
     await ctx.reply("📚 Davomatni ko'rish uchun kursni tanlang:", {
@@ -716,10 +716,10 @@ export class BotService {
     });
   }
 
-  async childAttendanceForCourse(ctx: Context, student_id: string, course_id: number) {
+  async childAttendanceForCourse(ctx: Context, id: number, course_id: number) {
     let student: any;
     try {
-      student = await this.userService.getStudentById(student_id);
+      student = await this.userService.getById(id);
     } catch (error) { }
 
     if (!student) {
@@ -770,10 +770,10 @@ export class BotService {
     );
   }
 
-  async childTasks(ctx: Context, student_id: string) {
+  async childTasks(ctx: Context, student_id: number) {
     let student: any;
     try {
-      student = await this.userService.getStudentById(student_id);
+      student = await this.userService.getById(student_id);
     } catch (error) { }
 
     if (!student) {
@@ -807,10 +807,10 @@ export class BotService {
     });
   }
 
-  async childTasksForCourse(ctx: Context, student_id: string, course_id: number) {
+  async childTasksForCourse(ctx: Context, student_id: number, course_id: number) {
     let student: any;
     try {
-      student = await this.userService.getStudentById(student_id);
+      student = await this.userService.getById(student_id);
     } catch (error) { }
 
     if (!student) {

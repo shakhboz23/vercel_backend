@@ -779,8 +779,8 @@ export class UserService {
       r.user_id,
       ROW_NUMBER() OVER (ORDER BY SUM(r.ball) DESC) AS position
     FROM reyting r
-    JOIN lesson l ON l.id = r.lesson_id
-    JOIN course c ON c.id = l.course_id
+    LEFT JOIN lesson l ON l.id = r.lesson_id
+    JOIN course c ON c.id = COALESCE(l.course_id, r.course_id)
     WHERE c.group_id = :groupId
     GROUP BY r.user_id
   )
@@ -811,8 +811,8 @@ export class UserService {
       u.image AS "user.image",
       ROW_NUMBER() OVER (ORDER BY SUM(r.ball) DESC) AS position
     FROM reyting r
-    JOIN lesson l ON l.id = r.lesson_id
-    JOIN course c ON c.id = l.course_id
+    LEFT JOIN lesson l ON l.id = r.lesson_id
+    JOIN course c ON c.id = COALESCE(l.course_id, r.course_id)
     JOIN "user" u ON u.id = r.user_id
     WHERE c.group_id = :groupId
     GROUP BY r.user_id, u.id, u.name, u.surname, u.image
@@ -851,8 +851,8 @@ export class UserService {
       r.user_id,
       ROW_NUMBER() OVER (ORDER BY SUM(r.ball) DESC) AS position
     FROM reyting r
-    JOIN lesson l ON l.id = r.lesson_id
-    JOIN course c ON c.id = l.course_id
+    LEFT JOIN lesson l ON l.id = r.lesson_id
+    JOIN course c ON c.id = COALESCE(l.course_id, r.course_id)
     WHERE c.group_id = :groupId
       AND EXTRACT(MONTH FROM r."createdAt") = :currentMonth
       AND EXTRACT(YEAR FROM r."createdAt") = :currentYear
@@ -863,14 +863,14 @@ export class UserService {
       r.user_id,
       ROW_NUMBER() OVER (ORDER BY SUM(r.ball) DESC) AS position
     FROM reyting r
-    JOIN lesson l ON l.id = r.lesson_id
-    JOIN course c ON c.id = l.course_id
+    LEFT JOIN lesson l ON l.id = r.lesson_id
+    JOIN course c ON c.id = COALESCE(l.course_id, r.course_id)
     WHERE c.group_id = :groupId
       AND EXTRACT(MONTH FROM r."createdAt") = :lastMonth
       AND EXTRACT(YEAR FROM r."createdAt") = :lastMonthYear
     GROUP BY r.user_id
   )
-  SELECT 
+  SELECT
     coalesce(cm.position, 0) as "currentPosition",
     coalesce(lm.position, 0) as "lastPosition"
   FROM "user" u
@@ -964,7 +964,7 @@ export class UserService {
 
       userJSON.subscriptions = userJSON.subscriptions.map((subscription: any) => {
         const scheduledClasses = this.countScheduledClasses(
-          subscription.createdAt,
+          subscription.start_date,
           this.schedulesForSubgroup(
             subscription.course?.attendance_days || [],
             subscription.subgroup_id,
@@ -1051,8 +1051,8 @@ export class UserService {
       SUM(r.ball) AS total_ball,
       ROW_NUMBER() OVER (ORDER BY SUM(r.ball) DESC) AS position
     FROM reyting r
-    JOIN lesson l ON l.id = r.lesson_id
-    JOIN course c ON c.id = l.course_id
+    LEFT JOIN lesson l ON l.id = r.lesson_id
+    JOIN course c ON c.id = COALESCE(l.course_id, r.course_id)
     WHERE c.group_id = :groupId
       AND EXTRACT(MONTH FROM r."createdAt") = :currentMonth
       AND EXTRACT(YEAR FROM r."createdAt") = :currentYear
@@ -1064,8 +1064,8 @@ export class UserService {
       SUM(r.ball) AS total_ball,
       ROW_NUMBER() OVER (ORDER BY SUM(r.ball) DESC) AS position
     FROM reyting r
-    JOIN lesson l ON l.id = r.lesson_id
-    JOIN course c ON c.id = l.course_id
+    LEFT JOIN lesson l ON l.id = r.lesson_id
+    JOIN course c ON c.id = COALESCE(l.course_id, r.course_id)
     WHERE c.group_id = :groupId
       AND EXTRACT(MONTH FROM r."createdAt") = :lastMonth
       AND EXTRACT(YEAR FROM r."createdAt") = :lastMonthYear
