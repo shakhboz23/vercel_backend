@@ -49,7 +49,9 @@ export class BotService {
     private readonly subscriptionsService: SubscriptionsService,
     private readonly courseService: CourseService,
     private readonly lessonService: LessonService,
+    @Inject(forwardRef(() => TestsService))
     private readonly testsService: TestsService,
+    @Inject(forwardRef(() => ReytingService))
     private readonly reytingService: ReytingService,
     private readonly roleService: RoleService,
   ) { }
@@ -463,6 +465,48 @@ export class BotService {
       `📚 Kurs: <b>${courseTitle}</b>\n` +
       `📌 Holat: <b>${statusInfo.text}</b>`;
 
+    for (const parent of parents) {
+      await this.bot.telegram
+        .sendMessage(parent.parent_bot_id, text, { parse_mode: 'HTML' })
+        .catch((error) => console.log(error));
+    }
+  }
+
+  async notifyRatingChanged(
+    user_id: number,
+    courseTitle: string,
+    reasonText: string,
+    newBall: number,
+    ballDifference: number,
+  ): Promise<void> {
+    let student: any;
+    try {
+      student = await this.userService.getById(user_id);
+    } catch (error) { }
+
+    const studentName = [student?.name, student?.surname].filter(Boolean).join(' ') || "O'quvchi";
+    const isIncrease = ballDifference > 0;
+    const icon = isIncrease ? '📈' : '📉';
+    const diffText = `${isIncrease ? '+' : ''}${ballDifference}`;
+
+    const text =
+      `${icon} <b>Reyting yangilandi</b>\n\n` +
+      `👤 O'quvchi: <b>${studentName}</b>\n` +
+      `📚 Kurs: <b>${courseTitle}</b>\n` +
+      `📌 Sabab: <b>${reasonText}</b>\n` +
+      `O'zgarish: <b>${diffText} ball</b>\n` +
+      `🏆 Joriy ball: <b>${newBall}</b>`;
+
+    const studentBot = await this.botRepo.findOne({ where: { user_id } });
+    if (studentBot?.status) {
+      await this.bot.telegram
+        .sendMessage(studentBot.bot_id, text, { parse_mode: 'HTML' })
+        .catch((error) => console.log(error));
+    }
+
+    const parents = await this.botChildRepo.findAll({
+      where: { student_id: user_id },
+    });
     for (const parent of parents) {
       await this.bot.telegram
         .sendMessage(parent.parent_bot_id, text, { parse_mode: 'HTML' })

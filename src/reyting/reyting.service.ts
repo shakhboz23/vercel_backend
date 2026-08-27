@@ -13,14 +13,85 @@ import { ReytingDto } from './dto/reyting.dto';
 import { Sequelize } from 'sequelize-typescript';
 import { User } from 'src/user/models/user.models';
 import { TestsService } from 'src/test/test.service';
+import { Lesson } from 'src/lesson/models/lesson.models';
+import { Course } from 'src/course/models/course.models';
+import { BotService } from 'src/bot/bot.service';
+
+const RATING_REASON_LABELS: Partial<Record<FinishedType, string>> = {
+  [FinishedType.test]: 'Test natijasi',
+  [FinishedType.task]: 'Vazifa natijasi',
+  [FinishedType.attendance]: 'Davomat balli',
+  [FinishedType.manual]: "Qo'lda belgilandi",
+};
 
 @Injectable()
 export class ReytingService {
   constructor(
     @InjectModel(Reyting) private reytingRepository: typeof Reyting,
+    @InjectModel(Lesson) private lessonRepository: typeof Lesson,
+    @InjectModel(Course) private courseRepository: typeof Course,
     @Inject(forwardRef(() => TestsService))
     private readonly testsService: TestsService,
+    @Inject(forwardRef(() => BotService))
+    private readonly botService: BotService,
   ) { }
+
+  // Looks up display info for a rating-change notification: the course
+  // title (via the lesson if the reyting is lesson-based, or directly if
+  // it's a course-level entry like attendance ball) and the lesson title.
+  private async resolveRatingContext(
+    lesson_id?: number | null,
+    course_id?: number | null,
+  ): Promise<{ courseTitle: string; lessonTitle?: string }> {
+    let lessonTitle: string | undefined;
+    let resolvedCourseId = course_id ?? null;
+
+    if (lesson_id) {
+      const lesson = await this.lessonRepository.findByPk(lesson_id, {
+        attributes: ['title', 'course_id'],
+      });
+      lessonTitle = lesson?.title;
+      resolvedCourseId = resolvedCourseId ?? lesson?.course_id ?? null;
+    }
+
+    const course = resolvedCourseId
+      ? await this.courseRepository.findByPk(resolvedCourseId, {
+          attributes: ['title'],
+        })
+      : null;
+
+    return { courseTitle: course?.title || '', lessonTitle };
+  }
+
+  // Notifies the student's and their parents' bots whenever a reyting
+  // write actually changes the stored ball, with the reason (test/task/
+  // attendance/manual) and the course/lesson it happened in.
+  private notifyRatingChange(
+    user_id: number,
+    lesson_id: number | null | undefined,
+    course_id: number | null | undefined,
+    finished_type: FinishedType | undefined,
+    oldBall: number | null,
+    newBall: number | null,
+  ): void {
+    if (newBall == null || newBall === (oldBall ?? 0)) {
+      return;
+    }
+
+    this.resolveRatingContext(lesson_id, course_id)
+      .then(({ courseTitle, lessonTitle }) => {
+        const reason = (finished_type && RATING_REASON_LABELS[finished_type]) || 'Yangilandi';
+        const reasonText = lessonTitle ? `${reason} — "${lessonTitle}"` : reason;
+        return this.botService.notifyRatingChanged(
+          user_id,
+          courseTitle,
+          reasonText,
+          newBall,
+          newBall - (oldBall ?? 0),
+        );
+      })
+      .catch((error) => console.log(error));
+  }
 
   async create(reytingDto: ReytingDto, user_id: number): Promise<object> {
     try {
@@ -58,6 +129,14 @@ export class ReytingService {
           user_id,
           is_finished: true,
         });
+        this.notifyRatingChange(
+          user_id,
+          reyting.lesson_id,
+          reyting.course_id,
+          reyting.finished_type,
+          null,
+          reyting.ball,
+        );
         return {
           statusCode: HttpStatus.OK,
           message: 'Successfully added!',
@@ -65,7 +144,8 @@ export class ReytingService {
         };
       } else {
         console.log('------------------');
-        
+
+        const oldBall = is_reyting.ball;
         const reyting = await this.reytingRepository.update({
           ...reytingDto,
           user_id,
@@ -73,6 +153,15 @@ export class ReytingService {
           where: { id: is_reyting.id },
           returning: true,
         });
+        const updated = reyting[1][0];
+        this.notifyRatingChange(
+          user_id,
+          updated.lesson_id,
+          updated.course_id,
+          updated.finished_type,
+          oldBall,
+          updated.ball,
+        );
         return {
           statusCode: HttpStatus.OK,
           message: 'Successfully updated!',
@@ -140,6 +229,7 @@ export class ReytingService {
     const existing = await this.reytingRepository.findOne({
       where: { user_id, lesson_id, finished_type: FinishedType.task },
     });
+    const oldBall = existing?.ball ?? null;
 
     if (existing) {
       await this.reytingRepository.update(
@@ -160,6 +250,15 @@ export class ReytingService {
         is_finished: true,
       } as any);
     }
+
+    this.notifyRatingChange(
+      user_id,
+      lesson_id,
+      course_id,
+      FinishedType.task,
+      oldBall,
+      ball,
+    );
   }
 
   async markAsRead(user_id: number, lesson_id: number) {

@@ -18,7 +18,7 @@ import { Group } from 'src/group/models/group.models';
 import { RoleModule } from 'src/role/role.module';
 
 @Module({
-  imports: [SequelizeModule.forFeature([Bot, BotChild, Group]), UserModule, RoleModule, forwardRef(() => SubscriptionsModule), CourseModule, LessonModule, TestsModule, ReytingModule,
+  imports: [SequelizeModule.forFeature([Bot, BotChild, Group]), UserModule, RoleModule, forwardRef(() => SubscriptionsModule), CourseModule, LessonModule, forwardRef(() => TestsModule), forwardRef(() => ReytingModule),
   // TelegrafModule.forRootAsync({
   //   botName: BOT_NAME,
   //   useFactory: async (configService: ConfigService) => ({

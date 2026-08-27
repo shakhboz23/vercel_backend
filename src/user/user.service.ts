@@ -76,6 +76,8 @@ export class UserService {
     schedules: CourseSchedule[],
     subgroup_id?: number | null,
   ): CourseSchedule[] {
+    console.log(schedules);
+    
     const target = subgroup_id ?? null;
     return (schedules || []).filter(
       (schedule: any) => (schedule.subgroup_id ?? null) === target,
@@ -738,7 +740,6 @@ export class UserService {
                   {
                     model: CourseSchedule,
                     as: 'attendance_days',
-                    attributes: ['id', 'attendance_day', 'createdAt'],
                     required: false,
                   },
                   {
@@ -963,6 +964,8 @@ export class UserService {
         .filter((history) => history.length);
 
       userJSON.subscriptions = userJSON.subscriptions.map((subscription: any) => {
+        console.log(subscription);
+        
         const scheduledClasses = this.countScheduledClasses(
           subscription.start_date,
           this.schedulesForSubgroup(
@@ -970,6 +973,8 @@ export class UserService {
             subscription.subgroup_id,
           ),
         );
+        console.log(scheduledClasses, 'schedule');
+        
         const attendedClasses = attendanceByCourse.get(subscription.course_id) || 0;
         const percentage = scheduledClasses
           ? Number(((attendedClasses / scheduledClasses) * 100).toFixed(2))
