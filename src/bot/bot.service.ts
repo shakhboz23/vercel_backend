@@ -585,9 +585,9 @@ export class BotService {
   async saveChild(ctx: Context) {
     const bot_id = ctx.from.id;
     const message = ctx.message as Message.TextMessage;
-    const student_id = +message.text.trim();
+    const student_id = message.text.trim();
 
-    if (!Number.isInteger(+student_id) || +student_id <= 0) {
+    if (!Number.isInteger(student_id) || +student_id <= 0) {
       await ctx.reply(
         "Iltimos, faqat raqamlardan iborat ID yuboring. \n\nMasalan: 125",
       );
@@ -596,7 +596,7 @@ export class BotService {
 
     let student: any;
     try {
-      student = await this.userService.getById(student_id);
+      student = await this.userService.getStudentById(student_id);
     } catch (error) {
       console.log(error);
     }
