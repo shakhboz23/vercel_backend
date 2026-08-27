@@ -621,7 +621,7 @@ export class BotService {
         : "ℹ️ Bu o'quvchi allaqachon saqlangan",
     );
 
-    await this.childInfo(ctx, student_id);
+    await this.childInfo(ctx, student.id);
 
     return this.my_children(ctx);
   }
