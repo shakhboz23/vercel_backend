@@ -587,7 +587,7 @@ export class BotService {
     const message = ctx.message as Message.TextMessage;
     const student_id = message.text.trim();
 
-    if (!Number.isInteger(student_id) || +student_id <= 0) {
+    if (!Number.isInteger(+student_id) || +student_id <= 0) {
       await ctx.reply(
         "Iltimos, faqat raqamlardan iborat ID yuboring. \n\nMasalan: 125",
       );
