@@ -514,6 +514,43 @@ export class BotService {
     }
   }
 
+  private escapeHtml(text: string): string {
+    return (text || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  }
+
+  async notifyTestResult(
+    user_id: number,
+    lessonTitle: string,
+    ball: number,
+    total: number,
+    questionResults: { isCorrect: boolean; selectedLabel: string; correctLabel: string }[],
+  ): Promise<void> {
+    const studentBot = await this.botRepo.findOne({ where: { user_id } });
+    if (!studentBot?.status) return;
+
+    let text =
+      `📝 <b>Test natijasi</b>\n\n` +
+      (lessonTitle ? `📚 Dars: <b>${this.escapeHtml(lessonTitle)}</b>\n` : '') +
+      `✅ Natija: <b>${ball}/${total}</b>\n\n`;
+
+    text += questionResults
+      .map((item, index) => {
+        const selected = this.escapeHtml(item.selectedLabel) || '—';
+        if (item.isCorrect) {
+          return `${index + 1}. ${selected}✅`;
+        }
+        return `${index + 1}. ${selected}❌${this.escapeHtml(item.correctLabel)}`;
+      })
+      .join('\n');
+
+    await this.bot.telegram
+      .sendMessage(studentBot.bot_id, text, { parse_mode: 'HTML' })
+      .catch((error) => console.log(error));
+  }
+
   async onStop(ctx: Context) { }
 
   async sendOTP(phone: string, OTP: string): Promise<boolean> {

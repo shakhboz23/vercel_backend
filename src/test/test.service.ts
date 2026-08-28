@@ -2,7 +2,9 @@ import { LessonService } from './../lesson/lesson.service';
 import { Test_settingsService } from './../test_settings/test_settings.service';
 import {
   BadRequestException,
+  forwardRef,
   HttpStatus,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -19,6 +21,7 @@ import { Category } from 'src/category/models/category.models';
 import { FilesService } from 'src/files/files.service';
 import { Test_settings } from 'src/test_settings/models/test_settings.models';
 import { SubCategory } from 'src/subcategory/models/subcategory.models';
+import { BotService } from 'src/bot/bot.service';
 
 @Injectable()
 export class TestsService {
@@ -28,6 +31,8 @@ export class TestsService {
     private readonly lessonService: LessonService,
     private readonly test_settingsService: Test_settingsService,
     private readonly fileService: FilesService,
+    @Inject(forwardRef(() => BotService))
+    private readonly botService: BotService,
   ) { }
 
   async create(testsDto: TestsDto, user_id: number): Promise<object> {
@@ -294,19 +299,21 @@ export class TestsService {
       }
       let t = 0;
       let true_list = [];
+      let selected_list: any[] = [];
       console.log(answer);
       if (!answer || !answer?.length) {
-        return [id, [false], test];
+        return [id, [false], test, selected_list];
       }
       if (test.type == 'fill') {
         for (let i of test.variants) {
           if (this.containsAnswer(i.toString()) == this.containsAnswer(answer)) {
-            return [id, [true]];
+            return [id, [true], test, [answer]];
           }
         }
-        return [id, [false], test];
+        return [id, [false], test, [answer]];
       } else {
         for (let i of test.true_answer) {
+          selected_list.push(answer[0]?.[t]);
           if (test.variants[i] == answer[0][t]) {
             true_list.push(true);
           } else {
@@ -318,7 +325,7 @@ export class TestsService {
       if (!true_list?.length) {
         true_list.push(false, test);
       }
-      return [id, true_list, test];
+      return [id, true_list, test, selected_list];
     } catch (error) {
       throw new BadRequestException(error.message);
     }
@@ -333,16 +340,19 @@ export class TestsService {
     let message: string;
     try {
       const results = {};
+      const questionResults: { isCorrect: boolean; selectedLabel: string; correctLabel: string }[] = [];
       let student: any;
-      let res: object, id: number, answer: string;
+      let res: any[], id: number, answer: string;
       for (let i of answers) {
         if (!i?.length) {
           continue
         }
         id = +i[0];
         answer = i[1];
-        res = await this.checkById(id, answer);
-        results[res[0]] = this.checkAnswerList(res[1]);
+        res = await this.checkById(id, answer) as any[];
+        const isCorrect = this.checkAnswerList(res[1]);
+        results[res[0]] = isCorrect;
+        questionResults.push({ isCorrect, ...this.describeAnswer(res[2], res[3]) });
       }
       let ball = 0;
       for (let i in results) {
@@ -370,6 +380,16 @@ export class TestsService {
         message = 'Already added!';
       }
       // }
+
+      this.botService
+        .notifyTestResult(
+          user_id,
+          lesson?.title,
+          ball,
+          Object.keys(results)?.length,
+          questionResults,
+        )
+        .catch((error) => console.log(error));
 
       return {
         results,
@@ -520,6 +540,79 @@ export class TestsService {
 
   private checkAnswerList(list: boolean[]): boolean {
     return list.every(item => item === true);
+  }
+
+  // Plain-text version of a question/variant's rich-text HTML, for sending
+  // in a Telegram message (math formulas rendered back to their LaTeX
+  // source, since KaTeX markup has no meaningful stripped-tag text).
+  private stripHtml(html: string): string {
+    if (!html) return '';
+    const withoutMath = this.stripMathNodes(html);
+    return this.decodeHtmlEntities(withoutMath.replace(/<[^>]*>/g, ''))
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  // The correct-answer text to show a student after a wrong answer: the
+  // matching variant(s) for choice questions, or the accepted value for a
+  // "fill in the blank" question.
+  private getCorrectAnswerText(test: any): string {
+    if (!test) return '';
+    if (test.type == 'fill') {
+      return this.stripHtml(String(test.variants?.[0] ?? ''));
+    }
+    const indices: number[] = Array.isArray(test.true_answer) ? test.true_answer : [];
+    return indices
+      .map((index) => this.stripHtml(String(test.variants?.[index] ?? '')))
+      .filter(Boolean)
+      .join(', ');
+  }
+
+  private getOptionLetter(index: number): string {
+    return String.fromCharCode(65 + index);
+  }
+
+  // Per-question summary sent to the student's bot after a test: which
+  // option letter(s) they picked (or the text they typed for "fill"
+  // questions), and the correct one(s), so a wrong answer can be shown as
+  // "chosen❌correct" without re-sending the whole question text.
+  private describeAnswer(
+    test: any,
+    selected: any[],
+  ): { selectedLabel: string; correctLabel: string } {
+    if (!test) {
+      return { selectedLabel: '', correctLabel: '' };
+    }
+    if (test.type == 'fill') {
+      return {
+        selectedLabel: this.stripHtml(String(selected?.[0] ?? '')),
+        correctLabel: this.getCorrectAnswerText(test),
+      };
+    }
+    const variants: any[] = test.variants || [];
+    const indices: number[] = Array.isArray(test.true_answer) ? test.true_answer : [];
+
+    // A "pdf_file" (scanned exam) question stores only the answer key itself
+    // in variants[0] (e.g. "D"), not the 4 real options the student saw on
+    // paper - there's no option list to look an index up against, so show
+    // the raw value the student picked and the raw key as-is instead of
+    // re-encoding them into an A/B/C/D position letter.
+    if (variants.length <= 1) {
+      return {
+        selectedLabel: this.stripHtml(String(selected?.[0] ?? '')),
+        correctLabel: this.stripHtml(String(variants[indices[0] ?? 0] ?? '')),
+      };
+    }
+
+    const selectedLabel = (selected || [])
+      .map((value) => {
+        const index = variants.findIndex((variant) => variant == value);
+        return index >= 0 ? this.getOptionLetter(index) : '';
+      })
+      .filter(Boolean)
+      .join(', ');
+    const correctLabel = indices.map((index) => this.getOptionLetter(index)).join(', ');
+    return { selectedLabel, correctLabel };
   }
 
   private containsAnswer(htmlString: string) {
