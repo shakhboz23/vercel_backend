@@ -448,11 +448,26 @@ export class CourseService {
 
       let user: any = await this.courseRepository.findAll({
         where: { group_id },
-        include: [{
-          model: Subscriptions, include: [{
-            model: User, required: false, include: userInclude
-          }, { model: Course }]
-        }],
+        include: [
+          {
+            model: Subscriptions, include: [{
+              model: User, required: false, include: userInclude
+            }, { model: Course }]
+          },
+          {
+            model: CourseSchedule,
+            as: 'attendance_days',
+            separate: true,
+            limit: 1,
+            order: [['createdAt', 'DESC']],
+          },
+          {
+            model: CourseSubgroup,
+            as: 'subgroups',
+            required: false,
+            include: [{ model: CourseSchedule, as: 'schedules', separate: true, limit: 1, order: [['createdAt', 'DESC']] }],
+          },
+        ],
       });
       // if (!users) {
       //   throw new NotFoundException('Users not found');
