@@ -120,7 +120,6 @@ export class CommentService {
 
   async pagination(page: number, lesson_id: number): Promise<object> {
     try {
-      console.log(lesson_id, 230303);
       const offset = (page - 1) * 10;
       const limit = 30;
       const comments = await this.commentRepository.findAll({

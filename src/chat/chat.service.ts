@@ -65,7 +65,6 @@ export class ChatService {
       };
       return res;
     } catch (error) {
-      console.log(error);
       return { status: HttpStatus.NOT_FOUND, error: error.message };
     }
   }
@@ -102,7 +101,6 @@ export class ChatService {
       };
       return res;
     } catch (error) {
-      console.log(error);
       return { status: HttpStatus.NOT_FOUND, error: error.message };
     }
   }

@@ -16,11 +16,8 @@ export async function newTokenForSMS() {
       },
       data,
     };
-    console.log(data);
     axios(config)
-      .then(function (response: any) {
-        console.log(JSON.stringify(response.data));
-      })
+      .then(function (response: any) {})
       .catch(function (error: any) {
         console.log(error);
       });

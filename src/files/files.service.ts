@@ -44,7 +44,6 @@ export class FilesService {
 
   async deleteFile(fileUrl: string) {
     const result = await this.cloudinaryService.deleteFileByUrl(fileUrl);
-    console.log(result);
     return result;
   }
 }

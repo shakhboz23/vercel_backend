@@ -95,8 +95,6 @@ export class ReytingService {
 
   async create(reytingDto: ReytingDto, user_id: number): Promise<object> {
     try {
-      console.log('goo');
-      
       let is_reyting: any;
 
       if (reytingDto.finished_type === FinishedType.attendance) {
@@ -121,8 +119,7 @@ export class ReytingService {
           },
         });
       }
-      console.log(is_reyting, '====');
-      
+
       if (!is_reyting) {
         const reyting = await this.reytingRepository.create({
           ...reytingDto,
@@ -143,8 +140,6 @@ export class ReytingService {
           data: reyting,
         };
       } else {
-        console.log('------------------');
-
         const oldBall = is_reyting.ball;
         const reyting = await this.reytingRepository.update({
           ...reytingDto,

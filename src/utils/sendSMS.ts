@@ -21,9 +21,7 @@ export async function sendSMS(phone: string, message: string) {
       data,
     };
     axios(config)
-      .then(function (response: any) {
-        console.log(JSON.stringify(response.data));
-      })
+      .then(function (response: any) {})
       .catch(function (error: any) {
         console.log(error);
       });

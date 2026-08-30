@@ -38,9 +38,7 @@ export function extractUserIdFromToken(
 ): number | null {
   const authHeader = headers['authorization'];
   const token = authHeader?.split(' ')[1];
-  console.log(token, !token, 'token');
   if (!token || token == 'null') {
-    console.log(is_optional);
     if (is_optional) return;
     throw new UnauthorizedException('Token not found');
   }
@@ -49,11 +47,8 @@ export function extractUserIdFromToken(
     const user = jwtService.verify(token, {
       secret: process.env.ACCESS_TOKEN_KEY,
     });
-    console.log(token);
-    console.log(user);
     return user?.id || null;
   } catch (error) {
-    console.log(error);
     throw new UnauthorizedException('Invalid or expired token');
   }
 }

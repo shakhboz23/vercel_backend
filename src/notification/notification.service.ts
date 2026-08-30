@@ -24,7 +24,6 @@ export class NotificationService {
   async findAll(page: number) {
     const limit = 10;
     const offset = (page - 1) * limit;
-    console.log(offset);
     try {
       const notifications = await this.notificationRepository.findAll({
         order: [['updatedAt', 'DESC']],
@@ -51,7 +50,6 @@ export class NotificationService {
       };
       return res;
     } catch (error) {
-      console.log(error);
       return { status: HttpStatus.NOT_FOUND, error: error.message };
     }
   }

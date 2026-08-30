@@ -106,7 +106,6 @@ export class AttendanceService {
         data,
       };
     } catch (error) {
-      console.log(error);
       throw new BadRequestException(error.message);
     }
   }
