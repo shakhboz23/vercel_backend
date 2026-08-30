@@ -38,35 +38,24 @@ export class TestsController {
   }
 
   @ApiOperation({ summary: 'Get all testss' })
-  // @UseGuards(AuthGuard)
   @Get()
   getTests() {
     return this.testsService.getTests();
   }
 
   @ApiOperation({ summary: 'Get all testss' })
-  // @UseGuards(AuthGuard)
   @Get('/class/:class_number')
   getAll(@Param('class_number') class_number: number) {
     return this.testsService.getAll(class_number);
   }
 
-  // @ApiOperation({ summary: 'checkById all tests' })
-  // // @UseGuards(AuthGuard)
-  // @Post('/check/:id')
-  // checkById(@Param('id') id: number, @Body() answers: any) {
-  //   return this.testsService.checkById(id, answers);
-  // }
-
   @ApiOperation({ summary: 'checkById all tests' })
-  // @UseGuards(AuthGuard)
   @Post('/check/:id')
   checkById(@Param('id') id: number, @Body() { answer }: { answer: any }) {
     return this.testsService.checkById(id, answer);
   }
 
   @ApiOperation({ summary: 'checkById all tests' })
-  // @UseGuards(AuthGuard)
   @Post('/check_answers/:lesson_id')
   checkAllAnswers(
     @Param('lesson_id') lesson_id: number,
@@ -78,7 +67,6 @@ export class TestsController {
   }
 
   @ApiOperation({ summary: 'Get tests by ID' })
-  // @UseGuards(AuthGuard)
   @Get('/:id')
   getById(@Param('id') id: number, @Headers() headers: Record<string, string>) {
     const user_id = extractUserIdFromToken(headers, this.jwtService, true);
@@ -86,7 +74,6 @@ export class TestsController {
   }
 
   @ApiOperation({ summary: 'Get testss with pagination' })
-  // @UseGuards(AuthGuard)
   @Get('pagination/:page')
   pagination(@Param('page') page: number) {
     return this.testsService.pagination(page);
@@ -105,7 +92,6 @@ export class TestsController {
       },
     },
   })
-  // @UseGuards(AuthGuard)
   @Post('/create_url')
   @UseInterceptors(FileInterceptor('file'))
   create_url(
@@ -115,14 +101,12 @@ export class TestsController {
   }
 
   @ApiOperation({ summary: 'Update tests profile by ID' })
-  // @UseGuards(AuthGuard)
   @Put('/:id')
   update(@Param('id') id: number, @Body() questionDto: QuestionDto) {
     return this.testsService.update(id, questionDto);
   }
 
   @ApiOperation({ summary: 'Delete tests' })
-  // @UseGuards(AuthGuard)
   @Delete(':id')
   deleteTests(@Param('id') id: number) {
     return this.testsService.delete(id);
@@ -130,7 +114,6 @@ export class TestsController {
 
   // mobile
   @ApiOperation({ summary: 'checkById all tests' })
-  // @UseGuards(AuthGuard)
   @Post('/set_answers/:lesson_id')
   setAnswers(
     @Param('lesson_id') lesson_id: number,

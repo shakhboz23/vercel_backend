@@ -146,17 +146,12 @@ export class UserStreakService {
         data,
       };
     } catch (error: any) {
-      console.log(error);
       throw new BadRequestException(error.message);
     }
   }
 
   async getAll(): Promise<object> {
     try {
-      // const where: any = {};
-      // if (role != 'all') {
-      //   where.role = { [Op.contains]: [[role, '']] };
-      // }
       const users = await this.userStreakRepository.findAll();
       return {
         statusCode: HttpStatus.OK,

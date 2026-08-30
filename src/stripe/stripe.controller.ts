@@ -33,7 +33,6 @@ export class StripeController {
     }
 
     @ApiOperation({ summary: 'Get subscriptions by ID' })
-    // @UseGuards(AuthGuard)
     @Get('/get-user-payment-history')
     getUserPaymentHistory(@Headers() headers?: string, @Query('group_id') group_id?: number) {
         const user_id = extractUserIdFromToken(headers, this.jwtService, true);
@@ -41,7 +40,6 @@ export class StripeController {
     }
 
     @ApiOperation({ summary: 'Get subscriptions by ID' })
-    // @UseGuards(AuthGuard)
     @Get('/get-user-group-payment-history')
     getUserGroupPaymentHistory(@Headers() headers?: string, @Query('group_id') group_id?: number) {
         const user_id = extractUserIdFromToken(headers, this.jwtService, true);
@@ -49,7 +47,6 @@ export class StripeController {
     }
 
     @ApiOperation({ summary: 'Get subscriptions by ID' })
-    // @UseGuards(AuthGuard)
     @Get('/get-group-payment-history')
     getGroupPaymentHistory(@Headers() headers?: string, @Query('group_id') group_id?: number) {
         const user_id = extractUserIdFromToken(headers, this.jwtService, true);

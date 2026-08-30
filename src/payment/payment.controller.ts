@@ -28,28 +28,24 @@ export class PaymentController {
   }
 
   @ApiOperation({ summary: 'Get all users' })
-  // @UseGuards(AuthGuard)
   @Get('getByRole')
   getAll() {
     return this.paymentService.getAll();
   }
 
   @ApiOperation({ summary: 'Get user by ID' })
-  // @UseGuards(AuthGuard)
   @Get(':id')
   getById(@Param('id') id: string) {
     return this.paymentService.getById(id);
   }
 
   @ApiOperation({ summary: 'Get users with pagination' })
-  // @UseGuards(AuthGuard)
   @Get('pagination/:page/:limit')
   pagination(@Param('page') page: number, @Param('limit') limit: number) {
     return this.paymentService.pagination(page, limit);
   }
 
   @ApiOperation({ summary: 'Delete user by ID' })
-  // @UseGuards(AuthGuard)
   @Delete(':id')
   deleteUser(@Param('id') id: string) {
     return this.paymentService.deleteUser(id);

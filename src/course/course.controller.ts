@@ -79,23 +79,18 @@ export class CourseController {
     @UploadedFile(new ImageValidationPipe()) image: Express.Multer.File,
     @Headers() headers: string,
   ) {
-    console.log(image, 2303);
     const user_id = extractUserIdFromToken(headers, this.jwtService, true);
-    console.log(user_id);
     return this.courseService.create(courseDto, image, user_id);
   }
 
   @ApiOperation({ summary: 'Get course by ID' })
-  // @UseGuards(AuthGuard)
   @Get('/getById/:id')
   getById(@Param('id') id: number, @Headers() headers: string) {
     const user_id = extractUserIdFromToken(headers, this.jwtService, true);
-    console.log(user_id);
     return this.courseService.getById(id, user_id);
   }
 
   @ApiOperation({ summary: 'Get group by ID' })
-  // @UseGuards(AuthGuard)
   @Get('/getUsersByGroupId/:group_id')
   getUsersByGroupId(@Param('group_id') group_id: number, @Query() { date, course_id, lesson_id, page }: { date: Date, course_id: number, lesson_id: number, page: string }, @Headers() headers: string) {
     const user_id = extractUserIdFromToken(headers, this.jwtService, true);
@@ -103,7 +98,6 @@ export class CourseController {
   }
 
   @ApiOperation({ summary: 'Get all lessons' })
-  // @UseGuards(AuthGuard)
   @Get('/')
   getAll(
     @Query('subcategory_id') subcategory_id: string,
@@ -114,21 +108,6 @@ export class CourseController {
     return this.courseService.getAll(subcategory_id, user_id, category_id);
   }
 
-
-  // @ApiOperation({ summary: 'Get all courses' })
-  // // @UseGuards(AuthGuard)
-  // @Get('/')
-  // getAll(@Headers() headers?: string) {
-  //   const auth_header = headers['authorization'];
-  //   const token = auth_header?.split(' ')[1];
-  //   const user = token
-  //     ? this.jwtService.verify(token, { secret: process.env.ACCESS_TOKEN_KEY })
-  //     : null;
-  //   const user_id = user?.id;
-  //   console.log(user_id, '565456');
-  //   return this.courseService.getAll();
-  // }
-
   @ApiOperation({ summary: 'Get all courses' })
   @UseGuards(AuthGuard)
   @Get('/getByCourse/:id/:subcategory_id')
@@ -138,7 +117,6 @@ export class CourseController {
   }
 
   @ApiOperation({ summary: 'Get courses with pagination' })
-  // @UseGuards(AuthGuard)
   @Get('pagination/:page')
   pagination(@Param('page') page: number) {
     return this.courseService.pagination(page);
@@ -180,7 +158,6 @@ export class CourseController {
       },
     },
   })
-  // @UseGuards(AuthGuard)
   @Put('/:id')
   @UseInterceptors(FileInterceptor('image'))
   update(@Param('id') id: number, @Body() courseDto: CourseDto,
@@ -193,7 +170,6 @@ export class CourseController {
   }
 
   @ApiOperation({ summary: 'Delete course' })
-  // @UseGuards(AuthGuard)
   @Delete(':id')
   deleteCourse(@Param('id') id: number) {
     return this.courseService.delete(id);

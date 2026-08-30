@@ -11,7 +11,6 @@ import { Otp } from './models/otp.model';
 import { PhoneDto } from './dto/phone.dto';
 import { generate } from 'otp-generator';
 import { VerifyOtpDto } from './dto/verifyOtp.dto';
-import { otpCodeSMSSchema, sendSMS } from '../utils/sendSMS';
 import { newTokenForSMS } from '../utils/newTokenForSMS';
 import { NewTokenDto } from './dto/newToken.dto';
 
@@ -35,8 +34,6 @@ export class OtpService {
         });
       }
 
-      // await sendSMS(email, otpCodeSMSSchema(code));
-      // await this.mailService.sendConfirmationCode(email, code);
       const expire_time = Date.now() + 120000;
       const exist = await this.otpRepository.findOne({
         where: { email },

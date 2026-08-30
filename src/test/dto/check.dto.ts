@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsNotEmpty, IsNumber } from 'class-validator';
+import { IsArray, IsNotEmpty } from 'class-validator';
 
 export class CheckDto {
   @ApiProperty({
@@ -9,12 +9,4 @@ export class CheckDto {
   @IsNotEmpty()
   @IsArray()
   answers: string[] | number[] | any[];
-
-  // @ApiProperty({
-  //   example: 1,
-  //   description: 'Lesson id',
-  // })
-  // @IsNotEmpty()
-  // @IsNumber()
-  // lesson_id: number;
 }

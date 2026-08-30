@@ -34,7 +34,6 @@ export class ResetpasswordService {
         email,
         activate_link,
       });
-      // await this.mailService.sendUserActivationLink(activate_link, email);
       return {
         statusCode: HttpStatus.OK,
         message: 'Created successfully',

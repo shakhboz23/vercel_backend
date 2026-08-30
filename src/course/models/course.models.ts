@@ -178,11 +178,6 @@ export class Course extends Model<Course, CourseAttributes> {
   })
   subgroups: CourseSubgroup[];
 
-  //   @HasMany(() => PaymentStripe, {
-  //     onDelete: 'CASCADE',
-  //     hooks: true,
-  //   })
-  //   paymentStripe: PaymentStripe[];
   @HasMany(() => Payment, {
     onDelete: 'CASCADE',
     hooks: true,

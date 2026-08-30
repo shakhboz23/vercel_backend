@@ -56,13 +56,7 @@ export class Test_settingsService {
 
   async getById(id: number): Promise<object> {
     try {
-      const test_settings = await this.test_settingsRepository.findByPk(
-        id,
-        // where: { [Op.and]: [{ class: class_name }, { id: id }] },
-        // include: [
-        //   { model: Tests, attributes: ['id'] },
-        // ],
-      );
+      const test_settings = await this.test_settingsRepository.findByPk(id);
       if (!test_settings) {
         throw new NotFoundException('Test_settings not found');
       }
@@ -80,11 +74,6 @@ export class Test_settingsService {
       const test_settings = await this.test_settingsRepository.findOne({
         where: { lesson_id: id },
       });
-      // if (!test_settings) {
-      //   return {
-      //     message: "Test settings not found"
-      //   }
-      // }
       return test_settings;
     } catch (error) {
       throw new BadRequestException(error.message);

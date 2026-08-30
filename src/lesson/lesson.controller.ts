@@ -72,24 +72,19 @@ export class LessonController {
   }
 
   @ApiOperation({ summary: 'Get lesson by ID' })
-  // @UseGuards(AuthGuard)
   @Get('/getById/:id')
   getById(@Param('id') id: number, @Headers() headers?: string) {
     const user_id = extractUserIdFromToken(headers, this.jwtService, true);
-    console.log(user_id);
-
     return this.lessonService.getById(id, user_id);
   }
 
   @ApiOperation({ summary: 'Get all lessons' })
-  // @UseGuards(AuthGuard)
   @Get('/')
   getAll(@Query('subcategory_id') subcategory_id: string, @Query('category_id') category_id: number) {
     return this.lessonService.getAll(subcategory_id, category_id);
   }
 
   @ApiOperation({ summary: 'Get all lessons' })
-  // @UseGuards(AuthGuard)
   @Get('/getByCourse/:id')
   getByCourse(@Param('id') id: number, @Headers() headers: string, @Query('date') date: string,) {
     const user_id = extractUserIdFromToken(headers, this.jwtService, true);
@@ -97,14 +92,12 @@ export class LessonController {
   }
 
   @ApiOperation({ summary: 'Get lessons with pagination' })
-  // @UseGuards(AuthGuard)
   @Get('pagination/:page')
   pagination(@Param('page') page: number) {
     return this.lessonService.pagination(page);
   }
 
   @ApiOperation({ summary: 'Update lesson profile by ID' })
-  // @UseGuards(AuthGuard)
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
@@ -150,7 +143,6 @@ export class LessonController {
   }
 
   @ApiOperation({ summary: 'Delete lesson' })
-  // @UseGuards(AuthGuard)
   @Delete(':id')
   deleteLesson(@Param('id') id: number) {
     return this.lessonService.delete(id);

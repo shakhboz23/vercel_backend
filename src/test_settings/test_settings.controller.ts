@@ -26,36 +26,29 @@ export class Test_settingsController {
   @Post('/create')
   create(
     @Body() test_settingsDto: Test_settingsDto,
-    // @Headers() headers?: string,
   ) {
-    // const auth_header = headers['authorization'];
-    // const token = auth_header?.split(' ')[1];
     return this.test_settingsService.create(test_settingsDto);
   }
 
   @ApiOperation({ summary: 'Get test_settings by ID' })
-  // @UseGuards(AuthGuard)
   @Get('/getById/:id/:class_name')
   getById(@Param('id') id: number, @Param('class_name') class_name: number) {
     return this.test_settingsService.getById(id);
   }
 
   @ApiOperation({ summary: 'Get all test_settingss' })
-  // @UseGuards(AuthGuard)
   @Get('/getAll')
   getAll() {
     return this.test_settingsService.getAll();
   }
 
   @ApiOperation({ summary: 'Get test_settingss with pagination' })
-  // @UseGuards(AuthGuard)
   @Get('pagination/:page')
   pagination(@Param('page') page: number) {
     return this.test_settingsService.pagination(page);
   }
 
   @ApiOperation({ summary: 'Update test_settings profile by ID' })
-  // @UseGuards(AuthGuard)
   @Put('/:id')
   update(
     @Param('id') id: number,
@@ -66,7 +59,6 @@ export class Test_settingsController {
   }
 
   @ApiOperation({ summary: 'Delete test_settings' })
-  // @UseGuards(AuthGuard)
   @Delete(':id')
   deleteTest_settings(@Param('id') id: number) {
     return this.test_settingsService.delete(id);

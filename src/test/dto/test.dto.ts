@@ -84,8 +84,5 @@ export class TestsDto extends Test_settingsDto {
     description: 'Test id of the tests',
   })
   @IsOptional()
-  // @IsArray()
-  // @ValidateNested({ each: true })
-  // @Type(() => QuestionDto)
   files: any[];
 }

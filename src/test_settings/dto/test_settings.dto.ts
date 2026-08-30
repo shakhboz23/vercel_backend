@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsDate, IsNumber, IsOptional } from 'class-validator';
+import { IsOptional } from 'class-validator';
 
 export class Test_settingsDto {
   @ApiProperty({
@@ -7,7 +7,6 @@ export class Test_settingsDto {
     description: 'Test, Vocabulary, IELTS',
   })
   @IsOptional()
-  // @IsDate()
   test_type: string;
 
   @ApiProperty({
@@ -15,7 +14,6 @@ export class Test_settingsDto {
     description: 'Test_settings Title',
   })
   @IsOptional()
-  // @IsDate()
   start_date: Date;
 
   @ApiProperty({
@@ -23,7 +21,6 @@ export class Test_settingsDto {
     description: 'Test_settings description',
   })
   @IsOptional()
-  // @IsDate()
   end_date: Date;
 
   @ApiProperty({
@@ -31,7 +28,6 @@ export class Test_settingsDto {
     description: 'Test sort level',
   })
   @IsOptional()
-  // @IsNumber()
   sort_level: any[];
 
   @ApiProperty({
@@ -39,7 +35,6 @@ export class Test_settingsDto {
     description: 'Test id',
   })
   @IsOptional()
-  // @IsNumber()
   lesson_id: number;
 
   @ApiProperty({
@@ -47,7 +42,6 @@ export class Test_settingsDto {
     description: 'Test id',
   })
   @IsOptional()
-  // @IsNumber()
   period: string;
 
   @ApiProperty({
@@ -55,6 +49,5 @@ export class Test_settingsDto {
     description: 'Test mix',
   })
   @IsOptional()
-  // @IsNumber()
   mix: boolean;
 }

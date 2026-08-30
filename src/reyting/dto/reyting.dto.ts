@@ -1,21 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
   IsEnum,
-  IsNotEmpty,
   IsNumber,
   IsOptional,
 } from 'class-validator';
 import { FinishedType } from '../models/reyting.models';
 
 export class ReytingDto {
-  // @ApiProperty({
-  //   example: 'https://example.com',
-  //   description: 'The image of the user',
-  // })
-  // @IsNotEmpty()
-  // @IsNumber()
-  // role_id: number;
-
   @ApiProperty({
     example: 'John Doe',
     description: 'full name of the user',

@@ -36,7 +36,6 @@ export class SubscriptionsController {
     @Body() subscriptionsDto: SubscriptionsDto,
     @Headers() headers?: string,
   ) {
-    console.log(headers);
     const user_id = extractUserIdFromToken(headers, this.jwtService, true);
     return this.subscriptionsService.create(subscriptionsDto, user_id);
   }
@@ -47,7 +46,6 @@ export class SubscriptionsController {
     @Body() createSubscriptionDto: CreateSubscriptionsDto,
     @Headers() headers?: string,
   ) {
-    console.log(headers);
     const user_id = extractUserIdFromToken(headers, this.jwtService, true);
     return this.subscriptionsService.createSubscription(
       createSubscriptionDto,
@@ -65,21 +63,18 @@ export class SubscriptionsController {
   }
 
   @ApiOperation({ summary: 'Get subscriptions by ID' })
-  // @UseGuards(AuthGuard)
   @Get('/getById/:id')
   getById(@Param('id') id: number) {
     return this.subscriptionsService.getById(id);
   }
 
   @ApiOperation({ summary: 'Get all subscriptionss' })
-  // @UseGuards(AuthGuard)
   @Get('/')
   getAll(@Headers() headers?: string) {
     return this.subscriptionsService.getAll();
   }
 
   @ApiOperation({ summary: 'Get all subscriptionss' })
-  // @UseGuards(AuthGuard)
   @Get('/getByUserId')
   getByUserId(@Headers() headers?: string) {
     const user_id = extractUserIdFromToken(headers, this.jwtService, true);
@@ -87,21 +82,18 @@ export class SubscriptionsController {
   }
 
   @ApiOperation({ summary: 'Get subscriptionss with pagination' })
-  // @UseGuards(AuthGuard)
   @Get('pagination/:page')
   pagination(@Param('page') page: number) {
     return this.subscriptionsService.pagination(page);
   }
 
   @ApiOperation({ summary: 'Update subscriptions profile by ID' })
-  // @UseGuards(AuthGuard)
   @Put('/:id')
   update(@Param('id') id: number, @Body() subscriptionsDto: SubscriptionsDto) {
     return this.subscriptionsService.update(id, subscriptionsDto);
   }
 
   @ApiOperation({ summary: 'Delete subscription' })
-  // @UseGuards(AuthGuard)
   @Delete('/deleteSubscription/:course_id/:user_id')
   deleteSubscription(
     @Param('course_id') course_id: number,

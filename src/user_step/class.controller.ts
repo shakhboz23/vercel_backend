@@ -36,35 +36,30 @@ export class UserStepController {
   }
 
   @ApiOperation({ summary: 'Get all classs' })
-  // @UseGuards(AuthGuard)
   @Get()
   getAll() {
     return this.classService.getAll();
   }
 
   @ApiOperation({ summary: 'get step by ID' })
-  // @UseGuards(AuthGuard)
   @Get('/:id')
   getById(@Param('id') id: number) {
     return this.classService.getById(id);
   }
 
   @ApiOperation({ summary: 'Get classs with pagination' })
-  // @UseGuards(AuthGuard)
   @Get('pagination/:page')
   pagination(@Param('page') page: number) {
     return this.classService.pagination(page);
   }
 
   @ApiOperation({ summary: 'Update class profile by ID' })
-  // @UseGuards(AuthGuard)
   @Put('/:id')
   update(@Param('id') id: number, @Body() userStepDto: UserStepDto) {
     return this.classService.update(id, userStepDto);
   }
 
   @ApiOperation({ summary: 'Delete user step' })
-  // @UseGuards(AuthGuard)
   @Delete(':id')
   deleteClass(@Param('id') id: number) {
     return this.classService.delete(id);
