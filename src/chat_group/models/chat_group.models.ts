@@ -27,12 +27,6 @@ export class ChatGroup extends Model<ChatGroup, ChatGroupAttributes> {
   })
   id: number;
 
-  // @Column({
-  //   type: DataType.STRING,
-  //   allowNull: false,
-  // })
-  // title: string;
-
   @ForeignKey(() => Course)
   @Column({
     type: DataType.INTEGER,
@@ -40,7 +34,6 @@ export class ChatGroup extends Model<ChatGroup, ChatGroupAttributes> {
   })
   course_id: number;
 
-  // @BelongsTo(() => Course)
   @BelongsTo(() => Course)
   course: Course;
 

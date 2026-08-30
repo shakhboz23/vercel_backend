@@ -3,18 +3,12 @@ import { Type } from 'class-transformer';
 import {
     IsArray,
     IsDate,
-    IsEnum,
     IsNotEmpty,
     IsNumber,
     IsNumberString,
     IsOptional,
     IsString,
 } from 'class-validator';
-
-// export enum GroupType {
-//     public = 'public',
-//     private = 'private',
-// }
 
 export class GroupSearchDto {
     @ApiProperty({
@@ -57,12 +51,4 @@ export class GroupSearchDto {
     @IsOptional()
     @IsString()
     price?: string;
-
-    // @ApiProperty({
-    //     example: 'A',
-    //     description: 'group type',
-    // })
-    // @IsOptional()
-    // @IsEnum(GroupType)
-    // group_type?: GroupType;
 }

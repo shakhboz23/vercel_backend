@@ -2,7 +2,6 @@ import { Controller, Post, UploadedFile, UseInterceptors, Get, Query, Body } fro
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CloudinaryService } from './cloudinary.service';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-// import { v2 as cloudinary } from 'cloudinary';
 import cloudinary from '../../cloudinary.config';
 
 

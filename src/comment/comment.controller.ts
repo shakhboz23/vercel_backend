@@ -37,43 +37,36 @@ export class CommentController {
   }
 
   @ApiOperation({ summary: 'Get comment by ID' })
-  // @UseGuards(AuthGuard)
   @Get('/getById/:id')
   getById(@Param('id') id: number) {
     return this.commentService.getById(id);
   }
 
   @ApiOperation({ summary: 'Get all comments' })
-  // @UseGuards(AuthGuard)
   @Get('/')
   getAll(@Headers() headers?: string) {
     const auth_header = headers['authorization'];
     const token = auth_header?.split(' ')[1];
-    console.log(token, 'token2303');
     const user = token
       ? this.jwtService.verify(token, { secret: process.env.ACCESS_TOKEN_KEY })
       : null;
     const user_id = user?.id;
-    // console.log(user_id, '565456');
     return this.commentService.getAll(0);
   }
 
   @ApiOperation({ summary: 'Get comments with pagination' })
-  // @UseGuards(AuthGuard)
   @Get('pagination/:page/:lesson_id')
   pagination(@Param('page') page: number, @Param('lesson_id') lesson_id: number) {
     return this.commentService.pagination(page, lesson_id);
   }
 
   @ApiOperation({ summary: 'Update comment profile by ID' })
-  // @UseGuards(AuthGuard)
   @Put('/:id')
   update(@Param('id') id: number, @Body() commentDto: CommentDto) {
     return this.commentService.update(id, commentDto);
   }
 
   @ApiOperation({ summary: 'Delete comment' })
-  // @UseGuards(AuthGuard)
   @Delete(':id')
   deleteComment(@Param('id') id: number) {
     return this.commentService.delete(id);

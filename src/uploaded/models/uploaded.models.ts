@@ -5,7 +5,6 @@ import {
   Model,
   Table,
 } from 'sequelize-typescript';
-// import { Video_lesson } from '../video_lesson/models/video_lesson.models';
 
 interface UploadedAttributes {
   status: boolean;

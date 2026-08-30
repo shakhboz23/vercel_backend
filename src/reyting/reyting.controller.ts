@@ -19,7 +19,6 @@ export class ReytingController {
   constructor(
     private readonly reytingService: ReytingService,
     private readonly jwtService: JwtService,
-    // private readonly chatGateway: ChatGateway,ChatGateway
   ) {}
 
   @ApiOperation({ summary: 'Registration a new reyting' })
@@ -33,7 +32,6 @@ export class ReytingController {
   }
 
   @ApiOperation({ summary: 'Get all reytings' })
-  // @UseGuards(AuthGuard)
   @Get('/getall/:subject_id/:group_id')
   getAll(
     @Param('subject_id') subject_id: number,
@@ -45,7 +43,6 @@ export class ReytingController {
   }
 
   @ApiOperation({ summary: 'Get all reytings' })
-  // @UseGuards(AuthGuard)
   @Post('/markAsRead/:lesson_id')
   markAsRead(
     @Param('lesson_id') lesson_id: number,
@@ -56,7 +53,6 @@ export class ReytingController {
   }
 
   @ApiOperation({ summary: 'Get all reytings' })
-  // @UseGuards(AuthGuard)
   @Get('/getLessonReyting/:lesson_id')
   getLessonsReyting(
     @Param('lesson_id') lesson_id: number,
@@ -67,21 +63,12 @@ export class ReytingController {
   }
 
   @ApiOperation({ summary: 'Get reytings with pagination' })
-  // @UseGuards(AuthGuard)
   @Get('pagination/:page/:limit')
   pagination(@Param('page') page: number, @Param('limit') limit: number) {
     return this.reytingService.pagination(page, limit);
   }
 
-  // @ApiOperation({ summary: 'Update user profile by ID' })
-  // // @UseGuards(AuthGuard)
-  // @Put('profile/:id')
-  // update(@Param('id') id: string, @Body() updateDto: UpdateDto) {
-  //   return this.reytingService.update(id, updateDto);
-  // }
-
   @ApiOperation({ summary: 'Delete reyting by ID' })
-  // @UseGuards(AuthGuard)
   @Delete(':id')
   delete(@Param('id') id: number) {
     return this.reytingService.delete(id);

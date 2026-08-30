@@ -19,14 +19,6 @@ export class UpdateDto {
   @IsString()
   surname: string;
 
-  // @ApiProperty({
-  //   example: '+998901234567',
-  //   description: 'Phone number of user',
-  // })
-  // @IsNotEmpty()
-  // @IsString()
-  // phone: string; 
-     
   @ApiProperty({
     example: ['Maths', 'Biology'],
     description: 'Subjects of the user',

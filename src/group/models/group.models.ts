@@ -64,12 +64,6 @@ export class Group extends Model<Group, GroupAttributes> {
   @BelongsTo(() => User)
   user: User[];
 
-  // @HasMany(() => Lesson, {
-  //   onDelete: 'CASCADE',
-  //   hooks: true,
-  // })
-  // lesson: Lesson[];
-
   @HasMany(() => Course, {
     onDelete: 'CASCADE',
     hooks: true,

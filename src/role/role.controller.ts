@@ -27,7 +27,6 @@ import { RoleReytingDto } from './dto/filter_reyting';
 export class RoleController {
   constructor(
     private readonly roleService: RoleService,
-    // private readonly chatGateway: ChatGateway,ChatGateway
     private readonly jwtService: JwtService,
   ) { }
 
@@ -38,33 +37,21 @@ export class RoleController {
   }
 
   @ApiOperation({ summary: 'Get all roles' })
-  // @UseGuards(AuthGuard)
   @Get('getByRole/:role')
   async getAll(
     @Param('role') role: string,
     @Param('current_role') current_role: string,
-    // @Headers() headers,
   ) {
-    // const user_id: number = await this.handleUserId(headers);
     return this.roleService.getAll(role);
   }
 
-  // @ApiOperation({ summary: 'Get all roles' })
-  // // @UseGuards(AuthGuard)
-  // @Get('getChildren/:parent_id')
-  // getChildren(@Param('parent_id') parent_id: number) {
-  //   return this.roleService.getChildren(parent_id);
-  // }
-
   @ApiOperation({ summary: 'Get roles with pagination' })
-  // @UseGuards(AuthGuard)
   @Get('pagination/:page/:limit')
   pagination(@Param('page') page: number, @Param('limit') limit: number) {
     return this.roleService.pagination(page, limit);
   }
 
   @ApiOperation({ summary: 'Get roles with pagination' })
-  // @UseGuards(AuthGuard)
   @Post('reyting/:role')
   getReyting(
     @Param('role') role: string,
@@ -74,7 +61,6 @@ export class RoleController {
   }
 
   @ApiOperation({ summary: 'Get roles with pagination' })
-  // @UseGuards(AuthGuard)
   @Post('teacher_reyting/:subject_id')
   getTeacherReyting(
     @Param('subject_id') subject_id: number,
@@ -84,50 +70,39 @@ export class RoleController {
   }
 
   @ApiOperation({ summary: 'Get roles with pagination' })
-  // @UseGuards(AuthGuard)
   @Get('getallstudent/:class_id')
   getAllStudent(@Param('class_id') class_id: number, @Req() request) {
-    console.log(request?.user?.id, '-------------------------red');
     return this.roleService.getAllStudent(class_id);
   }
 
   @ApiOperation({ summary: 'Get role by ID' })
-  // @UseGuards(AuthGuard)
   @Post('/count_users')
   countUsers(@Body() users: string[]) {
     return this.roleService.countUsers(users);
   }
 
   @ApiOperation({ summary: 'Get role by ID' })
-  // @UseGuards(AuthGuard)
   @Get('/getfull/:user_id/:role')
   getByUserId(@Param('user_id') user_id: number, @Param('role') role: string) {
     return this.roleService.getByUserId(user_id, role);
   }
 
   @ApiOperation({ summary: 'Update user profile by ID' })
-  // @UseGuards(AuthGuard)
   @Put('profile/:id')
   updateProfile(@Param('id') id: string, @Body() updateDto: UpdateProfileDto) {
     return this.roleService.updateProfile(id, updateDto);
   }
 
   @ApiOperation({ summary: 'Update user profile by ID' })
-  // @UseGuards(AuthGuard)
   @Put('/update/:id')
   update(@Param('id') id: number, @Body() updateDto: UpdateDto) {
     return this.roleService.update(id, updateDto);
   }
 
   @ApiOperation({ summary: 'Update class profile by ID' })
-  // @UseGuards(AuthGuard)
   @Put('/status/:id/:role')
   async updateStatus(@Param('id') id: number, @Param('role') role: string) {
     const data = await this.roleService.updateStatus(id, role);
-    // this.chatGateway.server.emit('request', {
-    //   type: 'accepted',
-    //   data,
-    // });
     return data;
   }
 
@@ -144,7 +119,6 @@ export class RoleController {
       },
     },
   })
-  // @UseGuards(AuthGuard)
   @Put('profileImage/:user_id/:role')
   @UseInterceptors(FileInterceptor('image'))
   updateProfileImage(
@@ -156,7 +130,6 @@ export class RoleController {
   }
 
   @ApiOperation({ summary: 'Delete role by ID' })
-  // @UseGuards(AuthGuard)
   @Delete(':id')
   deleteRole(@Param('id') id: number) {
     return this.roleService.delete(id);

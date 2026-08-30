@@ -3,9 +3,6 @@ import { FilesService } from './files.service';
 import { CloudinaryService } from './cloudinary.service';
 
 @Module({
-  // imports: [
-  //   clodum
-  // ],
   providers: [CloudinaryService],
   exports: [CloudinaryService],
 })

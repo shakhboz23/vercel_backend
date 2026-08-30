@@ -19,21 +19,18 @@ export class ResetpasswordController {
   }
 
   @ApiOperation({ summary: 'Get resetpassword by ID' })
-  // @UseGuards(AuthGuard)
   @Get('/getById/:id')
   getById(@Param('id') id: number) {
     return this.resetpasswordService.getById(id);
   }
 
   @ApiOperation({ summary: 'Get all resetpasswords' })
-  // @UseGuards(AuthGuard)
   @Get('/getAll')
   getAll() {
     return this.resetpasswordService.getAll();
   }
 
   @ApiOperation({ summary: 'Delete resetpassword' })
-  // @UseGuards(AuthGuard)
   @Delete(':id')
   deleteResetpassword(@Param('id') id: number) {
     return this.resetpasswordService.delete(id);

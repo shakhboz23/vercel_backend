@@ -37,43 +37,34 @@ export class LikeController {
   }
 
   @ApiOperation({ summary: 'Get like by ID' })
-  // @UseGuards(AuthGuard)
   @Get('/getById/:id')
   getById(@Param('id') id: number) {
     return this.likeService.getById(id);
   }
 
   @ApiOperation({ summary: 'Get all likes' })
-  // @UseGuards(AuthGuard)
   @Get('/')
   getAll(@Headers() headers?: string) {
     const auth_header = headers['authorization'];
     const token = auth_header?.split(' ')[1];
-    console.log(token, 'token2303');
     const user = token
       ? this.jwtService.verify(token, { secret: process.env.ACCESS_TOKEN_KEY })
       : null;
     const user_id = user?.id;
-    // console.log(user_id, '565456');
     return this.likeService.getAll(0);
   }
 
   @ApiOperation({ summary: 'Get likes with pagination' })
-  // @UseGuards(AuthGuard)
   @Get('pagination/:page')
-  pagination(@Param('page') page: number) {
-    // return this.likeService.pagination(page);
-  }
+  pagination(@Param('page') page: number) {}
 
   @ApiOperation({ summary: 'Update like profile by ID' })
-  // @UseGuards(AuthGuard)
   @Put('/:id')
   update(@Param('id') id: number, @Body() likeDto: LikeDto) {
     return this.likeService.update(id, likeDto);
   }
 
   @ApiOperation({ summary: 'Delete like' })
-  // @UseGuards(AuthGuard)
   @Delete(':id')
   deleteLike(@Param('id') id: number) {
     return this.likeService.delete(id);

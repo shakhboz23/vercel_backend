@@ -44,7 +44,6 @@ export class RolesGuard implements CanActivate {
         let user: any;
         try {
             user = this.jwtService.verify(token,{secret:process.env.REFRESH_TOKEN_KEY})
-            // console.log(user);
         } catch (error) {
             throw new UnauthorizedException({
                 message: "Foydalanuvchi avtorizatsiyadan o'tmagan",

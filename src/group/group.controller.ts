@@ -75,7 +75,6 @@ export class GroupController {
   }
 
   @ApiOperation({ summary: 'Get group by ID' })
-  // @UseGuards(AuthGuard)
   @Get('/getById/:id')
   getById(
     @Param('id') id: number,
@@ -86,8 +85,6 @@ export class GroupController {
   }
 
   @ApiOperation({ summary: 'Get all groups' })
-  // @UseGuards(AuthGuard)
-  // @ApiBearerAuth()
   @Get('/')
   getAll(@Headers() headers: string, @Query() groupSearchDto: GroupSearchDto) {
     const user_id = extractUserIdFromToken(headers, this.jwtService, true);
@@ -95,17 +92,13 @@ export class GroupController {
   }
 
   @ApiOperation({ summary: 'Get all groups' })
-  // @UseGuards(AuthGuard)
-  // @ApiBearerAuth()
   @Get('/get-analytics/:category_id')
   getAllAnalytics(@Param('category_id') category_id: number, @Headers() headers: string) {
-    console.log(headers);
     const user_id = extractUserIdFromToken(headers, this.jwtService, true);
     return this.groupService.getAllAnalytics(category_id, user_id);
   }
 
   @ApiOperation({ summary: 'Get all groups' })
-  // @UseGuards(AuthGuard)
   @ApiBearerAuth()
   @Get()
   getMyGroup(@Headers() headers: string) {
@@ -114,7 +107,6 @@ export class GroupController {
   }
 
   @ApiOperation({ summary: 'Get all groups' })
-  // @UseGuards(AuthGuard)
   @ApiBearerAuth()
   @Get('subscribed-groups')
   getSubscribedGroups(@Headers() headers: string) {
@@ -123,7 +115,6 @@ export class GroupController {
   }
 
   @ApiOperation({ summary: 'Get groups with pagination' })
-  // @UseGuards(AuthGuard)
   @Get('pagination/:page')
   pagination(@Param('page') page: number) {
     return this.groupService.pagination(page);
@@ -148,7 +139,6 @@ export class GroupController {
       },
     },
   })
-  // @UseGuards(AuthGuard)
   @Put('/:id')
   @UseInterceptors(FileInterceptor('file'))
   update(
@@ -162,7 +152,6 @@ export class GroupController {
   }
 
   @ApiOperation({ summary: 'Delete group' })
-  // @UseGuards(AuthGuard)
   @Delete(':id')
   deleteGroup(@Param('id') id: number) {
     return this.groupService.delete(id);
