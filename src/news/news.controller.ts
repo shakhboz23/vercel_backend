@@ -61,19 +61,16 @@ export class NewsController
 
   async handleDisconnect(client: Socket) {
     const id: number = +client.handshake.query.id;
-    console.log(id, 'id================================');
     const user: any = await this.userService.getById(id);
     const data: any = await this.roleService.userAvailable(
       id,
       false,
       user.data.current_role,
     );
-    console.log(id, new Date(), '👎🛵👎👎disconnected');
     this.server.emit('disconnected', data);
   }
 
   @ApiOperation({ summary: 'Create a new news' })
-  // @UseGuards(AuthGuard)
   @Post('')
   create(@Body() newsDto: NewsDto, @Req() req: any) {
     const news = this.newsService.create(newsDto);
@@ -81,7 +78,6 @@ export class NewsController
   }
 
   @ApiOperation({ summary: 'Get all news' })
-  // @UseGuards(AuthGuard)
   @SubscribeMessage('getAll/news')
   async getGroupNews(
     @MessageBody()
@@ -100,41 +96,14 @@ export class NewsController
     client.emit('getById', news);
   }
 
-  // @ApiOperation({ summary: 'Update news by ID' })
-  // @UseGuards(AuthGuard)
-  // @SubscribeMessage('update/news')
-  // async update(
-  //   @MessageBody() { id, news }: { id: string; news: NewsDto },
-  //   @ConnectedSocket() client: Socket,
-  // ) {
-  //   const updated_news = await this.newsService.update(id, news);
-  //   client.emit('updated', updated_news);
-  //   if (updated_news.status !== 404) {
-  //     this.server.emit('listener');
-  //   }
-  // }
-
   @ApiOperation({ summary: 'Update lesson profile by ID' })
-  // @UseGuards(AuthGuard)
   @Get('/findall')
   async findAll() {
     const news = await this.newsService.findAll(1);
     return news;
   }
 
-  // @ApiOperation({ summary: 'Delete news by ID' })
-  // @UseGuards(AuthGuard)
-  // @SubscribeMessage('delete/news')
-  // async delete(@MessageBody() id: string, @ConnectedSocket() client: Socket) {
-  //   const deleted_news = await this.newsService.delete(id);
-  //   this.server.emit('deleted', deleted_news);
-  //   if (deleted_news.status !== 404) {
-  //     this.server.emit('listener');
-  //   }
-  // }
-
   @ApiOperation({ summary: 'Delete user by ID' })
-  // @UseGuards(AuthGuard)
   @Delete(':id')
   async deleteUser(@Param('id') id: number, @ConnectedSocket() client: Socket) {
     const news = await this.newsService.delete(id);
