@@ -15,7 +15,6 @@ import { OtpModule } from '../otp/otp.module';
     FilesModule,
     ActivityModule,
     forwardRef(() => UserModule)
-    // CourseMemberModule
   ],
   controllers: [RoleController],
   providers: [RoleService],

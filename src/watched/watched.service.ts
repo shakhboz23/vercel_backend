@@ -89,8 +89,6 @@ export class WatchedService {
         order: [[Sequelize.col('Watched.createdAt'), 'ASC']],
         include: [{ model: User }, {
           model: Lesson,
-          // required: type == 'lesson_id' ? true : false,
-          // where: { user_id },
         }, {
           model: Course, required: type == 'course_id' ? true : false,
           where: {
@@ -161,8 +159,6 @@ export class WatchedService {
         order: [[Sequelize.col('Watched.createdAt'), 'ASC']],
         offset, limit, include: [{ model: User }, {
           model: Lesson,
-          // required: type == 'lesson_id' ? true : false,
-          // where: { user_id },
         }, {
           model: Course, required: type == 'course_id' ? true : false,
           where: {
