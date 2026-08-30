@@ -1,520 +1,45 @@
-import { ResetpasswordService } from './../resetpassword/resetpassword.service';
 import {
   BadRequestException,
   HttpStatus,
   Injectable,
   NotFoundException,
-  Res,
 } from '@nestjs/common';
 import { RoleName, User } from './models/user.models';
 import { InjectModel } from '@nestjs/sequelize';
-import { JwtService } from '@nestjs/jwt';
-import { Response } from 'express';
 import { RegisterUserDto } from './dto/register.dto';
-import { generateToken, writeToCookie } from '../utils/token';
 import { LoginUserDto } from './dto/login.dto';
-import { Op, QueryTypes } from 'sequelize';
-import { NotificationService } from '../notification/notification.service';
-import { NotificationDto } from '../notification/dto/notification.dto';
-import { RoleService } from '../role/role.service';
-import { RoleDto } from '../role/dto/role.dto';
+import { Op } from 'sequelize';
 import { Role } from '../role/models/role.models';
 import { CheckDto } from '../role/dto/check.dto';
-import { compareSync, hash } from 'bcrypt';
-import * as uuid from 'uuid';
-import { Sequelize } from 'sequelize-typescript';
-import * as bcrypt from 'bcrypt';
 import { NewPasswordDto } from './dto/new-password.dto';
-import { OAuth2Client } from 'google-auth-library';
 import { UpdateDto } from './dto/update.dto';
-import { Reyting } from 'src/reyting/models/reyting.models';
-import { Lesson } from 'src/lesson/models/lesson.models';
+import { Tests } from 'src/test/models/test.models';
 import { Course } from 'src/course/models/course.models';
 import { FilesService } from 'src/files/files.service';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { PhoneUserDto } from './dto/email.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { ChangeUserEmailDto } from './dto/change-email.dto';
-import { OtpService } from 'src/otp/otp.service';
-import { validateTelegramInitData } from 'src/utils/webAppInitData';
-import { Bot } from 'src/bot/models/bot.model';
-import { Tests } from 'src/test/models/test.models';
-import { Group } from 'src/group/models/group.models';
-import { Test_settings } from 'src/test_settings/models/test_settings.models';
-import { Subscriptions } from 'src/subscriptions/models/subscriptions.models';
-import { CourseSchedule } from 'src/course_schedule/models/course_schedule.models';
+import { UserAuthService } from './services/user-auth.service';
+import { UserAnalyticsService } from './services/user-analytics.service';
 
+// UserService is the facade the rest of the app talks to. Registration,
+// login and password/role flows live in UserAuthService; reyting/analytics
+// queries live in UserAnalyticsService (both under ./services/). This class
+// keeps the flat public API that existed here before the split (thin
+// delegating wrappers for the auth/analytics methods) plus the plain user
+// CRUD/query methods that didn't warrant their own service.
 @Injectable()
 export class UserService {
   constructor(
     @InjectModel(User) private userRepository: typeof User,
-    private readonly jwtService: JwtService,
-    private readonly roleService: RoleService,
-    private readonly resetpasswordService: ResetpasswordService,
     private readonly filesService: FilesService,
-    private readonly otpService: OtpService,
-    private readonly sequelize: Sequelize,
+    private readonly userAuthService: UserAuthService,
+    private readonly userAnalyticsService: UserAnalyticsService,
   ) { }
-
-  private static readonly WEEK_DAY_INDEX: Record<string, number> = {
-    Sun: 0,
-    Mon: 1,
-    Tue: 2,
-    Wed: 3,
-    Thu: 4,
-    Fri: 5,
-    Sat: 6,
-  };
-
-  // A course can be split into subgroups meeting on different weekdays
-  // (e.g. "1-guruh" Mon/Wed/Fri vs "2-guruh" Tue/Thu/Sat because one
-  // classroom can't fit everyone). Narrows a course's full schedule history
-  // down to the version history of the subgroup this subscription belongs
-  // to, so attendance/analytics only count the days that actually apply to
-  // this student rather than merging both subgroups' schedules together.
-  private schedulesForSubgroup(
-    schedules: CourseSchedule[],
-    subgroup_id?: number | null,
-  ): CourseSchedule[] {
-    console.log(schedules);
-    
-    const target = subgroup_id ?? null;
-    return (schedules || []).filter(
-      (schedule: any) => (schedule.subgroup_id ?? null) === target,
-    );
-  }
-
-  private sortScheduleHistory(schedules: CourseSchedule[]): CourseSchedule[] {
-    return (schedules || [])
-      .filter((schedule) => Array.isArray(schedule.attendance_day))
-      .sort(
-        (left, right) =>
-          new Date(left.createdAt).getTime() -
-            new Date(right.createdAt).getTime() || left.id - right.id,
-      );
-  }
-
-  // A schedule change applies from its calendar date and remains active
-  // until the next version, so we resolve whichever version was in effect
-  // on the given date rather than always using the latest one.
-  private getActiveWeekdays(
-    scheduleHistory: CourseSchedule[],
-    date: Date,
-  ): Set<number> {
-    const activeSchedule = scheduleHistory.reduce<CourseSchedule | undefined>(
-      (active, schedule) =>
-        new Date(schedule.createdAt).setHours(0, 0, 0, 0) <= date.getTime()
-          ? schedule
-          : active,
-      undefined,
-    );
-    return new Set(
-      (activeSchedule?.attendance_day || [])
-        .map((day) => UserService.WEEK_DAY_INDEX[day])
-        .filter((day): day is number => day !== undefined),
-    );
-  }
-
-  private countScheduledClasses(
-    subscriptionDate: Date | string,
-    schedules: CourseSchedule[],
-  ): number {
-    const startDate = new Date(subscriptionDate);
-    if (Number.isNaN(startDate.getTime()) || !schedules.length) {
-      return 0;
-    }
-
-    const scheduleHistory = this.sortScheduleHistory(schedules);
-    const date = new Date(startDate);
-    date.setHours(0, 0, 0, 0);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    let scheduledClasses = 0;
-    while (date <= today) {
-      if (this.getActiveWeekdays(scheduleHistory, date).has(date.getDay())) {
-        scheduledClasses += 1;
-      }
-      date.setDate(date.getDate() + 1);
-    }
-
-    return scheduledClasses;
-  }
-
-  // Builds the current-month attendance calendar for the given schedule
-  // histories (one per subscribed course), merged with the user's actual
-  // attendance records for that month.
-  private buildMonthlyAttendance(
-    scheduleHistories: CourseSchedule[][],
-    attendanceByDate: Map<string, number>,
-  ) {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = now.getMonth();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const calendar: Array<{
-      day: number;
-      date: string;
-      status: 'present' | 'late' | 'absent' | 'upcoming' | 'none';
-    }> = [];
-    let present = 0;
-    let late = 0;
-    let absent = 0;
-    let scheduledClasses = 0;
-
-    for (let day = 1; day <= daysInMonth; day++) {
-      const date = new Date(year, month, day);
-      date.setHours(0, 0, 0, 0);
-      const isScheduled = scheduleHistories.some((history) =>
-        this.getActiveWeekdays(history, date).has(date.getDay()),
-      );
-      const key = this.formatDateKey(date);
-      let status: 'present' | 'late' | 'absent' | 'upcoming' | 'none' = 'none';
-
-      if (isScheduled) {
-        if (date > today) {
-          status = 'upcoming';
-        } else {
-          scheduledClasses += 1;
-          const rawStatus = attendanceByDate.get(key);
-          if (rawStatus === 2) {
-            status = 'present';
-            present += 1;
-          } else if (rawStatus === 1) {
-            status = 'late';
-            late += 1;
-          } else {
-            status = 'absent';
-            absent += 1;
-          }
-        }
-      }
-
-      calendar.push({ day, date: key, status });
-    }
-
-    const percentage = scheduledClasses
-      ? Number((((present + late) / scheduledClasses) * 100).toFixed(2))
-      : 0;
-
-    return {
-      year,
-      month: month + 1,
-      percentage,
-      present,
-      late,
-      absent,
-      scheduledClasses,
-      calendar,
-    };
-  }
-
-  // Builds the current week's activity (Mon..Sun), scoped to the days the
-  // subscribed courses actually meet on (their attendance_days schedule).
-  private buildWeeklyActivity(
-    scheduleHistories: CourseSchedule[][],
-    attendanceByDate: Map<string, number>,
-  ) {
-    const dayLabels = ['Du', 'Se', 'Ch', 'Pa', 'Ju', 'Sh', 'Ya'];
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const dow = today.getDay();
-    const mondayOffset = dow === 0 ? -6 : 1 - dow;
-    const monday = new Date(today);
-    monday.setDate(today.getDate() + mondayOffset);
-
-    const days: Array<{
-      label: string;
-      date: string;
-      scheduled: boolean;
-      status: 'present' | 'late' | 'absent' | 'upcoming' | 'none';
-      intensity: number;
-    }> = [];
-
-    for (let i = 0; i < 7; i++) {
-      const date = new Date(monday);
-      date.setDate(monday.getDate() + i);
-      const isScheduled = scheduleHistories.some((history) =>
-        this.getActiveWeekdays(history, date).has(date.getDay()),
-      );
-      const key = this.formatDateKey(date);
-      let status: 'present' | 'late' | 'absent' | 'upcoming' | 'none' = 'none';
-      let intensity = 0;
-
-      if (isScheduled) {
-        if (date > today) {
-          status = 'upcoming';
-          intensity = 0;
-        } else {
-          const rawStatus = attendanceByDate.get(key);
-          if (rawStatus === 2) {
-            status = 'present';
-            intensity = 100;
-          } else if (rawStatus === 1) {
-            status = 'late';
-            intensity = 55;
-          } else {
-            status = 'absent';
-            intensity = 20;
-          }
-        }
-      }
-
-      days.push({ label: dayLabels[i], date: key, scheduled: isScheduled, status, intensity });
-    }
-
-    return days;
-  }
-
-  // Uses local date components (not toISOString, which converts to UTC and
-  // would shift the date for timezones ahead of UTC) so the key matches the
-  // calendar day the date objects were built from.
-  private formatDateKey(date: Date): string {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  }
-
-  async register(
-    registerUserDto: RegisterUserDto,
-    type?: string,
-  ) {
-    try {
-      let is_new_role = false;
-      console.log(registerUserDto);
-      let { phone, role, password } = registerUserDto;
-      phone = phone || null;
-      const hashed_password: string = await hash(password, 7);
-      let user = await this.userRepository.findOne({
-        where: { [Op.or]: { phone } },
-      });
-      let is_role: any;
-      if (user) {
-        is_role = await this.roleService.getUserRoles(user.id, role);
-        if (is_role.data?.length) {
-          throw new BadRequestException('Already registered');
-        } else {
-          is_new_role = true;
-        }
-      }
-      const current_role: string = registerUserDto.role;
-      if (is_new_role) {
-        const roleData: RoleDto = {
-          ...registerUserDto,
-          user_id: user.id,
-        };
-        await this.roleService.create(roleData);
-        user = await this.userRepository.findByPk(user.id);
-        await this.updateCurrentRole(user.id, current_role);
-        const { access_token, refresh_token } = await generateToken(
-          { id: user.id },
-          this.jwtService,
-        );
-
-        // await writeToCookie(refresh_token, res);
-        const user_data: any = await this.userRepository.findByPk(user.id, {
-          include: { model: Role },
-        });
-        // if (type != 'googleauth') {
-        //   await this.mailService.sendUserConfirmation(user_data, access_token);
-        // }
-
-        return {
-          statusCode: HttpStatus.OK,
-          message: 'Successfully registered1!',
-          data: user_data,
-          token: access_token,
-        };
-      } else {
-        const student_id = await this.generateUniqueStudentId();
-        user = await this.userRepository.create({
-          ...registerUserDto,
-          hashed_password,
-          student_id,
-        });
-        const { access_token, refresh_token } = await generateToken(
-          { id: user.id, is_active: user.is_active },
-          this.jwtService,
-        );
-        const hashed_refresh_token = await hash(refresh_token, 7);
-
-        const uniqueKey: string = uuid.v4();
-
-        const updateuser = await this.userRepository.update(
-          {
-            hashed_refresh_token: hashed_refresh_token,
-            activation_link: uniqueKey,
-          },
-          { where: { id: user.id }, returning: true },
-        );
-
-        // if (type != 'googleauth') {
-        //   await this.mailService.sendUserConfirmation(updateuser[1][0], uniqueKey);
-        // }
-
-        const roleData: RoleDto = {
-          ...registerUserDto,
-          user_id: user.id,
-        };
-        await this.roleService.create(roleData);
-        // if (role == 'student') {
-        //   const data: NotificationDto = {
-        //     type: 'student',
-        //     user_id: user.id,
-        //   };
-        //   this.notificationService.create(data);
-        // }
-        await this.updateCurrentRole(user.id, current_role);
-
-        const user_data: any = await this.userRepository.findByPk(user.id, {
-          include: { model: Role },
-          attributes: { exclude: ['activation_link', 'hashed_password', 'is_active', 'hashed_refresh_token', ''] },
-        });
-
-        // await this.mailService.sendUserConfirmation(user_data);
-        return {
-          statusCode: HttpStatus.OK,
-          message: 'Verification code sended successfully',
-          data: user_data,
-          token: access_token,
-        };
-      }
-    } catch (error) {
-      throw new BadRequestException(error.message);
-    }
-  }
-
-  async createUsers(names: any[]) {
-    let user_list: any = [];
-    const users = names.map(async (name) => {
-      const password = this.generateRandomPassword();
-      console.log(name);
-      name = name.split(' ');
-      user_list.push({ login: name[0] + password.slice(0, 2) + '@gmail.com', password, user: name.join(' ') });
-      await this.register({
-        name: name[0],
-        surname: name[1],
-        // phone: name[0] + password.slice(0, 2) + '@gmail.com',
-        password,
-        role: RoleName.student,
-      })
-    });
-    return user_list;
-  }
-
-  private generateRandomPassword(): string {
-    const chars = '0123456789';
-    let password = '';
-    for (let i = 0; i < 6; i++) {
-      const randomIndex = Math.floor(Math.random() * chars.length);
-      password += chars[randomIndex];
-    }
-    return password;
-  }
-
-  private async generateUniqueStudentId(): Promise<string> {
-    let student_id: string;
-    let exists: User | null;
-    do {
-      student_id = String(Math.floor(1000 + Math.random() * 9000));
-      exists = await this.userRepository.findOne({ where: { student_id } });
-    } while (exists);
-    return student_id;
-  }
-
-  async activateLink(activation_link: string) {
-    if (!activation_link) {
-      throw new BadRequestException('Activation link not found');
-    }
-    const user = await this.userRepository.findOne({
-      where: { activation_link },
-    });
-    if (!user) {
-      throw new BadRequestException('Activation link not found');
-    } else if (user?.is_active) {
-      throw new BadRequestException('User already activated');
-    }
-    const updateduser = await this.userRepository.update(
-      { is_active: true, activation_link: "" },
-      { where: { activation_link }, returning: true },
-    );
-    const { access_token, refresh_token } = await generateToken(
-      { id: user.id },
-      this.jwtService,
-    );
-    return {
-      message: 'User activated successfully',
-      user: updateduser[1][0],
-      token: access_token,
-    };
-  }
-
-  async login(
-    loginUserDto: LoginUserDto,
-    type?: string,
-  ) {
-    try {
-      const user = await this.userRepository.findOne({
-        where: { phone: loginUserDto.phone },
-      });
-
-      if (!user) {
-        throw new NotFoundException('User not found');
-      }
-
-      if (type != 'googleauth') {
-        const isMatchPass = await bcrypt.compare(
-          loginUserDto.password,
-          user.hashed_password,
-        );
-        if (!isMatchPass) {
-          throw new BadRequestException('Password did not match!');
-        }
-      }
-
-      console.log(user);
-      if (!user.is_active) {
-        const uniqueKey: string = uuid.v4();
-
-        const updateuser = await this.userRepository.update(
-          {
-            activation_link: uniqueKey,
-          },
-          { where: { id: user.id }, returning: true },
-        );
-
-        // await this.mailService.sendUserConfirmation(updateuser[1][0], uniqueKey);
-
-        return {
-          statusCode: HttpStatus.OK,
-          message: 'Verification code sended successfully',
-          user,
-        };
-      }
-
-      const { access_token, refresh_token } = await generateToken(
-        { id: user.id },
-        this.jwtService,
-      );
-      // await writeToCookie(refresh_token, res);
-      return {
-        statusCode: HttpStatus.OK,
-        mesage: 'Logged in successfully',
-        user,
-        token: access_token,
-      };
-    } catch (error) {
-      throw new BadRequestException(error.message);
-    }
-  }
 
   async getAll(role: string) {
     try {
-      console.log(role);
       const where: any = {};
       if (role != 'all') {
         where.role = { [Op.contains]: [[role, '']] };
@@ -525,144 +50,6 @@ export class UserService {
         data: users,
       };
     } catch (error) {
-      throw new BadRequestException(error.message);
-    }
-  }
-
-  // async getReyting(
-  //   subject_id: number,
-  //   group_id: number,
-  //   user_id: number,
-  // ) {
-  //   try {
-  //     const filter: any = [];
-  //     if (subject_id != 0) {
-  //       filter.push(
-  //         Sequelize.literal(`
-  //           "test_id" IN (
-  //             SELECT "id" FROM "tests"
-  //             WHERE "id" = "Reyting"."test_id"
-  //             AND "lesson_id" IN (
-  //               SELECT "id" FROM "lesson"
-  //               WHERE "id" = "tests"."lesson_id"
-  //               AND "subject_id" = ${subject_id}
-  //             )
-  //           )
-  //         `),
-  //       );
-  //     }
-  //     const reytings = await this.userRepository.findAll({
-  //       where: {
-  //         [Op.and]: [
-  //           // ...filter,
-  //         ],
-  //       },
-  //       attributes: {
-  //         include: [
-  //           [
-  //             Sequelize.literal(`(
-  //               SELECT COALESCE(SUM("reyting"."ball"), 0)
-  //               FROM "group"
-  //               INNER JOIN "course" ON "course"."group_id" = :group_id
-  //               INNER JOIN "reyting" ON "reyting"."lesson_id" = "Lesson"."id"
-  //               INNER JOIN "user" ON "user"."id" = "reyting"."user_id"
-  //               WHERE "reyting"."user_id" = "user"."id"
-  //             )`),
-  //             'a',
-  //           ],
-  //         ],
-  //       },
-  //       replacements: { group_id, user_id },
-  //       include: [{ model: Reyting }],
-  //     });
-  //     return reytings;
-  //   } catch (error) {
-  //     throw new BadRequestException(error.message);
-  //   }
-  // }
-
-  async getReyting(group_id: number, course_id: number) {
-    console.log(+course_id)
-    course_id = +course_id;
-    try {
-      const whereConditions: string[] = [];
-      const replacements: Record<string, any> = {};
-
-      if (group_id != 0) {
-        whereConditions.push(`"Course"."group_id" = :group_id`);
-        replacements.group_id = group_id;
-      }
-
-      if (course_id) {
-        whereConditions.push(`"Course"."id" = :course_id`);
-        replacements.course_id = course_id;
-      }
-
-      const users = await this.userRepository.findAll({
-        where: {
-          id: {
-            [Op.in]: Sequelize.literal(`(
-              SELECT DISTINCT "Reyting"."user_id"
-              FROM "reyting" AS "Reyting"
-              LEFT JOIN "lesson" AS "Lesson" ON "Lesson"."id" = "Reyting"."lesson_id"
-              INNER JOIN "course" AS "Course" ON "Course"."id" = COALESCE("Lesson"."course_id", "Reyting"."course_id")
-              ${whereConditions.length ? `WHERE ${whereConditions.join(' AND ')}` : ''}
-            )`),
-          },
-        },
-        attributes: {
-          include: [
-            [
-              Sequelize.literal(`(
-                SELECT SUM("reyting"."ball")
-                FROM "reyting"
-                LEFT JOIN "lesson" ON "lesson"."id" = "reyting"."lesson_id"
-                INNER JOIN "course" ON "course"."id" = COALESCE("lesson"."course_id", "reyting"."course_id")
-                WHERE "reyting"."user_id" = "User"."id"
-                ${group_id != 0 ? ' AND "course"."group_id" = :group_id' : ''}
-                ${course_id ? ' AND "course"."id" = :course_id' : ''}
-              )::int`),
-              'totalReyting',
-            ],
-          ],
-        },
-        replacements: { group_id, course_id },
-        order: [['totalReyting', 'DESC']],
-      });
-      return users;
-    } catch (error) {
-      throw new BadRequestException(error.message);
-    }
-  }
-
-  async getLessonReyting(lesson_id: number) {
-    try {
-      const users = await this.userRepository.findAll({
-        where: {
-          id: {
-            [Op.in]: Sequelize.literal(`(
-              SELECT DISTINCT "Reyting"."user_id"
-              FROM "reyting" AS "Reyting" WHERE "Reyting"."lesson_id" = ${lesson_id}
-              AND "Reyting"."user_id" = "User"."id"
-            )`),
-          },
-        },
-        attributes: {
-          include: [
-            [
-              Sequelize.literal(`(
-                SELECT SUM("reyting"."ball")
-                FROM "reyting" WHERE "reyting"."lesson_id" = ${lesson_id}
-                AND "reyting"."user_id" = "User"."id"
-              )::int`),
-              'totalReyting',
-            ],
-          ],
-        },
-        order: [['totalReyting', 'DESC']],
-      });
-      return users;
-    } catch (error: any) {
       throw new BadRequestException(error.message);
     }
   }
@@ -715,426 +102,6 @@ export class UserService {
     }
   }
 
-  async getUserAnalytics(user_id: number, group_id: number): Promise<any> {
-    try {
-      if (!user_id) {
-        throw new NotFoundException('User not found!');
-      }
-      const userdata: any = await this.userRepository.findByPk(user_id);
-      const current_role: string = userdata?.current_role || 'student';
-      const user = await this.userRepository.findOne({
-        where: { id: user_id },
-        include: [
-          {
-            model: Role,
-          },
-          {
-            model: Subscriptions,
-            include: [
-              {
-                model: Course,
-                where: {
-                  group_id,
-                },
-                include: [
-                  {
-                    model: CourseSchedule,
-                    as: 'attendance_days',
-                    required: false,
-                  },
-                  {
-                    model: Lesson,
-                    as: 'lessons',
-                    include: [
-                      {
-                        model: Reyting,
-                        required: false,
-                      },
-                      {
-                        model: Test_settings,
-                        where: {
-                          start_date: {
-                            [Op.gt]: new Date(),
-                          },
-                        },
-                        required: false,
-                      },
-                    ],
-                  },
-                ],
-              },
-            ],
-          },
-        ],
-        replacements: { id: user_id, current_role },
-      });
-
-      if (!user) {
-        throw new NotFoundException('User not found!');
-      }
-
-      const [result]: any = await this.sequelize.query(
-        `
-  WITH ranked AS (
-    SELECT
-      r.user_id,
-      ROW_NUMBER() OVER (ORDER BY SUM(r.ball) DESC) AS position
-    FROM reyting r
-    LEFT JOIN lesson l ON l.id = r.lesson_id
-    JOIN course c ON c.id = COALESCE(l.course_id, r.course_id)
-    WHERE c.group_id = :groupId
-    GROUP BY r.user_id
-  )
-  SELECT position
-  FROM ranked
-  WHERE user_id = :userId
-  `,
-        {
-          replacements: {
-            groupId: group_id,
-            userId: user_id,
-          },
-          type: QueryTypes.SELECT,
-        },
-      );
-
-      const userPosition = result?.position || 0;
-
-      const rankings = await this.sequelize.query(
-        `
-  WITH ranked AS (
-    SELECT
-      r.user_id,
-      SUM(r.ball) AS ball,
-      u.id AS "user.id",
-      u.name AS "user.name",
-      u.surname AS "user.surname",
-      u.image AS "user.image",
-      ROW_NUMBER() OVER (ORDER BY SUM(r.ball) DESC) AS position
-    FROM reyting r
-    LEFT JOIN lesson l ON l.id = r.lesson_id
-    JOIN course c ON c.id = COALESCE(l.course_id, r.course_id)
-    JOIN "user" u ON u.id = r.user_id
-    WHERE c.group_id = :groupId
-    GROUP BY r.user_id, u.id, u.name, u.surname, u.image
-  )
-  SELECT *
-  FROM ranked
-  WHERE position BETWEEN :userPosition - 2
-                     AND :userPosition + 2
-  ORDER BY position
-  `,
-        {
-          replacements: {
-            groupId: group_id,
-            userPosition,
-          },
-          type: QueryTypes.SELECT,
-          nest: true,
-          raw: true,
-        },
-      );
-
-      // =========== reyting position ============ //
-      // 1. Joriy va o'tgan oyning sanalarini aniqlaymiz (agar bazada timestamp bo'yicha ajratish kerak bo'lsa)
-      const now = new Date();
-      const currentMonth = now.getMonth() + 1; // 1-12
-      const currentYear = now.getFullYear();
-
-      const lastMonth = currentMonth === 1 ? 12 : currentMonth - 1;
-      const lastMonthYear = currentMonth === 1 ? currentYear - 1 : currentYear;
-
-      // 2. SQL so'rovni bitta o'tishda ham joriy, ham o'tgan oydagi o'rinni hisoblaydigan qilamiz
-      const positions: any = await this.sequelize.query(
-        `
-  WITH current_month_ranked AS (
-    SELECT
-      r.user_id,
-      ROW_NUMBER() OVER (ORDER BY SUM(r.ball) DESC) AS position
-    FROM reyting r
-    LEFT JOIN lesson l ON l.id = r.lesson_id
-    JOIN course c ON c.id = COALESCE(l.course_id, r.course_id)
-    WHERE c.group_id = :groupId
-      AND EXTRACT(MONTH FROM r."createdAt") = :currentMonth
-      AND EXTRACT(YEAR FROM r."createdAt") = :currentYear
-    GROUP BY r.user_id
-  ),
-  last_month_ranked AS (
-    SELECT
-      r.user_id,
-      ROW_NUMBER() OVER (ORDER BY SUM(r.ball) DESC) AS position
-    FROM reyting r
-    LEFT JOIN lesson l ON l.id = r.lesson_id
-    JOIN course c ON c.id = COALESCE(l.course_id, r.course_id)
-    WHERE c.group_id = :groupId
-      AND EXTRACT(MONTH FROM r."createdAt") = :lastMonth
-      AND EXTRACT(YEAR FROM r."createdAt") = :lastMonthYear
-    GROUP BY r.user_id
-  )
-  SELECT
-    coalesce(cm.position, 0) as "currentPosition",
-    coalesce(lm.position, 0) as "lastPosition"
-  FROM "user" u
-  LEFT JOIN current_month_ranked cm ON cm.user_id = u.id
-  LEFT JOIN last_month_ranked lm ON lm.user_id = u.id
-  WHERE u.id = :userId
-  `,
-        {
-          replacements: {
-            groupId: group_id,
-            userId: user_id,
-            currentMonth,
-            currentYear,
-            lastMonth,
-            lastMonthYear
-          },
-          type: QueryTypes.SELECT,
-          plain: true // Obvekt ko'rinishida olish uchun
-        }
-      );
-
-      const currentPosition = positions?.currentPosition || 0;
-      const lastPosition = positions?.lastPosition || 0;
-
-      // 3. O'rinlar farqini (dinamikani) hisoblaymiz
-      let rankStatus = "o'zgarishsiz";
-      let rankDifference = 0;
-
-      if (lastPosition === 0 && currentPosition > 0) {
-        rankStatus = "yangi"; // O'tgan oyda reytingi bo'lmagan
-      } else if (currentPosition > 0 && lastPosition > 0) {
-        rankDifference = lastPosition - currentPosition;
-        if (rankDifference > 0) {
-          rankStatus = "ko'tarildi";
-        } else if (rankDifference < 0) {
-          rankStatus = "tushdi";
-          rankDifference = Math.abs(rankDifference); // musbat songa o'tkazish
-        }
-      }
-
-      const userJSON = user.get({ plain: true });
-
-      // Scoped to this group so it doesn't pull in attendance from the
-      // user's other groups.
-      const attendanceRows = await this.sequelize.query<{
-        course_id: number;
-        date: Date;
-        status: number;
-      }>(
-        `
-          SELECT a."course_id" AS course_id, a."date" AS date, a."attendance" AS status
-          FROM "attendance" a
-          JOIN "course" c ON c.id = a."course_id"
-          WHERE a."user_id" = :userId AND c."group_id" = :groupId
-        `,
-        {
-          replacements: { userId: user_id, groupId: group_id },
-          type: QueryTypes.SELECT,
-        },
-      );
-
-      // attendance status: 2 = present, 1 = late, 0 = absent (see Activity/Main.vue).
-      // Present and late both count as "attended" for percentage purposes.
-      const attendanceByCourse = new Map<number, number>();
-      const attendanceByDate = new Map<string, number>();
-      for (const row of attendanceRows) {
-        const status = Number(row.status) || 0;
-        if (status > 0) {
-          attendanceByCourse.set(
-            row.course_id,
-            (attendanceByCourse.get(row.course_id) || 0) + 1,
-          );
-        }
-        const dateKey = this.formatDateKey(new Date(row.date));
-        const prevStatus = attendanceByDate.get(dateKey);
-        if (prevStatus === undefined || status > prevStatus) {
-          attendanceByDate.set(dateKey, status);
-        }
-      }
-
-      const scheduleHistories = userJSON.subscriptions
-        .map((subscription: any) =>
-          this.sortScheduleHistory(
-            this.schedulesForSubgroup(
-              subscription.course?.attendance_days || [],
-              subscription.subgroup_id,
-            ),
-          ),
-        )
-        .filter((history) => history.length);
-
-      userJSON.subscriptions = userJSON.subscriptions.map((subscription: any) => {
-        console.log(subscription);
-        
-        const scheduledClasses = this.countScheduledClasses(
-          subscription.start_date,
-          this.schedulesForSubgroup(
-            subscription.course?.attendance_days || [],
-            subscription.subgroup_id,
-          ),
-        );
-        console.log(scheduledClasses, 'schedule');
-        
-        const attendedClasses = attendanceByCourse.get(subscription.course_id) || 0;
-        const percentage = scheduledClasses
-          ? Number(((attendedClasses / scheduledClasses) * 100).toFixed(2))
-          : 0;
-
-        return {
-          ...subscription,
-          attendance: {
-            attended_classes: attendedClasses,
-            scheduled_classes: scheduledClasses,
-            percentage,
-          },
-        };
-      });
-
-      const monthlyAttendance = this.buildMonthlyAttendance(
-        scheduleHistories,
-        attendanceByDate,
-      );
-      const weeklyActivity = this.buildWeeklyActivity(
-        scheduleHistories,
-        attendanceByDate,
-      );
-
-      const upcomingTests = userJSON.subscriptions
-        .flatMap((subscription: any) =>
-          (subscription.course?.lessons || []).flatMap((lesson: any) =>
-            (lesson.test_settings || []).map((setting: any) => ({
-              id: setting.id,
-              lesson_id: lesson.id,
-              lesson_title: lesson.title,
-              course_id: subscription.course_id,
-              course_title: subscription.course?.title,
-              test_type: setting.test_type,
-              start_date: setting.start_date,
-              end_date: setting.end_date,
-              duration: lesson.duration,
-              question_count: 0,
-            })),
-          ),
-        )
-        .sort(
-          (left: any, right: any) =>
-            new Date(left.start_date).getTime() - new Date(right.start_date).getTime(),
-        );
-
-      const upcomingLessonIds = [
-        ...new Set(upcomingTests.map((test: any) => test.lesson_id)),
-      ];
-      if (upcomingLessonIds.length) {
-        const questionCountRows: any = await this.sequelize.query(
-          `
-            SELECT "lesson_id", COUNT(*)::int AS count
-            FROM "tests"
-            WHERE "lesson_id" IN (:lessonIds) AND "type" != 'deleted'
-            GROUP BY "lesson_id"
-          `,
-          {
-            replacements: { lessonIds: upcomingLessonIds },
-            type: QueryTypes.SELECT,
-          },
-        );
-        const questionCounts = new Map(
-          questionCountRows.map((row: any) => [row.lesson_id, row.count]),
-        );
-        upcomingTests.forEach((test: any) => {
-          test.question_count = questionCounts.get(test.lesson_id) || 0;
-        });
-      }
-
-      // ========== reyting ball ================== //
-
-
-      const positionsBall: any = await this.sequelize.query(
-        `
-  WITH current_month_ranked AS (
-    SELECT
-      r.user_id,
-      SUM(r.ball) AS total_ball,
-      ROW_NUMBER() OVER (ORDER BY SUM(r.ball) DESC) AS position
-    FROM reyting r
-    LEFT JOIN lesson l ON l.id = r.lesson_id
-    JOIN course c ON c.id = COALESCE(l.course_id, r.course_id)
-    WHERE c.group_id = :groupId
-      AND EXTRACT(MONTH FROM r."createdAt") = :currentMonth
-      AND EXTRACT(YEAR FROM r."createdAt") = :currentYear
-    GROUP BY r.user_id
-  ),
-  last_month_ranked AS (
-    SELECT
-      r.user_id,
-      SUM(r.ball) AS total_ball,
-      ROW_NUMBER() OVER (ORDER BY SUM(r.ball) DESC) AS position
-    FROM reyting r
-    LEFT JOIN lesson l ON l.id = r.lesson_id
-    JOIN course c ON c.id = COALESCE(l.course_id, r.course_id)
-    WHERE c.group_id = :groupId
-      AND EXTRACT(MONTH FROM r."createdAt") = :lastMonth
-      AND EXTRACT(YEAR FROM r."createdAt") = :lastMonthYear
-    GROUP BY r.user_id
-  )
-  SELECT 
-    COALESCE(cm.position, 0) as "currentPosition",
-    COALESCE(lm.position, 0) as "lastPosition",
-    COALESCE(cm.total_ball, 0) as "currentBall",
-    COALESCE(lm.total_ball, 0) as "lastBall"
-  FROM "user" u
-  LEFT JOIN current_month_ranked cm ON cm.user_id = u.id
-  LEFT JOIN last_month_ranked lm ON lm.user_id = u.id
-  WHERE u.id = :userId
-  `,
-        {
-          replacements: {
-            groupId: group_id,
-            userId: user_id,
-            currentMonth,
-            currentYear,
-            lastMonth,
-            lastMonthYear
-          },
-          type: QueryTypes.SELECT,
-          plain: true
-        }
-      );
-
-      // Qiymatlarni o'zgaruvchilarga olamiz
-      const currentBall = Number(positionsBall?.currentBall) || 0;
-      const lastBall = Number(positionsBall?.lastBall) || 0;
-
-      // Ball o'zgarishi mantiqi
-      let ballStatus = "o'zgarishsiz";
-      let ballDifference = currentBall - lastBall; // Joriy balldan o'tgan oynikini ayiramiz
-
-      if (ballDifference > 0) {
-        ballStatus = "oshdi";
-      } else if (ballDifference < 0) {
-        ballStatus = "kamaydi";
-        ballDifference = Math.abs(ballDifference); // Musbat son ko'rinishiga o'tkazish
-      }
-
-      return {
-        ...userJSON, rankings, ratingStats: {
-          currentPosition,
-          difference: rankDifference,
-          status: rankStatus,
-        }, ratingBallStats: {
-          currentBall,
-          difference: ballDifference,
-          status: ballStatus,
-        },
-        attendanceStats: monthlyAttendance,
-        weeklyActivity,
-        upcomingTests,
-        newTestsCount: upcomingTests.length,
-      };
-    } catch (error) {
-      throw new BadRequestException(error.message);
-    }
-  }
-
   async getUserInfo(id: number) {
     try {
       if (!id) {
@@ -1168,42 +135,6 @@ export class UserService {
     } catch (error) {
       throw new BadRequestException(error.message);
     }
-  }
-
-  async getWebAppUser(initData: any) {
-    const isValid = validateTelegramInitData(
-      initData,
-      process.env.BOT_TOKEN
-    );
-    console.log(isValid);
-
-    if (!isValid) {
-      throw new NotFoundException('User not found!');
-    }
-
-    const params = new URLSearchParams(initData);
-    const bot_id = JSON.parse(params.get('user'))?.id;
-    const user: any = await this.userRepository.findOne({
-      include: {
-        model: Bot, where: { bot_id }
-      }
-    })
-
-    if (!user) {
-      throw new NotFoundException('User not found!');
-    }
-
-    const { access_token, refresh_token } = await generateToken(
-      { id: user.id },
-      this.jwtService,
-    );
-
-    return {
-      statusCode: HttpStatus.OK,
-      message: 'Successfully registered1!',
-      data: user,
-      token: access_token,
-    };
   }
 
   async searchUsers(page: number, search: string) {
@@ -1248,23 +179,6 @@ export class UserService {
     }
   }
 
-  async checkEmail(email: string) {
-    // try {
-    //   const user = await this.userRepository.findOne({
-    //     where: { email },
-    //   });
-    //   if (!user) {
-    //     throw new BadRequestException('User not found');
-    //   }
-    //   return {
-    //     statusCode: HttpStatus.OK,
-    //     data: user,
-    //   };
-    // } catch (error) {
-    //   throw new BadRequestException(error.message);
-    // }
-  }
-
   async pagination(page: number, limit: number) {
     try {
       const offset = (page - 1) * limit;
@@ -1288,27 +202,11 @@ export class UserService {
     }
   }
 
-  async checkPassword(checkDto: CheckDto) {
-    const res: any = await this.roleService.checkPassword(checkDto);
-    if (res) {
-      const user: any = await this.updateCurrentRole(
-        res.data.id,
-        res.data.role,
-      );
-      return {
-        statusCode: HttpStatus.OK,
-        message: 'Updated successfully',
-        data: user.data,
-      };
-    }
-  }
-
   async updateProfile(
     id: number,
     updateDto: UpdateDto,
     image: any
   ) {
-    console.log(image);
     try {
       let user: any = await this.userRepository.findByPk(id);
       if (!user) {
@@ -1320,7 +218,6 @@ export class UserService {
         }
         image = await this.filesService.createFile(image, 'image');
         updateDto.image = image.secure_url;
-        console.log(updateDto.image)
         if (image == 'error') {
           return {
             status: HttpStatus.BAD_REQUEST,
@@ -1334,179 +231,7 @@ export class UserService {
         where: { id },
         returning: true,
       });
-      // user = await this.userRepository.findByPk(id, {
-      //   include: { model: User },
-      // });
       return user[1][0];
-    } catch (error) {
-      throw new BadRequestException(error.message);
-    }
-  }
-
-  async newPassword(newPasswordDto: NewPasswordDto) {
-    try {
-      // const { new_password, confirm_password, activation_link } =
-      //   newPasswordDto;
-      // const email =
-      //   await this.resetpasswordService.checkActivationLink(activation_link);
-      // const hashed_password = await hash(new_password, 7);
-      // const updated_info = await this.userRepository.update(
-      //   { hashed_password },
-      //   { where: { email }, returning: true },
-      // );
-      // return {
-      //   statusCode: HttpStatus.OK,
-      //   message: 'Password updated successfully',
-      //   data: {
-      //     user: updated_info[1][0],
-      //   },
-      // };
-    } catch (error) {
-      throw new BadRequestException(error.message);
-    }
-  }
-
-  async updatePassword(password: string, phone: string) {
-    try {
-      const hashed_password = await hash(password, 7);
-      const updated_info = await this.userRepository.update(
-        { hashed_password },
-        { where: { phone }, returning: true },
-      );
-      return updated_info[1][0]
-    } catch (error) {
-      throw new BadRequestException(error.message);
-    }
-  }
-
-  async changeEmail(user_id: number, changeUserEmailDto: ChangeUserEmailDto) {
-    // try {
-    //   const { phone, password, code } = changeUserEmailDto;
-    //   const user = await this.userRepository.findByPk(user_id);
-    //   if (!user) {
-    //     throw new BadRequestException("User not found");
-    //   }
-    //   await this.otpService.verifyOtp({ phone, code })
-
-    //   const hashed_password = await hash(password, 7);
-    //   const updated_info = await this.userRepository.update(
-    //     { phone, hashed_password },
-    //     { where: { phone: user.phone }, returning: true },
-    //   );
-    //   return updated_info[1][0]
-    // } catch (error) {
-    //   throw new BadRequestException(error.message);
-    // }
-  }
-
-  // async newPassword(
-  //   id: string,
-  //   newPasswordDto: NewPasswordDto,
-  // ) {
-  //   try {
-  //     const { old_password, new_password } = newPasswordDto;
-  //     const user = await this.userRepository.findByPk(id);
-  //     if (!user) {
-  //       throw new NotFoundException('User not found!');
-  //     }
-  //     const is_match_pass = await compare(old_password, user.hashed_password);
-  //     if (!is_match_pass) {
-  //       throw new ForbiddenException('The old password did not match!');
-  //     }
-  //     const hashed_password = await hash(new_password, 7);
-  //     const updated_info = await this.userRepository.update(
-  //       { hashed_password },
-  //       { where: { id }, returning: true },
-  //     );
-  //     return {
-  //       statusCode: HttpStatus.OK,
-  //       message: "Parol o'zgartirildi",
-  //       data: {
-  //         user: updated_info[1][0],
-  //       },
-  //     };
-  //   } catch (error) {
-  //     throw new BadRequestException(error.message);
-  //   }
-  // }
-  async forgotPassword(
-    // id: string,
-    phoneUserDto: PhoneUserDto,
-  ) {
-    try {
-      const { phone } = phoneUserDto;
-      const activation_link: string = uuid.v4();
-
-      const updated_info = await this.userRepository.update(
-        { activation_link },
-        { where: { phone }, returning: true },
-      );
-      // await this.mailService.sendUserActivationLink(activation_link, phone);
-
-      return {
-        statusCode: HttpStatus.OK,
-        message: "Emailingizga link yuborildi",
-        data: {
-          user: updated_info[1][0],
-        },
-      };
-    } catch (error) {
-      throw new BadRequestException(error.message);
-    }
-  }
-
-  async resetPassword(
-    // id: string,
-    forgotPasswordDto: ForgotPasswordDto,
-  ) {
-    try {
-      const { activation_link, new_password } =
-        forgotPasswordDto;
-      // await this.otpService.verifyOtp({ phone, code });
-      // await this.getById(id);
-      // if (new_password != confirm_new_password) {
-      //   throw new ForbiddenException('Yangi parolni tasdiqlashda xatolik!');
-      // }
-      const user = await this.userRepository.findOne({
-        where: { activation_link }
-      })
-      const hashed_password = await hash(new_password, 7);
-      const updated_info = await this.userRepository.update(
-        { hashed_password },
-        { where: { phone: user.phone }, returning: true },
-      );
-      return {
-        message: "Paroli o'zgartirildi",
-      };
-    } catch (error) {
-      throw new BadRequestException(error.message);
-    }
-  }
-
-
-  async changePassword(
-    user_id: number,
-    changePasswordDto: ChangePasswordDto,
-  ) {
-    try {
-      const { old_password, new_password } =
-        changePasswordDto;
-      const user = await this.userRepository.findByPk(user_id);
-      const isMatchPass = await bcrypt.compare(
-        changePasswordDto.old_password,
-        user.hashed_password,
-      );
-      if (!isMatchPass) {
-        throw new BadRequestException('Password did not match!');
-      }
-      const hashed_password = await hash(new_password, 7);
-      await this.userRepository.update(
-        { hashed_password },
-        { where: { phone: user.phone }, returning: true },
-      );
-      return {
-        message: "Parolingiz o'zgartirildi",
-      };
     } catch (error) {
       throw new BadRequestException(error.message);
     }
@@ -1518,12 +243,10 @@ export class UserService {
       if (!user) {
         throw new NotFoundException('User not found');
       }
-      console.log(updateDto, id);
       const update = await this.userRepository.update(updateDto, {
         where: { id },
         returning: true,
       });
-      console.log(update);
       return {
         statusCode: HttpStatus.OK,
         message: 'Updated successfully',
@@ -1533,54 +256,6 @@ export class UserService {
       throw new BadRequestException(error.message);
     }
   }
-
-  async updateCurrentRole(id: number, current_role: string) {
-    try {
-      const user = await this.userRepository.findByPk(id);
-      if (!user) {
-        throw new NotFoundException('User not found');
-      }
-      const update = await this.userRepository.update(
-        { current_role },
-        {
-          where: { id },
-          returning: true,
-        },
-      );
-      return {
-        statusCode: HttpStatus.OK,
-        message: 'Updated successfully',
-        data: update[1][0],
-      };
-    } catch (error) {
-      throw new BadRequestException(error.message);
-    }
-  }
-
-  // async updateTestReyting(id: number) {
-  //   try {
-  //     console.log(id, '-----------------------');
-  //     const user = await this.userRepository.findByPk(id);
-  //     if (!user) {
-  //       throw new NotFoundException('User not found');
-  //     }
-  //     const test_reyting = user.test_reyting + 1;
-  //     const update = await this.userRepository.update(
-  //       { test_reyting },
-  //       {
-  //         where: { id },
-  //         returning: true,
-  //       },
-  //     );
-  //     return {
-  //       statusCode: HttpStatus.OK,
-  //       message: 'Updated successfully',
-  //       data: update[1][0],
-  //     };
-  //   } catch (error) {
-  //     throw new BadRequestException(error.message);
-  //   }
-  // }
 
   async deleteUser(id: string) {
     try {
@@ -1599,71 +274,87 @@ export class UserService {
     }
   }
 
+  // --- Delegates to UserAuthService (registration/login/password/role) ---
+
+  async register(registerUserDto: RegisterUserDto, type?: string) {
+    return this.userAuthService.register(registerUserDto, type);
+  }
+
+  async createUsers(names: any[]) {
+    return this.userAuthService.createUsers(names);
+  }
+
+  async activateLink(activation_link: string) {
+    return this.userAuthService.activateLink(activation_link);
+  }
+
+  async login(loginUserDto: LoginUserDto, type?: string) {
+    return this.userAuthService.login(loginUserDto, type);
+  }
+
+  async getWebAppUser(initData: any) {
+    return this.userAuthService.getWebAppUser(initData);
+  }
+
+  async checkEmail(email: string) {
+    return this.userAuthService.checkEmail(email);
+  }
+
+  async checkPassword(checkDto: CheckDto) {
+    return this.userAuthService.checkPassword(checkDto);
+  }
+
+  async newPassword(newPasswordDto: NewPasswordDto) {
+    return this.userAuthService.newPassword(newPasswordDto);
+  }
+
+  async updatePassword(password: string, phone: string) {
+    return this.userAuthService.updatePassword(password, phone);
+  }
+
+  async changeEmail(user_id: number, changeUserEmailDto: ChangeUserEmailDto) {
+    return this.userAuthService.changeEmail(user_id, changeUserEmailDto);
+  }
+
+  async forgotPassword(phoneUserDto: PhoneUserDto) {
+    return this.userAuthService.forgotPassword(phoneUserDto);
+  }
+
+  async resetPassword(forgotPasswordDto: ForgotPasswordDto) {
+    return this.userAuthService.resetPassword(forgotPasswordDto);
+  }
+
+  async changePassword(user_id: number, changePasswordDto: ChangePasswordDto) {
+    return this.userAuthService.changePassword(user_id, changePasswordDto);
+  }
+
+  async updateCurrentRole(id: number, current_role: string) {
+    return this.userAuthService.updateCurrentRole(id, current_role);
+  }
+
   async verify(token: string, type?: string) {
-    let ticket: any;
-    if (type == 'mobile') {
-      const client = new OAuth2Client(process.env.FLUTTER_CLIENT_ID);
-      ticket = await client.verifyIdToken({
-        idToken: token,
-        audience: process.env.FLUTTER_CLIENT_ID,
-      });
-    } else if (type == 'desktop') {
-      const client = new OAuth2Client(process.env.DESKTOP_CLIENT_ID)
-      ticket = await client.verifyIdToken({
-        idToken: token,
-        audience: process.env.DESKTOP_CLIENT_ID,
-      });
-    } else {
-      const client = new OAuth2Client(process.env.CLIENT_ID);
-      ticket = await client.verifyIdToken({
-        idToken: token,
-        audience: process.env.CLIENT_ID,
-      });
-    }
-    const payload: any = ticket.getPayload();
-    return payload;
+    return this.userAuthService.verify(token, type);
   }
 
   async googleAuth(credential: string, type?: string) {
-    console.log(credential, 'credential');
-    // try {
-    //   const payload: any = await this.verify(credential, type);
-    //   console.log(payload);
-    //   const data: any = {
-    //     name: payload.given_name,
-    //     surname: payload.family_name,
-    //     password: credential,
-    //     email: payload.email,
-    //     is_active: true,
-    //     role: 'student',
-    //   };
-    //   const is_user = await this.userRepository.findOne({
-    //     where: {
-    //       email: payload.email,
-    //     },
-    //   });
-    //   let user: any;
-    //   if (is_user) {
-    //     user = await this.login(data, 'googleauth');
-    //   } else {
-    //     user = await this.register(data, 'googleauth');
-    //   }
-    //   return user;
-    // } catch (error) {
-    //   console.log(error);
-    //   throw new BadRequestException(error);
-    // }
+    return this.userAuthService.googleAuth(credential, type);
   }
 
   async createDefaultUser() {
-    try {
-      await this.register({
-        name: process.env.INITIAL_NAME,
-        surname: process.env.INITIAL_SURNAME,
-        password: process.env.INITIAL_PASSWORD,
-        role: RoleName.super_admin,
-        // email: process.env.INITIAL_EMAIL,
-      });
-    } catch { }
+    return this.userAuthService.createDefaultUser();
+  }
+
+  // --- Delegates to UserAnalyticsService (reyting/analytics) ---
+
+  async getReyting(group_id: number, course_id: number) {
+    return this.userAnalyticsService.getReyting(group_id, course_id);
+  }
+
+  async getLessonReyting(lesson_id: number) {
+    return this.userAnalyticsService.getLessonReyting(lesson_id);
+  }
+
+  async getUserAnalytics(user_id: number, group_id: number): Promise<any> {
+    return this.userAnalyticsService.getUserAnalytics(user_id, group_id);
   }
 }

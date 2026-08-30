@@ -9,6 +9,8 @@ import { ResetpasswordModule } from '../resetpassword/resetpassword.module';
 import { JwtModule } from '@nestjs/jwt';
 import { FilesModule } from 'src/files/files.module';
 import { OtpModule } from 'src/otp/otp.module';
+import { UserAuthService } from './services/user-auth.service';
+import { UserAnalyticsService } from './services/user-analytics.service';
 
 @Module({
   imports: [
@@ -20,7 +22,7 @@ import { OtpModule } from 'src/otp/otp.module';
     OtpModule,
   ],
   controllers: [UserController],
-  providers: [UserService],
+  providers: [UserService, UserAuthService, UserAnalyticsService],
   exports: [UserService],
 })
 export class UserModule {}
