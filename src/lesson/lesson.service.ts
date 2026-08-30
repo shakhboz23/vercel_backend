@@ -416,11 +416,11 @@ export class LessonService {
       if (lesson.type == 'lesson') {
         let file_type: string;
         let file_data: any;
-        if (!content) {
-          throw new BadRequestException(
-            'Please enter a content',
-          );
-        };
+        // if (!content) {
+        //   throw new BadRequestException(
+        //     'Please enter a content',
+        //   );
+        // };
         if (youtube) {
           duration = await this.uploadedService.getVideoDuration(youtube);
           video = youtube;
