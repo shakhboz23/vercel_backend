@@ -49,7 +49,6 @@ import { SubscriptionActivity } from './subscription_activity/models/subscriptio
 import { Subscriptions } from './subscriptions/models/subscriptions.models';
 import { VideoChat } from './video_chat/models/video_chat.model';
 import { TelegrafModule } from 'nestjs-telegraf';
-// import { BOT_NAME } from './app.constants';
 import { BotModule } from './bot/bot.module';
 import { WatchedModule } from './watched/watched.module';
 import { ScheduleModule } from '@nestjs/schedule';
@@ -66,7 +65,6 @@ import { BotChild } from './bot/models/bot_child.model';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { Watched } from './watched/models/watched.models';
-import pg from "pg"
 import { Test_settings } from './test_settings/models/test_settings.models';
 import { Attendance } from './attendance/models/attendance.models';
 import { AttendanceModule } from './attendance/attendance.module';
@@ -88,12 +86,6 @@ import { CourseSubgroupModule } from './course_subgroup/course_subgroup.module';
         return process.env.NODE_ENV !== 'production' ? {
           token: process.env.BOT_TOKEN,
           includes: [BotModule],
-          // launchOptions: {
-          //   webhook: {
-          //     domain: 'https://vercelbackend-production.up.railway.app',
-          //     hookPath: '/api/webhook',
-          //   }
-          // }
         } : {
           token: process.env.BOT_TOKEN,
           includes: [BotModule],
@@ -151,17 +143,6 @@ import { CourseSubgroupModule } from './course_subgroup/course_subgroup.module';
         Payment,
         CourseSubgroup,
       ],
-      // autoLoadModels: true,
-      // synchronize: true,
-      // sync: { alter: true },
-      // logging: true,
-      // dialectModule: pg,
-      // dialectOptions: process.env.NODE_ENV == 'production' ? {
-      //   ssl: {
-      //     require: true,
-      //     rejectUnauthorized: false,
-      //   },
-      // } : {},
     }),
     ServeStaticModule.forRoot({
       rootPath: resolve(__dirname, '..', 'static'),
@@ -218,7 +199,6 @@ export class AppModule implements OnApplicationBootstrap {
 
   async onApplicationBootstrap() {
     await this.userService.createDefaultUser();
-    // ConsoleUtils.startAutoClear();
   }
 
 }
