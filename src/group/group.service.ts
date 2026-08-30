@@ -48,7 +48,6 @@ export class GroupService {
       if (cover) {
         image_url = await this.uploadedService.create(cover, file_type);
       }
-      console.log(image_url)
       const group = await this.groupRepository.create({
         ...groupDto,
         user_id,
@@ -329,7 +328,6 @@ export class GroupService {
       const groups = await this.groupRepository.findOne({
         where: { id },
       });
-      console.log(groups);
       if (!groups) {
         throw new NotFoundException('Group not found');
       }
@@ -381,7 +379,6 @@ export class GroupService {
       const file_type: string = 'image';
       let file_data: any;
       let image_url: string;
-      console.log(cover, '2303');
       if (cover) {
         if (group.cover) {
           await this.filesService.deleteFile(group.cover);

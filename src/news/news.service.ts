@@ -65,7 +65,6 @@ export class NewsService {
       };
       return res;
     } catch (error) {
-      console.log(error);
       return { status: HttpStatus.NOT_FOUND, error: error.message };
     }
   }
