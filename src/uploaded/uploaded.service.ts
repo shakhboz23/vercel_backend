@@ -7,7 +7,6 @@ import {
 import { Uploaded } from './models/uploaded.models';
 import { InjectModel } from '@nestjs/sequelize';
 import { JwtService } from '@nestjs/jwt';
-import { UploadedDto } from './dto/uploaded.dto';
 import { Op } from 'sequelize';
 import { FilesService } from '../files/files.service';
 import { UpdateDto } from './dto/update';
@@ -46,38 +45,8 @@ export class UploadedService {
     const hours = parseInt(match[1], 10) || 0;
     const minutes = parseInt(match[2], 10) || 0;
     const seconds = parseInt(match[3], 10) || 0;
-    // return `${hours}h ${minutes}m ${seconds}s`;
     return hours * 3600 + minutes * 60 + seconds;
   }
-
-  // async create(file: any, file_type: string) {
-  //   try {
-  //     let file_data: any;
-  //     let data: any;
-  //     if (file_type != 'youtube') {
-  //       file_data = await this.fileService.createFile(
-  //         file,
-  //         file_type,
-  //       );
-  //       data = await this.uploadedRepository.create({
-  //         duration: Math.floor(file_data.duration) || null,
-  //         file_type,
-  //         url: file_data.url,
-  //       });
-  //     } else {
-  //       data = await this.uploadedRepository.create({
-  //         duration: Math.floor(file_data.duration) || null,
-  //         file_type,
-  //         url: file_data.url,
-  //       });
-  //     }
-  //     return file_data.url;
-  //   } catch (error) {
-  //     console.log(error.message);
-  //     return { statusCode: HttpStatus.BAD_REQUEST, error: error.message };
-  //   }
-  // }
-
 
   async create(file: any, file_type: string) {
     try {
@@ -88,40 +57,15 @@ export class UploadedService {
           file_type,
         );
       }
-      console.log(file_data);
       let data = await this.uploadedRepository.create({
         duration: Math.floor(file_data.duration) || null,
         file_type,
         url: file_data.secure_url,
       });
-      console.log(data);
       return file_data.secure_url;
     } catch (error) {
-      console.log(error.message);
       return { statusCode: HttpStatus.BAD_REQUEST, error: error.message };
     }
-  }
-
-  async upload(uploadedDto: UploadedDto, file: any) {
-    // try {
-    //   const file_data: any = await this.fileService.createFile(
-    //     file,
-    //     uploadedDto.file_type,
-    //   );
-    //   const data = await this.uploadedRepository.create({
-    //     public_id: '1',
-    //     duration: file_data.duration,
-    //     url: file_data.url,
-    //     file_type: uploadedDto.file_type,
-    //   });
-    //   return {
-    //     statusCode: HttpStatus.OK,
-    //     message: 'Created successfully',
-    //     data,
-    //   };
-    // } catch (error) {
-    //   return { statusCode: HttpStatus.BAD_REQUEST, error: error.message };
-    // }
   }
 
   async getAll(): Promise<object> {
@@ -136,22 +80,7 @@ export class UploadedService {
     }
   }
 
-  async getById(public_id: number) {
-    // try {
-    //   const uploaded = await this.uploadedRepository.findOne({
-    //     where: { public_id },
-    //   });
-    //   if (!uploaded) {
-    //     throw new NotFoundException('Uploaded not found');
-    //   }
-    //   return {
-    //     statusCode: HttpStatus.OK,
-    //     data: uploaded,
-    //   };
-    // } catch (error) {
-    //   throw new BadRequestException(error.message);
-    // }
-  }
+  async getById(public_id: number) {}
 
   async pagination(page: number): Promise<object> {
     try {
