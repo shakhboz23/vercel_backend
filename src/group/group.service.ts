@@ -28,7 +28,7 @@ export class GroupService {
     private readonly uploadedService: UploadedService,
     private readonly watchedService: WatchedService,
     private readonly filesService: FilesService,
-  ) { }
+  ) {}
 
   async create(
     groupDto: GroupDto,
@@ -60,21 +60,30 @@ export class GroupService {
     }
   }
 
-  async getAll({ groupSearchDto, user_id, type }: { groupSearchDto?: GroupSearchDto, user_id?: number, type?: string }): Promise<object> {
+  async getAll({
+    groupSearchDto,
+    user_id,
+    type,
+  }: {
+    groupSearchDto?: GroupSearchDto;
+    user_id?: number;
+    type?: string;
+  }): Promise<object> {
     try {
-      let { title, subcategory_id, category_id, createdAt, price } = groupSearchDto || {};
+      let { title, subcategory_id, category_id, createdAt, price } =
+        groupSearchDto || {};
 
-      let subcategories: any = JSON.parse(subcategory_id || "[]");
-      let createdAtDates: any = JSON.parse(createdAt || "[]");
-      price = JSON.parse(price || "[]");
+      const subcategories: any = JSON.parse(subcategory_id || '[]');
+      const createdAtDates: any = JSON.parse(createdAt || '[]');
+      price = JSON.parse(price || '[]');
 
-      let whereClause: any = {};
+      const whereClause: any = {};
 
       // 1. Title yoki description bilan filter
       if (title) {
         whereClause[Op.or] = [
           { title: { [Op.iLike]: `%${title}%` } },
-          { description: { [Op.iLike]: `%${title}%` } }
+          { description: { [Op.iLike]: `%${title}%` } },
         ];
       }
 
@@ -84,40 +93,48 @@ export class GroupService {
 
       if (!subcategories?.length && +category_id) {
         categoryInclude = {
-          include: [{
-            model: SubCategory,
-            include: [{
-              model: Category,
-              where: {
-                id: category_id
-              },
+          include: [
+            {
+              model: SubCategory,
+              include: [
+                {
+                  model: Category,
+                  where: {
+                    id: category_id,
+                  },
+                  required: true,
+                },
+              ],
               required: true,
             },
-            ],
-            required: true,
-          }]
-        }
+          ],
+        };
       } else if (Array.isArray(subcategories) && subcategories.length) {
         subcategoryInclude = {
           where: {
             subcategory_id: {
-              [Op.in]: subcategories
-            }
-          }
+              [Op.in]: subcategories,
+            },
+          },
         };
       }
 
       // 3. createdAt: Date[] = [start, end]
       if (Array.isArray(createdAtDates) && createdAtDates.length === 2) {
         whereClause.createdAt = {
-          [Op.between]: [new Date(createdAtDates[0]), new Date(createdAtDates[1])]
+          [Op.between]: [
+            new Date(createdAtDates[0]),
+            new Date(createdAtDates[1]),
+          ],
         };
       }
 
       if (Array.isArray(price) && price.length === 2) {
-        subcategoryInclude.where = subcategoryInclude.where ? subcategoryInclude.where : {};
+        subcategoryInclude.where = subcategoryInclude.where
+          ? subcategoryInclude.where
+          : {};
         subcategoryInclude.where.price = {
-          [Op.between]: [price[0], price[1]]
+          [Op.between]: [price[0], price[1]],
         };
       }
 
@@ -125,12 +142,16 @@ export class GroupService {
         return {
           where: whereClause,
           order: [['title', 'ASC']],
-          include: [{ model: User }, {
-            model: Course, attributes: [],
-            ...subcategoryInclude,
-            ...categoryInclude,
-            required: type == 'my_groups' ? false : true,
-          }],
+          include: [
+            { model: User },
+            {
+              model: Course,
+              attributes: [],
+              ...subcategoryInclude,
+              ...categoryInclude,
+              required: type == 'my_groups' ? false : true,
+            },
+          ],
           attributes: {
             include: [
               [
@@ -174,8 +195,8 @@ export class GroupService {
               ],
             ],
           },
-        }
-      };
+        };
+      }
 
       const groups = await this.groupRepository.findAll(filters());
       let my_groups = [];
@@ -195,20 +216,27 @@ export class GroupService {
     }
   }
 
-  async getAllAnalytics(category_id: number, user_id?: number): Promise<object> {
+  async getAllAnalytics(
+    category_id: number,
+    user_id?: number,
+  ): Promise<object> {
     try {
       let category: any = {
-        where: { user_id }
-      }
+        where: { user_id },
+      };
       if (category_id != 0) {
-        category = { where: { category_id, user_id } }
+        category = { where: { category_id, user_id } };
       }
       const filters: any = {
         order: [['title', 'ASC']],
         ...category,
-        include: [{ model: User }, {
-          model: Course, attributes: [],
-        }],
+        include: [
+          { model: User },
+          {
+            model: Course,
+            attributes: [],
+          },
+        ],
         attributes: {
           include: [
             [
@@ -223,7 +251,7 @@ export class GroupService {
                   JOIN "lesson" AS "l" ON "likes"."lesson_id" = "l"."id"
                   JOIN "course" AS "c" ON "l"."course_id" = "c"."id"
                   JOIN "group" AS "g" ON "c"."group_id" = "g"."id"
-                  WHERE g."user_id" = :user_id)::int, 0)`
+                  WHERE g."user_id" = :user_id)::int, 0)`,
               ),
               'likes_count',
             ],
@@ -234,9 +262,7 @@ export class GroupService {
               'users_count',
             ],
             [
-              Sequelize.literal(
-                `EXTRACT(EPOCH FROM "Group"."createdAt")::int`
-              ),
+              Sequelize.literal(`EXTRACT(EPOCH FROM "Group"."createdAt")::int`),
               'createdAt',
             ],
           ],
@@ -246,14 +272,18 @@ export class GroupService {
 
       const filters2: any = {
         ...category,
-        include: [{ model: User }, {
-          model: Course, attributes: [],
-        }],
+        include: [
+          { model: User },
+          {
+            model: Course,
+            attributes: [],
+          },
+        ],
         attributes: {
           include: [
             [
               Sequelize.literal(
-                `COALESCE((SELECT COUNT(*) FROM "watched" WHERE "watched"."group_id" = "Group"."id" AND "Group"."user_id" = :user_id)::int, 0)`
+                `COALESCE((SELECT COUNT(*) FROM "watched" WHERE "watched"."group_id" = "Group"."id" AND "Group"."user_id" = :user_id)::int, 0)`,
               ),
               'watched_count',
             ],
@@ -263,7 +293,7 @@ export class GroupService {
                   JOIN "lesson" AS "l" ON "likes"."lesson_id" = "l"."id"
                   JOIN "course" AS "c" ON "l"."course_id" = "c"."id"
                   JOIN "group" AS "g" ON "c"."group_id" = "g"."id"
-                  WHERE g."user_id" = :user_id)::int, 0)`
+                  WHERE g."user_id" = :user_id)::int, 0)`,
               ),
               'likes_count',
             ],
@@ -274,9 +304,7 @@ export class GroupService {
               'users_count',
             ],
             [
-              Sequelize.literal(
-                `EXTRACT(EPOCH FROM "Group"."createdAt")::int`
-              ),
+              Sequelize.literal(`EXTRACT(EPOCH FROM "Group"."createdAt")::int`),
               'createdAt',
             ],
           ],
@@ -312,7 +340,14 @@ export class GroupService {
   async getSubscribedGroups(user_id: number): Promise<object> {
     try {
       const groups = await this.groupRepository.findAll({
-        include: [{ model: Course, include: [{ model: Subscriptions, where: { user_id }, required: true }] }]
+        include: [
+          {
+            model: Course,
+            include: [
+              { model: Subscriptions, where: { user_id }, required: true },
+            ],
+          },
+        ],
       });
       if (!groups) {
         throw new NotFoundException('Group not found');

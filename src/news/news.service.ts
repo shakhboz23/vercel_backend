@@ -10,7 +10,7 @@ export class NewsService {
   constructor(
     @InjectModel(News) private readonly newsRepository: typeof News,
     private readonly filesService: FilesService,
-  ) { }
+  ) {}
 
   async create(newsDto: NewsDto) {
     try {

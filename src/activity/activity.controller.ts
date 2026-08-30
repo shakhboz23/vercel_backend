@@ -1,11 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Param,
-  Delete,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete } from '@nestjs/common';
 import { ActivityService } from './activity.service';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ActivityDto } from './dto/activity.dto';
@@ -14,15 +7,11 @@ import { GetActivityDto } from './dto/get_activity.dto';
 @ApiTags('Activity')
 @Controller('activity')
 export class ActivityController {
-  constructor(
-    private readonly activityService: ActivityService,
-  ) {}
+  constructor(private readonly activityService: ActivityService) {}
 
   @ApiOperation({ summary: 'Registration a new user' })
   @Post('register')
-  async register(
-    @Body() activityDto: ActivityDto,
-  ) {
+  async register(@Body() activityDto: ActivityDto) {
     const data = await this.activityService.create(activityDto);
     return data;
   }

@@ -15,7 +15,12 @@ import { CourseSubgroupModule } from 'src/course_subgroup/course_subgroup.module
 @Module({
   imports: [
     SequelizeModule.forFeature([Course]),
-    UserModule, UploadedModule, ChatGroupModule, WatchedModule, FilesModule, GroupModule,
+    UserModule,
+    UploadedModule,
+    ChatGroupModule,
+    WatchedModule,
+    FilesModule,
+    GroupModule,
     CourseScheduleModule,
     CourseSubgroupModule,
   ],
@@ -23,4 +28,4 @@ import { CourseSubgroupModule } from 'src/course_subgroup/course_subgroup.module
   providers: [CourseService],
   exports: [CourseService],
 })
-export class CourseModule { }
+export class CourseModule {}

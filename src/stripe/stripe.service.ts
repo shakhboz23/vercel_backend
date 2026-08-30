@@ -1,5 +1,10 @@
 // stripe/stripe.service.ts
-import { BadRequestException, Injectable, NotFoundException, RawBodyRequest } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+  RawBodyRequest,
+} from '@nestjs/common';
 import Stripe from 'stripe';
 import { StripeDto } from './dto/stripe.dto';
 import { Request } from 'express';
@@ -20,7 +25,7 @@ export class StripeService {
     private readonly courseService: CourseService,
     private readonly subscriptionsService: SubscriptionsService,
     private readonly sequelize: Sequelize,
-  ) { }
+  ) {}
 
   private stripe = new Stripe(process.env.STRIPE_API_KEY, {});
   private endpointSecret = process.env.STRIPE_SIGNING_SECRET;
@@ -30,13 +35,13 @@ export class StripeService {
       where: {
         course_id: stripeDto.course_id,
         user_id,
-      }
-    })
+      },
+    });
 
     if (isPaid) {
-      throw new BadRequestException("You already subscribed to this course");
+      throw new BadRequestException('You already subscribed to this course');
     }
-    let session: any = { id: "" };
+    const session: any = { id: '' };
   }
 
   async handleStripeWebhook(req: RawBodyRequest<Request>) {
@@ -63,7 +68,7 @@ export class StripeService {
           console.log('✅ Payment success:', session.id);
           data = `✅ Payment success: ${session.id}`; // ✅ Now it's a plain string
           const stripeData = await this.stripeRepository.findOne({
-            where: { stripe_id: session.id }
+            where: { stripe_id: session.id },
           });
 
           if (stripeData) {
@@ -75,7 +80,7 @@ export class StripeService {
           break;
         default:
           console.log(`Unhandled event type ${event.type}`);
-          data = `Unhandled event type ${event.type}`
+          data = `Unhandled event type ${event.type}`;
       }
 
       return { received: true, data };
@@ -84,13 +89,12 @@ export class StripeService {
     }
   }
 
-
   async getUserPaymentHistory(user_id: number, group_id?: number) {
     try {
       const whereClause: any = {
         user_id,
         amount: { [Op.gt]: 0 },
-      }
+      };
 
       const courseInclude: any = {
         model: Course,
@@ -126,7 +130,7 @@ export class StripeService {
           {
             replacements: { user_id, group_id },
             type: QueryTypes.SELECT,
-          }
+          },
         );
 
         if (!payment.length) {
@@ -150,7 +154,10 @@ export class StripeService {
               'total_monthly_payment',
             ],
             [
-              Sequelize.fn('COUNT', Sequelize.fn('DISTINCT', Sequelize.col('course_id'))),
+              Sequelize.fn(
+                'COUNT',
+                Sequelize.fn('DISTINCT', Sequelize.col('course_id')),
+              ),
               'purchased_courses_count',
             ],
           ],
@@ -168,7 +175,6 @@ export class StripeService {
     }
   }
 
-
   async getUserGroupPaymentHistory(user_id: number, group_id?: number) {
     try {
       const groupWhere: any = { user_id };
@@ -180,15 +186,19 @@ export class StripeService {
         where: {
           amount: { [Op.gt]: 0 },
         },
-        include: [{
-          model: Course,
-          include: [{
-            model: Group,
-            where: groupWhere,
+        include: [
+          {
+            model: Course,
+            include: [
+              {
+                model: Group,
+                where: groupWhere,
+                required: true,
+              },
+            ],
             required: true,
-          }],
-          required: true,
-        }],
+          },
+        ],
         order: [['createdAt', 'ASC']],
       });
 
@@ -200,7 +210,8 @@ export class StripeService {
         queryParams.group_id = group_id;
       }
 
-      const [total] = await this.sequelize.query(`
+      const [total] = await this.sequelize.query(
+        `
           SELECT 
             SUM(s.amount) AS total_payment,
             SUM(CASE 
@@ -212,10 +223,12 @@ export class StripeService {
           INNER JOIN "group" g ON g.id = c.group_id
           WHERE s.amount > 0 AND g.user_id = :user_id
           ${groupFilterSQL}
-        `, {
-        replacements: queryParams,
-        type: QueryTypes.SELECT,
-      });
+        `,
+        {
+          replacements: queryParams,
+          type: QueryTypes.SELECT,
+        },
+      );
 
       if (!payment.length) {
         throw new NotFoundException('Payment history not found');
@@ -227,7 +240,6 @@ export class StripeService {
     }
   }
 
-
   async getGroupPaymentHistory(user_id: number, group_id?: number) {
     try {
       const groupWhere: any = { user_id };
@@ -237,19 +249,23 @@ export class StripeService {
       const courseBreakdown = await this.stripeRepository.findAll({
         attributes: [
           [Sequelize.col('course.group_id'), 'group_id'],
-          [Sequelize.fn('SUM', Sequelize.col('amount')), 'total']
+          [Sequelize.fn('SUM', Sequelize.col('amount')), 'total'],
         ],
-        include: [{
-          model: Course,
-          attributes: [],
-          include: [{
-            model: Group,
-            where: groupWhere,
-            attributes: ['title', 'user_id'],
+        include: [
+          {
+            model: Course,
+            attributes: [],
+            include: [
+              {
+                model: Group,
+                where: groupWhere,
+                attributes: ['title', 'user_id'],
+                required: true,
+              },
+            ],
             required: true,
-          }],
-          required: true,
-        }],
+          },
+        ],
         group: ['course.group_id', 'course.group.id'],
         raw: true,
       });
@@ -257,7 +273,8 @@ export class StripeService {
       const groupFilterSQL = group_id ? `AND c.group_id = :groupId` : '';
 
       // 2. Total payments
-      const [payment] = await this.sequelize.query(`
+      const [payment] = await this.sequelize.query(
+        `
       SELECT 
         SUM(CASE 
           WHEN sp."createdAt" >= DATE_TRUNC('month', NOW()) THEN sp.amount ELSE 0 
@@ -271,13 +288,16 @@ export class StripeService {
       JOIN "course" c ON c.id = sp.course_id
       WHERE c.user_id = :userId AND sp.amount > 0
       ${groupFilterSQL}
-    `, {
-        replacements: { userId: user_id, groupId: group_id },
-        type: QueryTypes.SELECT,
-      });
+    `,
+        {
+          replacements: { userId: user_id, groupId: group_id },
+          type: QueryTypes.SELECT,
+        },
+      );
 
       // 3. Likes
-      const [likes] = await this.sequelize.query(`
+      const [likes] = await this.sequelize.query(
+        `
       SELECT 
         SUM(CASE 
           WHEN l."createdAt" >= DATE_TRUNC('month', NOW()) THEN 1 ELSE 0 
@@ -292,13 +312,16 @@ export class StripeService {
       JOIN "course" c ON c.id = lesson.course_id
       WHERE c.user_id = :userId
       ${groupFilterSQL}
-    `, {
-        replacements: { userId: user_id, groupId: group_id },
-        type: QueryTypes.SELECT,
-      });
+    `,
+        {
+          replacements: { userId: user_id, groupId: group_id },
+          type: QueryTypes.SELECT,
+        },
+      );
 
       // 4. Watched
-      const [watched] = await this.sequelize.query(`
+      const [watched] = await this.sequelize.query(
+        `
       SELECT 
         SUM(CASE 
           WHEN w."createdAt" >= DATE_TRUNC('month', NOW()) THEN 1 ELSE 0 
@@ -313,13 +336,16 @@ export class StripeService {
       JOIN "course" c ON c.id = lesson.course_id
       WHERE c.user_id = :userId
       ${groupFilterSQL}
-    `, {
-        replacements: { userId: user_id, groupId: group_id },
-        type: QueryTypes.SELECT,
-      });
+    `,
+        {
+          replacements: { userId: user_id, groupId: group_id },
+          type: QueryTypes.SELECT,
+        },
+      );
 
       // 5. Subscribers
-      const [subscribers] = await this.sequelize.query(`
+      const [subscribers] = await this.sequelize.query(
+        `
       SELECT 
         SUM(CASE 
           WHEN s."createdAt" >= DATE_TRUNC('month', NOW()) THEN 1 ELSE 0 
@@ -333,10 +359,12 @@ export class StripeService {
       JOIN "course" c ON c.id = s.course_id
       WHERE c.user_id = :userId
       ${groupFilterSQL}
-    `, {
-        replacements: { userId: user_id, groupId: group_id },
-        type: QueryTypes.SELECT,
-      });
+    `,
+        {
+          replacements: { userId: user_id, groupId: group_id },
+          type: QueryTypes.SELECT,
+        },
+      );
 
       if (!payment) {
         throw new NotFoundException('Payment history not found');
@@ -353,5 +381,4 @@ export class StripeService {
       throw new BadRequestException(error.message);
     }
   }
-
 }

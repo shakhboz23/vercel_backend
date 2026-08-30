@@ -1,5 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, ValidateNested } from 'class-validator';
+import {
+  IsArray,
+  IsEnum,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
 import { Transform, Type } from 'class-transformer';
 import { Test_settingsDto } from 'src/test_settings/dto/test_settings.dto';
 import { ActionType, TestType } from '../models/test.models';
@@ -25,7 +33,7 @@ export class QuestionDto {
     example: [
       '5 proton, 4 elektron, 2 neytron',
       '4 proton, 8 elektron, 1 neytron',
-      '6 proton, 1 elektron, 8 neytron'
+      '6 proton, 1 elektron, 8 neytron',
     ],
     description: 'Answer options for the question',
   })
@@ -48,7 +56,6 @@ export class QuestionDto {
   @IsNotEmpty()
   @IsEnum(TestType)
   type: TestType;
-
 
   @ApiProperty({
     example: 1,

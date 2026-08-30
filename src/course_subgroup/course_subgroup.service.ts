@@ -23,7 +23,10 @@ export class CourseSubgroupService {
   // as needed, unmatched ones are created, and subgroups missing from the
   // list are removed (their subscriptions fall back to unassigned via
   // ON DELETE SET NULL rather than being deleted).
-  async sync(course_id: number, subgroups: CourseSubgroupInput[]): Promise<void> {
+  async sync(
+    course_id: number,
+    subgroups: CourseSubgroupInput[],
+  ): Promise<void> {
     const existing = await this.courseSubgroupRepository.findAll({
       where: { course_id },
     });

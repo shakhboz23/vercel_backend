@@ -27,7 +27,7 @@ export class NotificationDto {
   @ApiProperty({
     example: false,
     description: 'read',
-    required: false, 
+    required: false,
   })
   @IsOptional()
   @IsBoolean()
@@ -36,7 +36,7 @@ export class NotificationDto {
   @ApiProperty({
     example: false,
     description: 'accepted',
-    required: false, 
+    required: false,
   })
   @IsOptional()
   @IsBoolean()

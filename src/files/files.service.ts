@@ -8,7 +8,7 @@ import { CloudinaryService } from './cloudinary.service';
 
 @Injectable()
 export class FilesService {
-  constructor(private readonly cloudinaryService: CloudinaryService) { }
+  constructor(private readonly cloudinaryService: CloudinaryService) {}
 
   async createFile(file: any, file_type: string): Promise<string> {
     try {
@@ -24,7 +24,7 @@ export class FilesService {
             (error, result) => {
               if (error) return reject(error);
               resolve(result);
-            }
+            },
           );
 
           Readable.from(file.buffer).pipe(stream);

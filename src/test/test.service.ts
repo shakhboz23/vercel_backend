@@ -33,7 +33,7 @@ export class TestsService {
     private readonly fileService: FilesService,
     @Inject(forwardRef(() => BotService))
     private readonly botService: BotService,
-  ) { }
+  ) {}
 
   async create(testsDto: TestsDto, user_id: number): Promise<object> {
     try {
@@ -49,7 +49,7 @@ export class TestsService {
       } = testsDto;
       const lesson: any = await this.lessonService.getById(lesson_id);
       if (lesson.course?.user_id != user_id) {
-        throw new BadRequestException("You have not access");
+        throw new BadRequestException('You have not access');
       }
       let variants: string[];
       if (start_date || end_date || sort_level || period) {
@@ -66,9 +66,9 @@ export class TestsService {
       for (let i = 0; i < test.length; i++) {
         variants = Object.values(test[i].variants);
         if (test[i].is_action == ActionType.edited && test[i].id) {
-          await this.update(test[i].id, test[i])
+          await this.update(test[i].id, test[i]);
         } else if (test[i].is_action == ActionType.deleted && test[i].id) {
-          await this.delete(test[i].id)
+          await this.delete(test[i].id);
         } else if (test[i].is_action != ActionType.old) {
           await this.testsRepository.create({
             lesson_id,
@@ -147,7 +147,7 @@ export class TestsService {
   async getLessonTestsCount(lesson_id: number): Promise<number> {
     try {
       const tests_count = await this.testsRepository.count({
-        where: { lesson_id }
+        where: { lesson_id },
       });
       return tests_count;
     } catch (error) {
@@ -198,9 +198,22 @@ export class TestsService {
         where: {
           lesson_id,
         },
-        include: [{ model: Lesson, attributes: ['course_id', 'id'], include: [{ model: Course, attributes: ['subcategory_id'], include: [{ model: SubCategory, attributes: ['id'] }] }] }]
+        include: [
+          {
+            model: Lesson,
+            attributes: ['course_id', 'id'],
+            include: [
+              {
+                model: Course,
+                attributes: ['subcategory_id'],
+                include: [{ model: SubCategory, attributes: ['id'] }],
+              },
+            ],
+          },
+        ],
       });
-      const test_settings: any = await this.test_settingsService.getByLessonId(lesson_id);
+      const test_settings: any =
+        await this.test_settingsService.getByLessonId(lesson_id);
       let randomizedVariants: any;
       if (lesson.course.user_id != user_id) {
         // "Aralash savollar" (mix) faqat savollar tartibini tasodifiylashtiradi.
@@ -218,9 +231,9 @@ export class TestsService {
             }));
             const randomizedOptions = this.shuffle(withIndex);
             const newIndex = randomizedOptions.findIndex(
-              item => item.originalIndex === 0
+              (item) => item.originalIndex === 0,
             );
-            variants = randomizedOptions.map(item => item.value);
+            variants = randomizedOptions.map((item) => item.value);
 
             return {
               ...variant.toJSON(),
@@ -240,7 +253,10 @@ export class TestsService {
               const candidate = tests[r].variants[0];
 
               // Faqat bir xil bo'lmagan va takrorlanmagan variantlar qo'shiladi
-              if (candidate !== currentVariant && !randomVariants.includes(candidate)) {
+              if (
+                candidate !== currentVariant &&
+                !randomVariants.includes(candidate)
+              ) {
                 randomVariants.push(candidate);
               }
             }
@@ -251,9 +267,9 @@ export class TestsService {
             }));
             const randomizedOptions = this.shuffle(withIndex);
             const newIndex = randomizedOptions.findIndex(
-              item => item.originalIndex === 0
+              (item) => item.originalIndex === 0,
             );
-            const variants = randomizedOptions.map(item => item.value);
+            const variants = randomizedOptions.map((item) => item.value);
 
             return {
               ...variant.toJSON(),
@@ -294,17 +310,21 @@ export class TestsService {
   // distinct variant earns one point, regardless of which input it came
   // from (so answering the variants out of order still gets full credit).
   private checkFillAnswer(id: number, test: any, answer: any): any[] {
-    const variantsList: any[] = Array.isArray(test.variants) ? test.variants : [];
-    const studentAnswers: any[] = (Array.isArray(answer) ? answer : [answer]).filter(
-      (a) => a != null && String(a).trim() !== '',
-    );
+    const variantsList: any[] = Array.isArray(test.variants)
+      ? test.variants
+      : [];
+    const studentAnswers: any[] = (
+      Array.isArray(answer) ? answer : [answer]
+    ).filter((a) => a != null && String(a).trim() !== '');
     const maxPoints = this.getMaxPoints(test);
 
     if (!studentAnswers.length) {
       return [id, [false], test, [], 0, maxPoints];
     }
 
-    const normalizedVariants = variantsList.map((v) => this.containsAnswer(v.toString()));
+    const normalizedVariants = variantsList.map((v) =>
+      this.containsAnswer(v.toString()),
+    );
     const usedIndexes = new Set<number>();
     let matchedCount = 0;
 
@@ -342,9 +362,9 @@ export class TestsService {
         return this.checkFillAnswer(id, test, answer);
       }
       let t = 0;
-      let true_list = [];
-      let selected_list: any[] = [];
-      for (let i of test.true_answer) {
+      const true_list = [];
+      const selected_list: any[] = [];
+      for (const i of test.true_answer) {
         selected_list.push(answer[0]?.[t]);
         if (test.variants[i] == answer[0][t]) {
           true_list.push(true);
@@ -372,25 +392,32 @@ export class TestsService {
     let message: string;
     try {
       const results = {};
-      const questionResults: { isCorrect: boolean; selectedLabel: string; correctLabel: string }[] = [];
+      const questionResults: {
+        isCorrect: boolean;
+        selectedLabel: string;
+        correctLabel: string;
+      }[] = [];
       let student: any;
       let res: any[], id: number, answer: any;
       let ball = 0;
       let maxBall = 0;
-      for (let i of answers) {
+      for (const i of answers) {
         if (!i?.length) {
-          continue
+          continue;
         }
         id = +i[0];
         answer = i[1];
-        res = await this.checkById(id, answer) as any[];
+        res = (await this.checkById(id, answer)) as any[];
         const isCorrect = this.checkAnswerList(res[1]);
         results[res[0]] = isCorrect;
-        const points = typeof res[4] == 'number' ? res[4] : (isCorrect ? 1 : 0);
+        const points = typeof res[4] == 'number' ? res[4] : isCorrect ? 1 : 0;
         const maxPoints = typeof res[5] == 'number' ? res[5] : 1;
         ball += points;
         maxBall += maxPoints;
-        questionResults.push({ isCorrect, ...this.describeAnswer(res[2], res[3]) });
+        questionResults.push({
+          isCorrect,
+          ...this.describeAnswer(res[2], res[3]),
+        });
       }
       const percentage = maxBall > 0 ? (ball / maxBall) * 100 : 0;
       // if (percentage >= 70) {
@@ -401,12 +428,9 @@ export class TestsService {
         lesson_id,
         course_id: lesson?.course_id,
       };
-      const reyting_data: any = await this.reytingService.create(
-        data,
-        user_id,
-      );
+      const reyting_data: any = await this.reytingService.create(data, user_id);
       // await this.userStepService.create({ lesson_id, role_id });
-      message = 'Your reyting has been created!'
+      message = 'Your reyting has been created!';
       if (reyting_data.message == 'Already added!') {
         message = 'Already added!';
       }
@@ -441,25 +465,24 @@ export class TestsService {
     const { answers } = checkDto;
     let message: string;
     try {
-      const ball: number = +answers?.filter(item => item.isTrue === true)?.reduce((total: number) => +total + 1, 0);
-      const percentage = Math.round(ball / answers?.length * 100);
+      const ball: number = +answers
+        ?.filter((item) => item.isTrue === true)
+        ?.reduce((total: number) => +total + 1, 0);
+      const percentage = Math.round((ball / answers?.length) * 100);
       const lesson: any = await this.lessonService.getById(lesson_id);
       const data: ReytingDto = {
         ball,
         lesson_id,
         course_id: lesson?.course_id,
       };
-      const reyting_data: any = await this.reytingService.create(
-        data,
-        user_id,
-      );
+      const reyting_data: any = await this.reytingService.create(data, user_id);
       // await this.userStepService.create({ lesson_id, role_id });
-      message = 'Your reyting has been created!'
-      
+      message = 'Your reyting has been created!';
+
       if (reyting_data.message == 'Already added!') {
         message = 'Already added!';
       }
-      
+
       return [percentage, ball];
     } catch (error) {
       throw new BadRequestException(error.message);
@@ -565,12 +588,12 @@ export class TestsService {
       (match, startTag, mentionText, endTag) => {
         mentionCount++; // Har bir uchragan mention uchun +1
         return `${startTag}<span>${mentionCount}</span>......${endTag}`;
-      }
+      },
     );
   }
 
   private checkAnswerList(list: boolean[]): boolean {
-    return list.every(item => item === true);
+    return list.every((item) => item === true);
   }
 
   // Plain-text version of a question/variant's rich-text HTML, for sending
@@ -596,7 +619,9 @@ export class TestsService {
         .filter(Boolean)
         .join(', ');
     }
-    const indices: number[] = Array.isArray(test.true_answer) ? test.true_answer : [];
+    const indices: number[] = Array.isArray(test.true_answer)
+      ? test.true_answer
+      : [];
     return indices
       .map((index) => this.stripHtml(String(test.variants?.[index] ?? '')))
       .filter(Boolean)
@@ -629,7 +654,9 @@ export class TestsService {
       };
     }
     const variants: any[] = test.variants || [];
-    const indices: number[] = Array.isArray(test.true_answer) ? test.true_answer : [];
+    const indices: number[] = Array.isArray(test.true_answer)
+      ? test.true_answer
+      : [];
 
     // A "pdf_file" (scanned exam) question stores only the answer key itself
     // in variants[0] (e.g. "D"), not the 4 real options the student saw on
@@ -650,7 +677,9 @@ export class TestsService {
       })
       .filter(Boolean)
       .join(', ');
-    const correctLabel = indices.map((index) => this.getOptionLetter(index)).join(', ');
+    const correctLabel = indices
+      .map((index) => this.getOptionLetter(index))
+      .join(', ');
     return { selectedLabel, correctLabel };
   }
 

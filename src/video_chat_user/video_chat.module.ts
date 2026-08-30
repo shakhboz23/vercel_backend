@@ -18,4 +18,4 @@ import { VideoChat } from './models/video_chat.model';
   providers: [VideoChatService, VideoChatController],
   exports: [VideoChatService],
 })
-export class VideoChatModule { }
+export class VideoChatModule {}

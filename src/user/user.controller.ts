@@ -34,13 +34,11 @@ export class UserController {
     private readonly userService: UserService,
     private readonly roleService: RoleService,
     private readonly jwtService: JwtService,
-  ) { }
+  ) {}
 
   @ApiOperation({ summary: 'Registration a new user' })
   @Post('register')
-  async register(
-    @Body() registerUserDto: RegisterUserDto,
-  ) {
+  async register(@Body() registerUserDto: RegisterUserDto) {
     const data = await this.userService.register(registerUserDto);
     return data;
   }
@@ -58,9 +56,7 @@ export class UserController {
 
   @ApiOperation({ summary: 'Login user with send OTP' })
   @Post('login')
-  login(
-    @Body() loginUserDto: LoginUserDto,
-  ) {
+  login(@Body() loginUserDto: LoginUserDto) {
     return this.userService.login(loginUserDto);
   }
 
@@ -73,7 +69,9 @@ export class UserController {
 
   @ApiOperation({ summary: 'Get user reytings' })
   @Get('/reyting/:group_id/:course_id')
-  getReyting(@Param() { group_id, course_id }: { group_id: number, course_id: number }) {
+  getReyting(
+    @Param() { group_id, course_id }: { group_id: number; course_id: number },
+  ) {
     return this.userService.getReyting(group_id, course_id);
   }
 
@@ -93,7 +91,10 @@ export class UserController {
   @ApiOperation({ summary: 'Get user by ID' })
   // @UseGuards(AuthGuard)
   @Get('/analytics/:group_id')
-  getUserAnalytics(@Param('group_id') group_id: number, @Headers() headers?: string) {
+  getUserAnalytics(
+    @Param('group_id') group_id: number,
+    @Headers() headers?: string,
+  ) {
     const user_id = extractUserIdFromToken(headers, this.jwtService, true);
     return this.userService.getUserAnalytics(user_id, group_id);
   }
@@ -168,7 +169,8 @@ export class UserController {
   updateProfile(
     @Body() updateDto: UpdateDto,
     @UploadedFile(new ImageValidationPipe()) image: Express.Multer.File,
-    @Headers() headers?: string) {
+    @Headers() headers?: string,
+  ) {
     const user_id = extractUserIdFromToken(headers, this.jwtService, true);
     return this.userService.updateProfile(user_id, updateDto, image);
   }
@@ -198,7 +200,7 @@ export class UserController {
   @Post('change-password')
   changePassword(
     @Body() changePasswordDto: ChangePasswordDto,
-    @Headers() headers?: string
+    @Headers() headers?: string,
   ) {
     const user_id = extractUserIdFromToken(headers, this.jwtService, true);
     return this.userService.changePassword(user_id, changePasswordDto);
@@ -209,7 +211,7 @@ export class UserController {
   @Put('change-email')
   changeEmail(
     @Body() changeUserEmailDto: ChangeUserEmailDto,
-    @Headers() headers?: string
+    @Headers() headers?: string,
   ) {
     const user_id = extractUserIdFromToken(headers, this.jwtService, true);
     return this.userService.changeEmail(user_id, changeUserEmailDto);
@@ -243,7 +245,7 @@ export class UserController {
   // @UseGuards(AuthGuard)
   @Post('/auth/google')
   googleAuth(
-    @Body() { credential, type }: { credential: string, type?: string },
+    @Body() { credential, type }: { credential: string; type?: string },
   ) {
     return this.userService.googleAuth(credential, type);
   }

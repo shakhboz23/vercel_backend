@@ -32,7 +32,7 @@ export class SubscriptionsService {
     private uploadedService: UploadedService,
     @Inject(forwardRef(() => BotService))
     private readonly botService: BotService,
-  ) { }
+  ) {}
 
   async create(
     subscriptionsDto: SubscriptionsDto,
@@ -46,7 +46,13 @@ export class SubscriptionsService {
       if (exist) {
         return this.delete(user_id, subscriptionsDto.course_id);
       }
-      return this.subscriptionsRepository.create({ course_id, user_id, subgroup_id, is_active: SubscribeActive.requested, start_date: subscriptionsDto.start_date });
+      return this.subscriptionsRepository.create({
+        course_id,
+        user_id,
+        subgroup_id,
+        is_active: SubscribeActive.requested,
+        start_date: subscriptionsDto.start_date,
+      });
     } catch (error) {
       throw new BadRequestException(error.message);
     }
@@ -79,7 +85,7 @@ export class SubscriptionsService {
           where: { user_id, course_id: i },
         });
         if (exist) {
-          await this.deleteSubscription(exist.id, i, user_id)
+          await this.deleteSubscription(exist.id, i, user_id);
         }
         subcription = await this.subscriptionsRepository.create({
           course_id: i,
@@ -118,7 +124,7 @@ export class SubscriptionsService {
         throw new BadRequestException('User not found');
       }
 
-      await exist.destroy()
+      await exist.destroy();
       return {
         statusCode: HttpStatus.OK,
         message: 'Deleted successfully',
@@ -137,8 +143,13 @@ export class SubscriptionsService {
     copySubscriptionsDto: CopySubscriptionsDto,
   ): Promise<object> {
     try {
-      const { from_course_id, to_course_id, start_date, user_ids, subgroup_id } =
-        copySubscriptionsDto;
+      const {
+        from_course_id,
+        to_course_id,
+        start_date,
+        user_ids,
+        subgroup_id,
+      } = copySubscriptionsDto;
 
       if (+from_course_id === +to_course_id) {
         throw new BadRequestException(
@@ -235,7 +246,9 @@ export class SubscriptionsService {
         where: {
           user_id,
         },
-        include: [{ model: Course, include: [{ model: Group, required: false }] }],
+        include: [
+          { model: Course, include: [{ model: Group, required: false }] },
+        ],
       });
       if (!subscriptionss.length) {
         throw new NotFoundException('Subscriptionss not found');
@@ -319,7 +332,7 @@ export class SubscriptionsService {
   async delete(user_id: number, course_id: number): Promise<object> {
     try {
       const subscriptions = await this.subscriptionsRepository.findOne({
-        where: { user_id, course_id }
+        where: { user_id, course_id },
       });
       if (!subscriptions) {
         throw new NotFoundException('Subscriptions not found');

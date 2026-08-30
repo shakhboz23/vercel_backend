@@ -9,6 +9,6 @@ import { ChatGateway } from '../gateway/gateway';
   imports: [SequelizeModule.forFeature([UserStep])],
   controllers: [UserStepController],
   providers: [UserStepService, ChatGateway],
-  exports: [UserStepService]
+  exports: [UserStepService],
 })
 export class UserStepModule {}

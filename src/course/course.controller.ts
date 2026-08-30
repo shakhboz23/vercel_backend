@@ -33,7 +33,7 @@ export class CourseController {
   constructor(
     private readonly courseService: CourseService,
     private readonly jwtService: JwtService,
-  ) { }
+  ) {}
 
   @ApiOperation({ summary: 'Create a new course' })
   @ApiConsumes('multipart/form-data')
@@ -92,9 +92,26 @@ export class CourseController {
 
   @ApiOperation({ summary: 'Get group by ID' })
   @Get('/getUsersByGroupId/:group_id')
-  getUsersByGroupId(@Param('group_id') group_id: number, @Query() { date, course_id, lesson_id, page }: { date: Date, course_id: number, lesson_id: number, page: string }, @Headers() headers: string) {
+  getUsersByGroupId(
+    @Param('group_id') group_id: number,
+    @Query()
+    {
+      date,
+      course_id,
+      lesson_id,
+      page,
+    }: { date: Date; course_id: number; lesson_id: number; page: string },
+    @Headers() headers: string,
+  ) {
     const user_id = extractUserIdFromToken(headers, this.jwtService, true);
-    return this.courseService.getUsersByGroupId(group_id, date, user_id, course_id, page, lesson_id);
+    return this.courseService.getUsersByGroupId(
+      group_id,
+      date,
+      user_id,
+      course_id,
+      page,
+      lesson_id,
+    );
   }
 
   @ApiOperation({ summary: 'Get all lessons' })
@@ -111,7 +128,10 @@ export class CourseController {
   @ApiOperation({ summary: 'Get all courses' })
   @UseGuards(AuthGuard)
   @Get('/getByCourse/:id/:subcategory_id')
-  getByCourse(@Param() { id, subcategory_id }: { id: number, subcategory_id: string }, @Headers() headers: string) {
+  getByCourse(
+    @Param() { id, subcategory_id }: { id: number; subcategory_id: string },
+    @Headers() headers: string,
+  ) {
     const user_id = extractUserIdFromToken(headers, this.jwtService, true);
     return this.courseService.getByCourse(id, subcategory_id, user_id);
   }
@@ -160,7 +180,9 @@ export class CourseController {
   })
   @Put('/:id')
   @UseInterceptors(FileInterceptor('image'))
-  update(@Param('id') id: number, @Body() courseDto: CourseDto,
+  update(
+    @Param('id') id: number,
+    @Body() courseDto: CourseDto,
     @UploadedFile(new ImageValidationPipe()) image: Express.Multer.File,
     @Headers() headers: string,
   ) {

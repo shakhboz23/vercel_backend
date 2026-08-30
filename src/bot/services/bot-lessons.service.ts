@@ -39,7 +39,7 @@ export class BotLessonsService {
     private readonly testsService: TestsService,
     @Inject(forwardRef(() => ReytingService))
     private readonly reytingService: ReytingService,
-  ) { }
+  ) {}
 
   async getPublishedLessonsSorted(courseId: number): Promise<any[]> {
     const course: any = await this.courseService.getAllLessons(courseId);
@@ -139,10 +139,9 @@ export class BotLessonsService {
     );
 
     if (stillLocked) {
-      await ctx.answerCbQuery(
-        '❌ Siz hali oldingi testni yechmagansiz!',
-        { show_alert: true },
-      );
+      await ctx.answerCbQuery('❌ Siz hali oldingi testni yechmagansiz!', {
+        show_alert: true,
+      });
       return;
     }
 
@@ -213,9 +212,10 @@ export class BotLessonsService {
     }
 
     const statusKey =
-      (Object.keys(this.taskStatusLabels) as Array<'full' | 'partial' | 'none'>).find(
-        (key) => this.taskStatusLabels[key].ball === taskReyting.ball,
-      ) || 'none';
+      (
+        Object.keys(this.taskStatusLabels) as Array<'full' | 'partial' | 'none'>
+      ).find((key) => this.taskStatusLabels[key].ball === taskReyting.ball) ||
+      'none';
     const statusInfo = this.taskStatusLabels[statusKey];
 
     const buttons = [
@@ -252,8 +252,8 @@ export class BotLessonsService {
       return;
     }
 
-    const buttons =
-      [[
+    const buttons = [
+      [
         {
           text: 'Test yechish',
           callback_data: `lesson_test_${tests.id}`,
@@ -262,7 +262,8 @@ export class BotLessonsService {
           text: 'Vazifa yuborish',
           callback_data: `lesson_task_${tests.id}`,
         },
-      ]];
+      ],
+    ];
 
     const pdfUrl: string = tests.test?.[0]?.question;
     const fileName = `${(tests.lesson?.title || 'test').replace(/[\\/:*?"<>|]/g, '').trim() || 'test'}.pdf`;
@@ -274,7 +275,10 @@ export class BotLessonsService {
     await ctx.reply(
       'Test javoblarini yuborish:',
       Markup.inlineKeyboard([
-        Markup.button.webApp('Academic Success Hub', `https://www.ashacademy.uz/test/${lessonId}?pdf=true`),
+        Markup.button.webApp(
+          'Academic Success Hub',
+          `https://www.ashacademy.uz/test/${lessonId}?pdf=true`,
+        ),
       ]),
     );
   }
@@ -332,12 +336,12 @@ export class BotLessonsService {
     let student: any;
     try {
       student = await this.userService.getById(botUser.user_id);
-    } catch (error) { }
+    } catch (error) {}
 
     let lesson: any;
     try {
       lesson = await this.lessonService.getById(lessonId);
-    } catch (error) { }
+    } catch (error) {}
 
     let groupTitle = '';
     const groupId = lesson?.course?.group_id;
@@ -345,7 +349,7 @@ export class BotLessonsService {
       try {
         const group = await this.groupRepo.findOne({ where: { id: groupId } });
         groupTitle = group?.title || '';
-      } catch (error) { }
+      } catch (error) {}
     }
 
     const studentName =
@@ -470,7 +474,9 @@ export class BotLessonsService {
 
     if (!mediaGroupId) {
       try {
-        await this.sendTaskMedia(botUser, lessonId, [{ type, fileId, caption }]);
+        await this.sendTaskMedia(botUser, lessonId, [
+          { type, fileId, caption },
+        ]);
         await this.botRepo.update(
           { step: null, step_data: null },
           { where: { bot_id } },
@@ -545,8 +551,12 @@ export class BotLessonsService {
     // Telegram doesn't allow mixing documents with photos/videos in one album,
     // so send visual media and documents as separate groups.
     const visualEntries = entries.filter((entry) => entry.type !== 'document');
-    const documentEntries = entries.filter((entry) => entry.type === 'document');
-    const groups = [visualEntries, documentEntries].filter((group) => group.length > 0);
+    const documentEntries = entries.filter(
+      (entry) => entry.type === 'document',
+    );
+    const groups = [visualEntries, documentEntries].filter(
+      (group) => group.length > 0,
+    );
 
     let captionUsed = false;
 
@@ -569,17 +579,31 @@ export class BotLessonsService {
         }
 
         if (entry.type === 'photo') {
-          await this.bot.telegram.sendPhoto(TASK_GROUP_ID, entry.fileId, options);
+          await this.bot.telegram.sendPhoto(
+            TASK_GROUP_ID,
+            entry.fileId,
+            options,
+          );
         } else if (entry.type === 'video') {
-          await this.bot.telegram.sendVideo(TASK_GROUP_ID, entry.fileId, options);
+          await this.bot.telegram.sendVideo(
+            TASK_GROUP_ID,
+            entry.fileId,
+            options,
+          );
         } else {
-          await this.bot.telegram.sendDocument(TASK_GROUP_ID, entry.fileId, options);
+          await this.bot.telegram.sendDocument(
+            TASK_GROUP_ID,
+            entry.fileId,
+            options,
+          );
         }
       } else {
         const media = group.map((entry, idx) => ({
           type: entry.type,
           media: entry.fileId,
-          ...(idx === 0 && caption ? { caption, parse_mode: 'HTML' as const } : {}),
+          ...(idx === 0 && caption
+            ? { caption, parse_mode: 'HTML' as const }
+            : {}),
         }));
 
         if (caption) {
@@ -620,7 +644,7 @@ export class BotLessonsService {
     let lesson: any;
     try {
       lesson = await this.lessonService.getById(lessonId);
-    } catch (error) { }
+    } catch (error) {}
 
     if (!lesson) {
       await ctx.answerCbQuery('Dars topilmadi', { show_alert: true });
@@ -655,7 +679,7 @@ export class BotLessonsService {
           ],
         ],
       });
-    } catch (error) { }
+    } catch (error) {}
 
     await this.notifyStudentTaskResult(studentUserId, lessonId, statusInfo);
     await this.notifyTaskResult(studentUserId, lesson, statusInfo);
@@ -698,11 +722,10 @@ export class BotLessonsService {
     let student: any;
     try {
       student = await this.userService.getById(studentUserId);
-    } catch (error) { }
+    } catch (error) {}
 
     const studentName =
-      [student?.name, student?.surname].filter(Boolean).join(' ') ||
-      "O'quvchi";
+      [student?.name, student?.surname].filter(Boolean).join(' ') || "O'quvchi";
 
     const text =
       `${statusInfo.icon} <b>Vazifa natijasi</b>\n\n` +

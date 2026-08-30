@@ -11,9 +11,7 @@ import {
 import { UserStepService } from './class.service';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { UserStepDto } from './dto/class.dto';
-import {
-  WebSocketGateway,
-} from '@nestjs/websockets';
+import { WebSocketGateway } from '@nestjs/websockets';
 
 @ApiTags('User step')
 @WebSocketGateway({ cors: { origin: '*', credentials: true } }) // cors

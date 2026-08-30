@@ -29,7 +29,7 @@ export class BotChildrenService {
     private readonly botOnboardingService: BotOnboardingService,
     private readonly botDashboardService: BotDashboardService,
     private readonly botLessonsService: BotLessonsService,
-  ) { }
+  ) {}
 
   async my_children(ctx: Context) {
     const bot_id = ctx.from.id;
@@ -79,13 +79,10 @@ export class BotChildrenService {
   async askChildId(ctx: Context) {
     const bot_id = ctx.from.id;
 
-    await this.botRepo.update(
-      { step: CHILD_ID_STEP },
-      { where: { bot_id } },
-    );
+    await this.botRepo.update({ step: CHILD_ID_STEP }, { where: { bot_id } });
 
     await ctx.reply(
-      "Farzandingizning ID raqamini yuboring: 👇👇👇 \n\nMasalan: 125",
+      'Farzandingizning ID raqamini yuboring: 👇👇👇 \n\nMasalan: 125',
     );
   }
 
@@ -96,7 +93,7 @@ export class BotChildrenService {
 
     if (!Number.isInteger(+student_id) || +student_id <= 0) {
       await ctx.reply(
-        "Iltimos, faqat raqamlardan iborat ID yuboring. \n\nMasalan: 125",
+        'Iltimos, faqat raqamlardan iborat ID yuboring. \n\nMasalan: 125',
       );
       return;
     }
@@ -149,7 +146,7 @@ export class BotChildrenService {
     let courses: any;
     try {
       courses = await this.subscriptionsService.getByUserId(student.id);
-    } catch (error) { }
+    } catch (error) {}
 
     const course_titles = (courses || [])
       .map((subscription: any) => subscription.dataValues.course?.title)
@@ -158,16 +155,31 @@ export class BotChildrenService {
     await ctx.reply(
       `👤 <b>${student.name || ''} ${student.surname || ''}</b>\n` +
         (student.student_id ? `🆔 ID: ${student.student_id}\n` : ``) +
-      `📚 Kurslar: ${course_titles.length ? course_titles.join(', ') : 'mavjud emas'}`,
+        `📚 Kurslar: ${course_titles.length ? course_titles.join(', ') : 'mavjud emas'}`,
       { parse_mode: 'HTML' },
     );
 
     await ctx.reply("Nimani ko'rmoqchisiz?", {
       reply_markup: {
         inline_keyboard: [
-          [{ text: '📅 Davomat', callback_data: `child_attendance_${student_id}` }],
-          [{ text: '📊 Natijalar', callback_data: `child_results_${student_id}` }],
-          [{ text: '📝 Vazifalar', callback_data: `child_tasks_${student_id}` }],
+          [
+            {
+              text: '📅 Davomat',
+              callback_data: `child_attendance_${student_id}`,
+            },
+          ],
+          [
+            {
+              text: '📊 Natijalar',
+              callback_data: `child_results_${student_id}`,
+            },
+          ],
+          [
+            {
+              text: '📝 Vazifalar',
+              callback_data: `child_tasks_${student_id}`,
+            },
+          ],
         ],
       },
     });
@@ -177,7 +189,7 @@ export class BotChildrenService {
     let student: any;
     try {
       student = await this.userService.getById(student_id);
-    } catch (error) { }
+    } catch (error) {}
 
     if (!student) {
       await ctx.reply("O'quvchi topilmadi");
@@ -209,7 +221,7 @@ export class BotChildrenService {
     let student: any;
     try {
       student = await this.userService.getById(id);
-    } catch (error) { }
+    } catch (error) {}
 
     if (!student) {
       await ctx.reply("O'quvchi topilmadi");
@@ -232,11 +244,15 @@ export class BotChildrenService {
     });
   }
 
-  async childAttendanceGroupCourses(ctx: Context, id: number, group_id: number) {
+  async childAttendanceGroupCourses(
+    ctx: Context,
+    id: number,
+    group_id: number,
+  ) {
     let student: any;
     try {
       student = await this.userService.getById(id);
-    } catch (error) { }
+    } catch (error) {}
 
     if (!student) {
       await ctx.reply("O'quvchi topilmadi");
@@ -246,7 +262,7 @@ export class BotChildrenService {
     let subscriptions: any;
     try {
       subscriptions = await this.subscriptionsService.getByUserId(student.id);
-    } catch (error) { }
+    } catch (error) {}
 
     const courses = ((subscriptions as any[]) || [])
       .map((subscription: any) => subscription.dataValues.course)
@@ -258,7 +274,10 @@ export class BotChildrenService {
     }
 
     const buttons = courses.map((course: any) => [
-      { text: course.title, callback_data: `child_attendance_course_${id}_${course.id}` },
+      {
+        text: course.title,
+        callback_data: `child_attendance_course_${id}_${course.id}`,
+      },
     ]);
 
     await ctx.reply("📚 Davomatni ko'rish uchun kursni tanlang:", {
@@ -270,7 +289,7 @@ export class BotChildrenService {
     let student: any;
     try {
       student = await this.userService.getById(id);
-    } catch (error) { }
+    } catch (error) {}
 
     if (!student) {
       await ctx.reply("O'quvchi topilmadi");
@@ -280,7 +299,7 @@ export class BotChildrenService {
     let subscriptions: any;
     try {
       subscriptions = await this.subscriptionsService.getByUserId(student.id);
-    } catch (error) { }
+    } catch (error) {}
 
     const subscription = ((subscriptions as any[]) || []).find(
       (item: any) => item.dataValues.course?.id == course_id,
@@ -295,7 +314,10 @@ export class BotChildrenService {
 
     let analytics: any;
     try {
-      analytics = await this.userService.getUserAnalytics(student.id, course.group_id);
+      analytics = await this.userService.getUserAnalytics(
+        student.id,
+        course.group_id,
+      );
     } catch (error) {
       console.log(error);
       await ctx.reply('Davomatni olishda xatolik yuz berdi.');
@@ -313,9 +335,9 @@ export class BotChildrenService {
 
     await ctx.reply(
       `📅 <b>${course.title}</b> — Davomat\n\n` +
-      `✅ Qatnashgan darslar: <b>${attendance.attended_classes}</b>\n` +
-      `📚 Jami darslar: <b>${attendance.scheduled_classes}</b>\n` +
-      `📊 Foiz: <b>${attendance.percentage}%</b>`,
+        `✅ Qatnashgan darslar: <b>${attendance.attended_classes}</b>\n` +
+        `📚 Jami darslar: <b>${attendance.scheduled_classes}</b>\n` +
+        `📊 Foiz: <b>${attendance.percentage}%</b>`,
       { parse_mode: 'HTML' },
     );
   }
@@ -324,7 +346,7 @@ export class BotChildrenService {
     let student: any;
     try {
       student = await this.userService.getById(student_id);
-    } catch (error) { }
+    } catch (error) {}
 
     if (!student) {
       await ctx.reply("O'quvchi topilmadi");
@@ -334,7 +356,7 @@ export class BotChildrenService {
     let courses: any;
     try {
       courses = await this.subscriptionsService.getByUserId(student.id);
-    } catch (error) { }
+    } catch (error) {}
 
     if (!courses?.length) {
       await ctx.reply('Farzandingizda hozircha kurslar mavjud emas.');
@@ -357,18 +379,23 @@ export class BotChildrenService {
     });
   }
 
-  async childTasksForCourse(ctx: Context, student_id: number, course_id: number) {
+  async childTasksForCourse(
+    ctx: Context,
+    student_id: number,
+    course_id: number,
+  ) {
     let student: any;
     try {
       student = await this.userService.getById(student_id);
-    } catch (error) { }
+    } catch (error) {}
 
     if (!student) {
       await ctx.reply("O'quvchi topilmadi");
       return;
     }
 
-    const publishedLessons = await this.botLessonsService.getPublishedLessonsSorted(course_id);
+    const publishedLessons =
+      await this.botLessonsService.getPublishedLessonsSorted(course_id);
 
     if (!publishedLessons.length) {
       await ctx.reply('Bu kursda hozircha darslar mavjud emas.');
@@ -385,7 +412,9 @@ export class BotChildrenService {
       );
       const isLocked = !previousCompleted;
 
-      lines.push(`${isCompleted ? '✅' : isLocked ? '🔒' : '⏳'} ${lesson.title}`);
+      lines.push(
+        `${isCompleted ? '✅' : isLocked ? '🔒' : '⏳'} ${lesson.title}`,
+      );
       previousCompleted = isCompleted;
     }
 

@@ -19,7 +19,7 @@ export class WatchedController {
   constructor(
     private readonly watchedService: WatchedService,
     private readonly jwtService: JwtService,
-  ) { }
+  ) {}
 
   @ApiOperation({ summary: 'Registration a new watched' })
   @Post('/create')
@@ -34,7 +34,7 @@ export class WatchedController {
   @ApiOperation({ summary: 'Get watcheds with pagination' })
   @Get('/getall')
   getUserWatched(@Headers() headers: Record<string, string>) {
-    const user_id = extractUserIdFromToken(headers, this.jwtService, true)
+    const user_id = extractUserIdFromToken(headers, this.jwtService, true);
 
     return this.watchedService.getUserWatched(user_id);
   }
@@ -42,10 +42,12 @@ export class WatchedController {
   @ApiOperation({ summary: 'Get watcheds with pagination' })
   @Get('/:type/:analytics_id')
   getAll(
-    @Param('page') page: number, @Param('type') type: string, @Param('analytics_id') analytics_id: number,
-    @Headers() headers: Record<string, string>
+    @Param('page') page: number,
+    @Param('type') type: string,
+    @Param('analytics_id') analytics_id: number,
+    @Headers() headers: Record<string, string>,
   ) {
-    const user_id = extractUserIdFromToken(headers, this.jwtService, true)
+    const user_id = extractUserIdFromToken(headers, this.jwtService, true);
 
     return this.watchedService.getAll(user_id, type, analytics_id);
   }

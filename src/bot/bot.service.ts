@@ -4,7 +4,13 @@ import { InjectBot } from 'nestjs-telegraf';
 import { Context, Markup, Telegraf } from 'telegraf';
 import { Bot } from './models/bot.model';
 import { InjectModel } from '@nestjs/sequelize';
-import { CHILD_ID_STEP, NAME_STEP, SURNAME_STEP, PASSWORD_STEP, TASK_STEP } from './services/bot-onboarding.service';
+import {
+  CHILD_ID_STEP,
+  NAME_STEP,
+  SURNAME_STEP,
+  PASSWORD_STEP,
+  TASK_STEP,
+} from './services/bot-onboarding.service';
 import { BotOnboardingService } from './services/bot-onboarding.service';
 import { BotNotificationsService } from './services/bot-notifications.service';
 import { BotDashboardService } from './services/bot-dashboard.service';
@@ -26,7 +32,7 @@ export class BotService implements OnModuleInit {
     private readonly dashboard: BotDashboardService,
     private readonly lessonsService: BotLessonsService,
     private readonly childrenService: BotChildrenService,
-  ) { }
+  ) {}
 
   async onModuleInit() {
     try {
@@ -40,7 +46,7 @@ export class BotService implements OnModuleInit {
         console.log(`Webhook registered at: ${webhookUrl}`);
       }
     } catch (error) {
-      console.log(error)
+      console.log(error);
     }
   }
 
@@ -59,14 +65,14 @@ export class BotService implements OnModuleInit {
       parse_mode: 'HTML',
       ...Markup.keyboard([
         ['Farzandlarim'],
-        ["Statistika", "Kurslar"],
-        ["Reyting", "Davomat"],
-        ["Profil"],
+        ['Statistika', 'Kurslar'],
+        ['Reyting', 'Davomat'],
+        ['Profil'],
       ])
         .oneTime()
-        .resize()
-    }
-  };
+        .resize(),
+    };
+  }
 
   async handleText(ctx: Context) {
     const bot_id = ctx.from.id;
@@ -157,7 +163,12 @@ export class BotService implements OnModuleInit {
     amount: number,
     dueDate: Date,
   ): Promise<void> {
-    return this.notifications.notifyPaymentDue(user_id, courseTitle, amount, dueDate);
+    return this.notifications.notifyPaymentDue(
+      user_id,
+      courseTitle,
+      amount,
+      dueDate,
+    );
   }
 
   async notifySubscriptionAdded(
@@ -182,7 +193,13 @@ export class BotService implements OnModuleInit {
     newBall: number,
     ballDifference: number,
   ): Promise<void> {
-    return this.notifications.notifyRatingChanged(user_id, courseTitle, reasonText, newBall, ballDifference);
+    return this.notifications.notifyRatingChanged(
+      user_id,
+      courseTitle,
+      reasonText,
+      newBall,
+      ballDifference,
+    );
   }
 
   async notifyTestResult(
@@ -190,9 +207,19 @@ export class BotService implements OnModuleInit {
     lessonTitle: string,
     ball: number,
     total: number,
-    questionResults: { isCorrect: boolean; selectedLabel: string; correctLabel: string }[],
+    questionResults: {
+      isCorrect: boolean;
+      selectedLabel: string;
+      correctLabel: string;
+    }[],
   ): Promise<void> {
-    return this.notifications.notifyTestResult(user_id, lessonTitle, ball, total, questionResults);
+    return this.notifications.notifyTestResult(
+      user_id,
+      lessonTitle,
+      ball,
+      total,
+      questionResults,
+    );
   }
 
   // --- Student dashboard: statistics, attendance, profile, courses, reyting ---
@@ -213,7 +240,11 @@ export class BotService implements OnModuleInit {
     return this.dashboard.statisticsForGroup(ctx, group_id);
   }
 
-  async childStatisticsForGroup(ctx: Context, student_id: number, group_id: number) {
+  async childStatisticsForGroup(
+    ctx: Context,
+    student_id: number,
+    group_id: number,
+  ) {
     return this.dashboard.childStatisticsForGroup(ctx, student_id, group_id);
   }
 
@@ -302,7 +333,11 @@ export class BotService implements OnModuleInit {
     return this.childrenService.childAttendance(ctx, id);
   }
 
-  async childAttendanceGroupCourses(ctx: Context, id: number, group_id: number) {
+  async childAttendanceGroupCourses(
+    ctx: Context,
+    id: number,
+    group_id: number,
+  ) {
     return this.childrenService.childAttendanceGroupCourses(ctx, id, group_id);
   }
 
@@ -314,7 +349,11 @@ export class BotService implements OnModuleInit {
     return this.childrenService.childTasks(ctx, student_id);
   }
 
-  async childTasksForCourse(ctx: Context, student_id: number, course_id: number) {
+  async childTasksForCourse(
+    ctx: Context,
+    student_id: number,
+    course_id: number,
+  ) {
     return this.childrenService.childTasksForCourse(ctx, student_id, course_id);
   }
 }

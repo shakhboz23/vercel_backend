@@ -1,11 +1,5 @@
 import { RoleService } from '../role/role.service';
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Param,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Param } from '@nestjs/common';
 import { Subscription_activityService } from './subscription_activity.service';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { SubscriptionActivityDto } from './dto/subscription_activity.dto';
@@ -16,14 +10,14 @@ export class Subscription_activityController {
   constructor(
     private readonly subscription_activityService: Subscription_activityService,
     private readonly roleService: RoleService,
-  ) { }
+  ) {}
 
   @ApiOperation({ summary: 'Registration a new subscription_activity' })
   @Post('create')
-  async create(
-    @Body() subscriptionActivityDto: SubscriptionActivityDto,
-  ) {
-    const data = await this.subscription_activityService.create(subscriptionActivityDto);
+  async create(@Body() subscriptionActivityDto: SubscriptionActivityDto) {
+    const data = await this.subscription_activityService.create(
+      subscriptionActivityDto,
+    );
     return data;
   }
 

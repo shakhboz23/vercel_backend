@@ -14,7 +14,7 @@ import { OtpModule } from '../otp/otp.module';
     SequelizeModule.forFeature([Role]),
     FilesModule,
     ActivityModule,
-    forwardRef(() => UserModule)
+    forwardRef(() => UserModule),
   ],
   controllers: [RoleController],
   providers: [RoleService],

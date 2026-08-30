@@ -20,11 +20,11 @@ export class WatchedService {
   constructor(
     @InjectModel(Watched) private watchedRepository: typeof Watched,
     private readonly likeService: LikeService,
-  ) { }
+  ) {}
 
   async create(watchedDto: WatchedDto, user_id: number): Promise<object> {
     let likeType: string = '';
-    for (let i in watchedDto) {
+    for (const i in watchedDto) {
       if (watchedDto[i]) {
         likeType = i;
       }
@@ -47,15 +47,19 @@ export class WatchedService {
           message: 'Successfully liked!',
         };
       } else {
-        await this.watchedRepository.update({
-          ...watchedDto,
-          user_id,
-        }, {
-          where: {
-            id: is_watched.id,
+        await this.watchedRepository.update(
+          {
+            ...watchedDto,
+            user_id,
           },
-          returning: true,
-        }); return {
+          {
+            where: {
+              id: is_watched.id,
+            },
+            returning: true,
+          },
+        );
+        return {
           statusCode: HttpStatus.OK,
           message: 'Successfully unliked!',
         };
@@ -65,14 +69,13 @@ export class WatchedService {
     }
   }
 
-
   async getUserWatched(user_id: number): Promise<object> {
     try {
       const watched = await this.watchedRepository.findAll({
         where: {
-          user_id
+          user_id,
         },
-        include: [{ model: Lesson }, { model: Course }, { model: Group }]
+        include: [{ model: Lesson }, { model: Course }, { model: Group }],
       });
       return watched;
     } catch (error) {
@@ -80,40 +83,55 @@ export class WatchedService {
     }
   }
 
-  async getAll(user_id: number, type: string, analytics_id: number): Promise<object> {
+  async getAll(
+    user_id: number,
+    type: string,
+    analytics_id: number,
+  ): Promise<object> {
     try {
       let watched: any = await this.watchedRepository.findAll({
         where: {
           [type]: { [Op.ne]: null },
         },
         order: [[Sequelize.col('Watched.createdAt'), 'ASC']],
-        include: [{ model: User }, {
-          model: Lesson,
-        }, {
-          model: Course, required: type == 'course_id' ? true : false,
-          where: {
-            user_id,
-            ...(analytics_id && analytics_id != 0 ? { id: analytics_id } : {}),
+        include: [
+          { model: User },
+          {
+            model: Lesson,
           },
-        }, {
-          model: Group, required: type == 'group_id' ? true : false,
-          where: {
-            user_id,
-            ...(analytics_id && analytics_id != 0 ? { id: analytics_id } : {}),
+          {
+            model: Course,
+            required: type == 'course_id' ? true : false,
+            where: {
+              user_id,
+              ...(analytics_id && analytics_id != 0
+                ? { id: analytics_id }
+                : {}),
+            },
           },
-        }],
+          {
+            model: Group,
+            required: type == 'group_id' ? true : false,
+            where: {
+              user_id,
+              ...(analytics_id && analytics_id != 0
+                ? { id: analytics_id }
+                : {}),
+            },
+          },
+        ],
         attributes: {
           include: [
             [
               Sequelize.literal(
-                `EXTRACT(EPOCH FROM "Watched"."createdAt")::int`
+                `EXTRACT(EPOCH FROM "Watched"."createdAt")::int`,
               ),
               'createdAt',
             ],
           ],
         },
       });
-      let likes: any
+      let likes: any;
       if (type == 'group_id') {
         likes = await this.likeService.getAll(analytics_id);
       }
@@ -131,7 +149,7 @@ export class WatchedService {
         return acc;
       }, {});
 
-      let watchedList = await this.pagination(analytics_id, user_id, type, 1);
+      const watchedList = await this.pagination(analytics_id, user_id, type, 1);
 
       watched = Object.keys(groupedByYearMonth).map((key, index) => {
         const [year, month] = key.split('-');
@@ -151,27 +169,46 @@ export class WatchedService {
     }
   }
 
-  async pagination(analytics_id: number, user_id: number, type: string, page: number, limit?: number): Promise<object> {
+  async pagination(
+    analytics_id: number,
+    user_id: number,
+    type: string,
+    page: number,
+    limit?: number,
+  ): Promise<object> {
     try {
       limit = limit || 10;
       const offset = (page - 1) * limit;
       const watched = await this.watchedRepository.findAll({
         order: [[Sequelize.col('Watched.createdAt'), 'ASC']],
-        offset, limit, include: [{ model: User }, {
-          model: Lesson,
-        }, {
-          model: Course, required: type == 'course_id' ? true : false,
-          where: {
-            user_id,
-            ...(analytics_id && analytics_id != 0 ? { id: analytics_id } : {}),
+        offset,
+        limit,
+        include: [
+          { model: User },
+          {
+            model: Lesson,
           },
-        }, {
-          model: Group, required: type == 'group_id' ? true : false,
-          where: {
-            user_id,
-            ...(analytics_id && analytics_id != 0 ? { id: analytics_id } : {}),
+          {
+            model: Course,
+            required: type == 'course_id' ? true : false,
+            where: {
+              user_id,
+              ...(analytics_id && analytics_id != 0
+                ? { id: analytics_id }
+                : {}),
+            },
           },
-        }],
+          {
+            model: Group,
+            required: type == 'group_id' ? true : false,
+            where: {
+              user_id,
+              ...(analytics_id && analytics_id != 0
+                ? { id: analytics_id }
+                : {}),
+            },
+          },
+        ],
       });
       const total_count = await this.watchedRepository.count();
       const total_pages = Math.ceil(total_count / limit);
@@ -187,7 +224,6 @@ export class WatchedService {
       throw new BadRequestException(error.message);
     }
   }
-
 
   async delete(id: number): Promise<object> {
     try {

@@ -4,7 +4,7 @@ export function validateTelegramInitData(rawInitData, botToken) {
   try {
     const params = new URLSearchParams(rawInitData);
     const receivedHash = params.get('hash');
-    
+
     if (!receivedHash) return false;
 
     // Remove hash and sort keys alphabetically

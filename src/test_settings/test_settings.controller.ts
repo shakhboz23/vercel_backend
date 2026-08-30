@@ -24,9 +24,7 @@ export class Test_settingsController {
 
   @ApiOperation({ summary: 'Create a new test_settings' })
   @Post('/create')
-  create(
-    @Body() test_settingsDto: Test_settingsDto,
-  ) {
+  create(@Body() test_settingsDto: Test_settingsDto) {
     return this.test_settingsService.create(test_settingsDto);
   }
 

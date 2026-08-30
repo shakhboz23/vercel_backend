@@ -16,9 +16,10 @@ import { NewTokenDto } from './dto/newToken.dto';
 
 @Injectable()
 export class OtpService {
-  constructor(@InjectModel(Otp) 
-  private otpRepository: typeof Otp,
-) { }
+  constructor(
+    @InjectModel(Otp)
+    private otpRepository: typeof Otp,
+  ) {}
 
   async sendOTP(phoneDto: PhoneDto): Promise<object> {
     try {

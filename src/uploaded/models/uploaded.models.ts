@@ -1,10 +1,4 @@
-import {
-  Column,
-  DataType,
-  HasMany,
-  Model,
-  Table,
-} from 'sequelize-typescript';
+import { Column, DataType, HasMany, Model, Table } from 'sequelize-typescript';
 
 interface UploadedAttributes {
   status: boolean;

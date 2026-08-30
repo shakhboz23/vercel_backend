@@ -4,7 +4,7 @@ import { Context } from 'telegraf';
 
 @Update()
 export class BotUpdate {
-  constructor(private readonly botService: BotService) { }
+  constructor(private readonly botService: BotService) {}
 
   @Start()
   async onStart(@Ctx() ctx: Context) {
@@ -161,7 +161,9 @@ export class BotUpdate {
 
     await ctx.answerCbQuery();
 
-    const courseId = Number(callbackQuery.data.replace('attendance_course_', ''));
+    const courseId = Number(
+      callbackQuery.data.replace('attendance_course_', ''),
+    );
 
     return this.botService.attendanceForCourse(ctx, courseId);
   }
@@ -237,9 +239,14 @@ export class BotUpdate {
 
     await ctx.answerCbQuery();
 
-    const [, studentId, groupId] = callbackQuery.data.match(/^child_stats_(\d+)_(\d+)$/) || [];
+    const [, studentId, groupId] =
+      callbackQuery.data.match(/^child_stats_(\d+)_(\d+)$/) || [];
 
-    return this.botService.childStatisticsForGroup(ctx, Number(studentId), Number(groupId));
+    return this.botService.childStatisticsForGroup(
+      ctx,
+      Number(studentId),
+      Number(groupId),
+    );
   }
 
   @Action(/^child_results_(\d+)$/)
@@ -282,9 +289,14 @@ export class BotUpdate {
 
     await ctx.answerCbQuery();
 
-    const [, studentId, groupId] = callbackQuery.data.match(/^child_attendance_group_(\d+)_(\d+)$/) || [];
+    const [, studentId, groupId] =
+      callbackQuery.data.match(/^child_attendance_group_(\d+)_(\d+)$/) || [];
 
-    return this.botService.childAttendanceGroupCourses(ctx, +studentId, Number(groupId));
+    return this.botService.childAttendanceGroupCourses(
+      ctx,
+      +studentId,
+      Number(groupId),
+    );
   }
 
   @Action(/^child_attendance_course_(\d+)_(\d+)$/)
@@ -297,9 +309,14 @@ export class BotUpdate {
 
     await ctx.answerCbQuery();
 
-    const [, studentId, courseId] = callbackQuery.data.match(/^child_attendance_course_(\d+)_(\d+)$/) || [];
+    const [, studentId, courseId] =
+      callbackQuery.data.match(/^child_attendance_course_(\d+)_(\d+)$/) || [];
 
-    return this.botService.childAttendanceForCourse(ctx, +studentId, Number(courseId));
+    return this.botService.childAttendanceForCourse(
+      ctx,
+      +studentId,
+      Number(courseId),
+    );
   }
 
   @Action(/^child_tasks_(\d+)$/)
@@ -327,9 +344,14 @@ export class BotUpdate {
 
     await ctx.answerCbQuery();
 
-    const [, studentId, courseId] = callbackQuery.data.match(/^child_tasks_course_(\d+)_(\d+)$/) || [];
+    const [, studentId, courseId] =
+      callbackQuery.data.match(/^child_tasks_course_(\d+)_(\d+)$/) || [];
 
-    return this.botService.childTasksForCourse(ctx, +studentId, Number(courseId));
+    return this.botService.childTasksForCourse(
+      ctx,
+      +studentId,
+      Number(courseId),
+    );
   }
 
   @Action(/^lesson_test_(\d+)$/)
@@ -379,7 +401,9 @@ export class BotUpdate {
     }
 
     const [, status, lessonId, studentUserId] =
-      callbackQuery.data.match(/^task_status_(full|partial|none)_(\d+)_(\d+)$/) || [];
+      callbackQuery.data.match(
+        /^task_status_(full|partial|none)_(\d+)_(\d+)$/,
+      ) || [];
 
     if (!status) {
       return;

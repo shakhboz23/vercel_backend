@@ -16,7 +16,7 @@ export class AttendanceDto {
   @IsNumber()
   attendance: number;
 
-   @ApiProperty({
+  @ApiProperty({
     example: '2023-08-01T00:00:00.000Z',
     description: 'Attendance date',
   })

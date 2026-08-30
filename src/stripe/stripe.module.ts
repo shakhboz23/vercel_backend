@@ -18,6 +18,5 @@ import { SubscriptionsModule } from 'src/subscriptions/subscriptions.module';
   controllers: [StripeController],
   providers: [StripeService],
   exports: [StripeService],
-
 })
-export class StripeModule { }
+export class StripeModule {}

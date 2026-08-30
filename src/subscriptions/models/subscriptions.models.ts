@@ -23,7 +23,6 @@ interface SubscriptionsAttributes {
   subgroup_id?: number | null;
 }
 
-
 export enum SubscribeActive {
   requested = 'requested',
   pending = 'pending',
@@ -31,7 +30,10 @@ export enum SubscribeActive {
 }
 
 @Table({ tableName: 'subscriptions' })
-export class Subscriptions extends Model<Subscriptions, SubscriptionsAttributes> {
+export class Subscriptions extends Model<
+  Subscriptions,
+  SubscriptionsAttributes
+> {
   @Column({
     type: DataType.INTEGER,
     autoIncrement: true,
@@ -48,7 +50,7 @@ export class Subscriptions extends Model<Subscriptions, SubscriptionsAttributes>
     type: DataType.ENUM({
       values: Object.keys(RoleName),
     }),
-    defaultValue: RoleName.student
+    defaultValue: RoleName.student,
   })
   role: RoleName;
 

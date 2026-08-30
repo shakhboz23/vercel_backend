@@ -16,7 +16,8 @@ export class SubCategoryService {
 
   async create(categoryDto: SubCategoryDto): Promise<object> {
     try {
-      const subCategory: any = await this.categoryRepository.create(categoryDto);
+      const subCategory: any =
+        await this.categoryRepository.create(categoryDto);
       return {
         statusCode: HttpStatus.OK,
         message: 'Created successfully',
@@ -62,7 +63,10 @@ export class SubCategoryService {
     try {
       const offset = (page - 1) * 10;
       const limit = 10;
-      const subCategory = await this.categoryRepository.findAll({ offset, limit });
+      const subCategory = await this.categoryRepository.findAll({
+        offset,
+        limit,
+      });
       const total_count = await this.categoryRepository.count();
       const total_pages = Math.ceil(total_count / 10);
       const response = {
@@ -80,7 +84,7 @@ export class SubCategoryService {
     } catch (error) {
       throw new BadRequestException(error.message);
     }
-  }   
+  }
 
   async update(id: number, categoryDto: SubCategoryDto): Promise<object> {
     try {

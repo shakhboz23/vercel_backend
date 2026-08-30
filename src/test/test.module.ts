@@ -12,9 +12,18 @@ import { FilesModule } from 'src/files/files.module';
 import { BotModule } from 'src/bot/bot.module';
 
 @Module({
-  imports: [SequelizeModule.forFeature([Tests]), forwardRef(()=> ReytingModule), UserStepModule, Test_settingsModule, JwtModule, LessonModule, FilesModule, forwardRef(() => BotModule)],
+  imports: [
+    SequelizeModule.forFeature([Tests]),
+    forwardRef(() => ReytingModule),
+    UserStepModule,
+    Test_settingsModule,
+    JwtModule,
+    LessonModule,
+    FilesModule,
+    forwardRef(() => BotModule),
+  ],
   controllers: [TestsController],
   providers: [TestsService],
   exports: [TestsService],
 })
-export class TestsModule { }
+export class TestsModule {}

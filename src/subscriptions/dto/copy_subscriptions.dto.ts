@@ -27,7 +27,7 @@ export class CopySubscriptionsDto {
   @ApiProperty({
     example: '2026-08-30',
     description:
-      "Enrollment start date to record for every copied student, defaults to today",
+      'Enrollment start date to record for every copied student, defaults to today',
     required: false,
   })
   @IsOptional()

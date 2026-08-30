@@ -82,20 +82,21 @@ import { CourseSubgroupModule } from './course_subgroup/course_subgroup.module';
     TelegrafModule.forRootAsync({
       botName: BOT_NAME,
       useFactory: () => {
-
-        return process.env.NODE_ENV !== 'production' ? {
-          token: process.env.BOT_TOKEN,
-          includes: [BotModule],
-        } : {
-          token: process.env.BOT_TOKEN,
-          includes: [BotModule],
-          // Don't let Telegraf spin up its own webhook HTTP server (bot.launch()
-          // binds to a random, unexposed port) — updates are received through
-          // AppController's POST /webhook/bot instead, which calls
-          // bot.handleUpdate() directly. The webhook URL is registered with
-          // Telegram in BotService.onModuleInit().
-          launchOptions: false,
-        }
+        return process.env.NODE_ENV !== 'production'
+          ? {
+              token: process.env.BOT_TOKEN,
+              includes: [BotModule],
+            }
+          : {
+              token: process.env.BOT_TOKEN,
+              includes: [BotModule],
+              // Don't let Telegraf spin up its own webhook HTTP server (bot.launch()
+              // binds to a random, unexposed port) — updates are received through
+              // AppController's POST /webhook/bot instead, which calls
+              // bot.handleUpdate() directly. The webhook URL is registered with
+              // Telegram in BotService.onModuleInit().
+              launchOptions: false,
+            };
       },
     }),
     ScheduleModule.forRoot(),
@@ -185,20 +186,13 @@ import { CourseSubgroupModule } from './course_subgroup/course_subgroup.module';
     PaymentModule,
   ],
   controllers: [AppController],
-  providers: [
-    AppService,
-    MyService,
-  ],
-  exports: []
+  providers: [AppService, MyService],
+  exports: [],
 })
 export class AppModule implements OnApplicationBootstrap {
-
-  constructor(
-    private readonly userService: UserService,
-  ) { }
+  constructor(private readonly userService: UserService) {}
 
   async onApplicationBootstrap() {
     await this.userService.createDefaultUser();
   }
-
 }

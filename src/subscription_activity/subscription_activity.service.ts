@@ -8,21 +8,26 @@ import { InjectModel } from '@nestjs/sequelize';
 import { JwtService } from '@nestjs/jwt';
 import { Op } from 'sequelize';
 import { Course } from 'src/course/models/course.models';
-import { SubscriptionActivity, SubscriptionActivityStatus } from './models/subscription_activity.models';
+import {
+  SubscriptionActivity,
+  SubscriptionActivityStatus,
+} from './models/subscription_activity.models';
 import { SubscriptionActivityDto } from './dto/subscription_activity.dto';
 
 @Injectable()
 export class Subscription_activityService {
   constructor(
-    @InjectModel(SubscriptionActivity) private subscription_activityRepository: typeof SubscriptionActivity,
+    @InjectModel(SubscriptionActivity)
+    private subscription_activityRepository: typeof SubscriptionActivity,
     private readonly jwtService: JwtService,
-  ) { }
+  ) {}
 
   async create(
     subscriptionActivityDto: SubscriptionActivityDto,
   ): Promise<object> {
     try {
-      const { subscription_id, course_id, status, date } = subscriptionActivityDto
+      const { subscription_id, course_id, status, date } =
+        subscriptionActivityDto;
       const targetDate = new Date(date);
       const startOfDay = new Date(targetDate.setHours(0, 0, 0, 0)); // Kun boshidan
       const endOfDay = new Date(targetDate.setHours(23, 59, 59, 999)); // Kun oxirigacha
@@ -30,17 +35,21 @@ export class Subscription_activityService {
       const exist = await this.subscription_activityRepository.findOne({
         where: {
           course_id,
-          subscription_id, createdAt: {
+          subscription_id,
+          createdAt: {
             [Op.between]: [startOfDay, endOfDay], // Sana oralig'i
           },
         },
       });
       if (exist && status !== 'none') {
-        return this.update(exist.id, status)
+        return this.update(exist.id, status);
       } else if (status !== 'none') {
-        return await this.subscription_activityRepository.create({ ...subscriptionActivityDto, createdAt: date || new Date() })
+        return await this.subscription_activityRepository.create({
+          ...subscriptionActivityDto,
+          createdAt: date || new Date(),
+        });
       } else {
-        return this.delete(exist.id)
+        return this.delete(exist.id);
       }
     } catch (error) {
       throw new BadRequestException(error.message);
@@ -52,10 +61,13 @@ export class Subscription_activityService {
     status: SubscriptionActivityStatus,
   ): Promise<object> {
     try {
-      const updatedUser = await this.subscription_activityRepository.update({ status }, {
-        where: { id },
-        returning: true,
-      });
+      const updatedUser = await this.subscription_activityRepository.update(
+        { status },
+        {
+          where: { id },
+          returning: true,
+        },
+      );
       return updatedUser[1][0];
     } catch (error) {
       throw new BadRequestException(error.message);
@@ -64,9 +76,10 @@ export class Subscription_activityService {
 
   async getAll(): Promise<object> {
     try {
-      const subscriptionss: any = await this.subscription_activityRepository.findAll({
-        order: [['id', 'ASC']],
-      });
+      const subscriptionss: any =
+        await this.subscription_activityRepository.findAll({
+          order: [['id', 'ASC']],
+        });
       if (!subscriptionss.length) {
         throw new NotFoundException('Subscriptionss not found');
       }
@@ -95,10 +108,12 @@ export class Subscription_activityService {
     try {
       const offset = (page - 1) * 10;
       const limit = 10;
-      const subscriptionss = await this.subscription_activityRepository.findAll({
-        offset,
-        limit,
-      });
+      const subscriptionss = await this.subscription_activityRepository.findAll(
+        {
+          offset,
+          limit,
+        },
+      );
       const total_count = await this.subscription_activityRepository.count();
       const total_pages = Math.ceil(total_count / 10);
       const response = {
@@ -120,7 +135,8 @@ export class Subscription_activityService {
 
   async delete(id: number): Promise<object> {
     try {
-      const subscriptions = await this.subscription_activityRepository.findByPk(id);
+      const subscriptions =
+        await this.subscription_activityRepository.findByPk(id);
       if (!subscriptions) {
         throw new NotFoundException('Subscriptions not found');
       }

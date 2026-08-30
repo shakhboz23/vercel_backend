@@ -28,7 +28,7 @@ export class SubscriptionsController {
   constructor(
     private readonly subscriptionsService: SubscriptionsService,
     private readonly jwtService: JwtService,
-  ) { }
+  ) {}
 
   @ApiOperation({ summary: 'Create a new subscriptions' })
   @Post('/create')
@@ -55,7 +55,7 @@ export class SubscriptionsController {
 
   @ApiOperation({
     summary:
-      "Copy every student (or a chosen subset) from one course into another",
+      'Copy every student (or a chosen subset) from one course into another',
   })
   @Post('/copyFromCourse')
   async copyFromCourse(@Body() copySubscriptionsDto: CopySubscriptionsDto) {

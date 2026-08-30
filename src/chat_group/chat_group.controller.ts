@@ -15,9 +15,7 @@ import { UserService } from '../user/user.service';
 @ApiTags('ChatGroup')
 @Controller('chatgroup')
 export class ChatGroupController {
-  constructor(
-    private readonly chatGroupService: ChatGroupService,
-  ) { }
+  constructor(private readonly chatGroupService: ChatGroupService) {}
 
   @ApiOperation({ summary: 'Create a new chat group' })
   @Post('/create')
@@ -45,11 +43,9 @@ export class ChatGroupController {
 
   @ApiOperation({ summary: 'Get all chat group' })
   @Get()
-  getAll(
-  ) {
+  getAll() {
     return this.chatGroupService.getAll();
   }
-
 
   @ApiOperation({ summary: 'Get chat group with pagination' })
   @Get('pagination/:page')

@@ -1,9 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsEnum,
-  IsNumber,
-  IsOptional,
-} from 'class-validator';
+import { IsEnum, IsNumber, IsOptional } from 'class-validator';
 import { FinishedType } from '../models/reyting.models';
 
 export class ReytingDto {

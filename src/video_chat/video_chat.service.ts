@@ -8,9 +8,10 @@ import { VideoChatDto } from './dto/video_chat.dto';
 @Injectable()
 export class VideoChatService {
   constructor(
-    @InjectModel(VideoChat) private readonly VideoChatRepository: typeof VideoChat,
+    @InjectModel(VideoChat)
+    private readonly VideoChatRepository: typeof VideoChat,
     private readonly fileService: FilesService,
-  ) { }
+  ) {}
 
   async create(videoChatDto: VideoChatDto, headers: { 'user-agent': string }) {
     try {
@@ -76,8 +77,7 @@ export class VideoChatService {
     const offset = (page - 1) * limit;
     try {
       const chats = await this.VideoChatRepository.findAll({
-        where: {
-        },
+        where: {},
         order: [['updatedAt', 'DESC']],
         include: [
           {

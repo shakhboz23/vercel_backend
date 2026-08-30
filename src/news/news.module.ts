@@ -7,7 +7,12 @@ import { FilesModule } from '../files/files.module';
 import { UserModule } from '../user/user.module';
 import { RoleModule } from '../role/role.module';
 @Module({
-  imports: [SequelizeModule.forFeature([News]), FilesModule, RoleModule, UserModule],
+  imports: [
+    SequelizeModule.forFeature([News]),
+    FilesModule,
+    RoleModule,
+    UserModule,
+  ],
   controllers: [NewsController],
   providers: [NewsService],
   exports: [NewsService],

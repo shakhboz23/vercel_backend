@@ -3,10 +3,8 @@ import { FilesService } from './files.service';
 import { CloudinaryModule } from './cloudinary.module';
 
 @Module({
-  imports: [
-    CloudinaryModule,
-  ],
+  imports: [CloudinaryModule],
   providers: [FilesService],
   exports: [FilesService],
 })
-export class FilesModule { }
+export class FilesModule {}

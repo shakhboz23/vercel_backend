@@ -14,9 +14,7 @@ import { CategoryDto } from './dto/category.dto';
 @ApiTags('Category')
 @Controller('category')
 export class CategoryController {
-  constructor(
-    private readonly categoryService: CategoryService,
-  ) {}
+  constructor(private readonly categoryService: CategoryService) {}
 
   @ApiOperation({ summary: 'Create a new category' })
   @Post('/create')

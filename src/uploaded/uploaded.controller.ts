@@ -18,7 +18,7 @@ import { UpdateDto } from './dto/update';
 @ApiTags('Uploaded')
 @Controller('uploaded')
 export class UploadedController {
-  constructor(private readonly uploadedService: UploadedService) { }
+  constructor(private readonly uploadedService: UploadedService) {}
 
   @ApiOperation({ summary: 'Create a new video_lesson' })
   @ApiConsumes('multipart/form-data')
@@ -54,7 +54,7 @@ export class UploadedController {
   @ApiOperation({ summary: 'Cron' })
   @Get('/cron')
   cron() {
-    return "cron is working in vercel";
+    return 'cron is working in vercel';
   }
 
   @ApiOperation({ summary: 'Get all classs' })

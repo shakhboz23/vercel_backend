@@ -1,4 +1,12 @@
-import { BelongsTo, Column, DataType, ForeignKey, HasMany, Model, Table } from 'sequelize-typescript';
+import {
+  BelongsTo,
+  Column,
+  DataType,
+  ForeignKey,
+  HasMany,
+  Model,
+  Table,
+} from 'sequelize-typescript';
 import { Lesson } from '../../lesson/models/lesson.models';
 import { Test_settings } from '../../test_settings/models/test_settings.models';
 

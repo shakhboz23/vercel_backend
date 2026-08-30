@@ -9,7 +9,11 @@ import { Course } from 'src/course/models/course.models';
 import { BotModule } from 'src/bot/bot.module';
 
 @Module({
-  imports: [SequelizeModule.forFeature([Attendance, Course]), UserStreakModule, BotModule],
+  imports: [
+    SequelizeModule.forFeature([Attendance, Course]),
+    UserStreakModule,
+    BotModule,
+  ],
   controllers: [AttendanceController],
   providers: [AttendanceService],
   exports: [AttendanceService],

@@ -24,7 +24,7 @@ export class UserAnalyticsService {
   constructor(
     @InjectModel(User) private userRepository: typeof User,
     private readonly sequelize: Sequelize,
-  ) { }
+  ) {}
 
   private static readonly WEEK_DAY_INDEX: Record<string, number> = {
     Sun: 0,
@@ -231,7 +231,13 @@ export class UserAnalyticsService {
         }
       }
 
-      days.push({ label: dayLabels[i], date: key, scheduled: isScheduled, status, intensity });
+      days.push({
+        label: dayLabels[i],
+        date: key,
+        scheduled: isScheduled,
+        status,
+        intensity,
+      });
     }
 
     return days;
@@ -500,11 +506,11 @@ export class UserAnalyticsService {
             currentMonth,
             currentYear,
             lastMonth,
-            lastMonthYear
+            lastMonthYear,
           },
           type: QueryTypes.SELECT,
-          plain: true // Obvekt ko'rinishida olish uchun
-        }
+          plain: true, // Obvekt ko'rinishida olish uchun
+        },
       );
 
       const currentPosition = positions?.currentPosition || 0;
@@ -515,13 +521,13 @@ export class UserAnalyticsService {
       let rankDifference = 0;
 
       if (lastPosition === 0 && currentPosition > 0) {
-        rankStatus = "yangi"; // O'tgan oyda reytingi bo'lmagan
+        rankStatus = 'yangi'; // O'tgan oyda reytingi bo'lmagan
       } else if (currentPosition > 0 && lastPosition > 0) {
         rankDifference = lastPosition - currentPosition;
         if (rankDifference > 0) {
           rankStatus = "ko'tarildi";
         } else if (rankDifference < 0) {
-          rankStatus = "tushdi";
+          rankStatus = 'tushdi';
           rankDifference = Math.abs(rankDifference); // musbat songa o'tkazish
         }
       }
@@ -577,28 +583,31 @@ export class UserAnalyticsService {
         )
         .filter((history) => history.length);
 
-      userJSON.subscriptions = userJSON.subscriptions.map((subscription: any) => {
-        const scheduledClasses = this.countScheduledClasses(
-          subscription.start_date,
-          this.schedulesForSubgroup(
-            subscription.course?.attendance_days || [],
-            subscription.subgroup_id,
-          ),
-        );
-        const attendedClasses = attendanceByCourse.get(subscription.course_id) || 0;
-        const percentage = scheduledClasses
-          ? Number(((attendedClasses / scheduledClasses) * 100).toFixed(2))
-          : 0;
+      userJSON.subscriptions = userJSON.subscriptions.map(
+        (subscription: any) => {
+          const scheduledClasses = this.countScheduledClasses(
+            subscription.start_date,
+            this.schedulesForSubgroup(
+              subscription.course?.attendance_days || [],
+              subscription.subgroup_id,
+            ),
+          );
+          const attendedClasses =
+            attendanceByCourse.get(subscription.course_id) || 0;
+          const percentage = scheduledClasses
+            ? Number(((attendedClasses / scheduledClasses) * 100).toFixed(2))
+            : 0;
 
-        return {
-          ...subscription,
-          attendance: {
-            attended_classes: attendedClasses,
-            scheduled_classes: scheduledClasses,
-            percentage,
-          },
-        };
-      });
+          return {
+            ...subscription,
+            attendance: {
+              attended_classes: attendedClasses,
+              scheduled_classes: scheduledClasses,
+              percentage,
+            },
+          };
+        },
+      );
 
       const monthlyAttendance = this.buildMonthlyAttendance(
         scheduleHistories,
@@ -628,7 +637,8 @@ export class UserAnalyticsService {
         )
         .sort(
           (left: any, right: any) =>
-            new Date(left.start_date).getTime() - new Date(right.start_date).getTime(),
+            new Date(left.start_date).getTime() -
+            new Date(right.start_date).getTime(),
         );
 
       const upcomingLessonIds = [
@@ -656,7 +666,6 @@ export class UserAnalyticsService {
       }
 
       // ========== reyting ball ================== //
-
 
       const positionsBall: any = await this.sequelize.query(
         `
@@ -703,11 +712,11 @@ export class UserAnalyticsService {
             currentMonth,
             currentYear,
             lastMonth,
-            lastMonthYear
+            lastMonthYear,
           },
           type: QueryTypes.SELECT,
-          plain: true
-        }
+          plain: true,
+        },
       );
 
       // Qiymatlarni o'zgaruvchilarga olamiz
@@ -719,18 +728,21 @@ export class UserAnalyticsService {
       let ballDifference = currentBall - lastBall; // Joriy balldan o'tgan oynikini ayiramiz
 
       if (ballDifference > 0) {
-        ballStatus = "oshdi";
+        ballStatus = 'oshdi';
       } else if (ballDifference < 0) {
-        ballStatus = "kamaydi";
+        ballStatus = 'kamaydi';
         ballDifference = Math.abs(ballDifference); // Musbat son ko'rinishiga o'tkazish
       }
 
       return {
-        ...userJSON, rankings, ratingStats: {
+        ...userJSON,
+        rankings,
+        ratingStats: {
           currentPosition,
           difference: rankDifference,
           status: rankStatus,
-        }, ratingBallStats: {
+        },
+        ratingBallStats: {
           currentBall,
           difference: ballDifference,
           status: ballStatus,

@@ -14,9 +14,7 @@ import { SubCategoryDto } from './dto/subcategory.dto';
 @ApiTags('SubCategory')
 @Controller('subCategory')
 export class SubCategoryController {
-  constructor(
-    private readonly categoryService: SubCategoryService,
-  ) {}
+  constructor(private readonly categoryService: SubCategoryService) {}
 
   @ApiOperation({ summary: 'Create a new subCategory' })
   @Post('/create')

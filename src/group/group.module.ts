@@ -11,7 +11,11 @@ import { FilesModule } from 'src/files/files.module';
 
 @Module({
   imports: [
-    SequelizeModule.forFeature([Group]), UploadedModule, JwtModule, WatchedModule, FilesModule,
+    SequelizeModule.forFeature([Group]),
+    UploadedModule,
+    JwtModule,
+    WatchedModule,
+    FilesModule,
   ],
   controllers: [GroupController],
   providers: [GroupService, ChatGateway],

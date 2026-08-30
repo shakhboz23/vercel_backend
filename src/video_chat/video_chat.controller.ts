@@ -34,16 +34,17 @@ import { RoleService } from '../role/role.service';
 @WebSocketGateway({ cors: { origin: '*', credentials: true } }) // cors
 @Controller('videochat')
 export class VideoChatController
-  implements OnGatewayConnection, OnGatewayDisconnect {
+  implements OnGatewayConnection, OnGatewayDisconnect
+{
   @WebSocketServer() server: Server;
 
   constructor(
     private readonly videoChatService: VideoChatService,
     private readonly roleService: RoleService,
     private readonly userService: UserService,
-  ) { }
+  ) {}
 
-  private users: Record<string, string[]> = {};  // Store users and their peer IDs
+  private users: Record<string, string[]> = {}; // Store users and their peer IDs
 
   // Called when the gateway is initialized
   afterInit(server: Server) {
@@ -68,8 +69,8 @@ export class VideoChatController
   handleDisconnect(socket: Socket) {
     console.log('User disconnected:', socket.id);
     // Remove the user from all rooms
-    for (let room in this.users) {
-      this.users[room] = this.users[room].filter(id => id !== socket.id);
+    for (const room in this.users) {
+      this.users[room] = this.users[room].filter((id) => id !== socket.id);
       if (this.users[room].length === 0) {
         delete this.users[room];
       }
@@ -77,7 +78,8 @@ export class VideoChatController
   }
   // Handle user joining a room
   @SubscribeMessage('join-room')
-  handleJoinRoom(@MessageBody() roomId: string,
+  handleJoinRoom(
+    @MessageBody() roomId: string,
     @ConnectedSocket() client: Socket,
   ) {
     client.join(roomId);
@@ -93,7 +95,10 @@ export class VideoChatController
 
   // Handle user sending peer ID to others in the room
   @SubscribeMessage('join-peer')
-  handleJoinPeer(@MessageBody() data: { peerId: string, roomId: string }, client: Socket) {
+  handleJoinPeer(
+    @MessageBody() data: { peerId: string; roomId: string },
+    client: Socket,
+  ) {
     // Notify others in the room
     client.broadcast.to(data.roomId).emit('user-connected', data.peerId);
   }
@@ -101,7 +106,7 @@ export class VideoChatController
   // Handle user leaving the room
   @SubscribeMessage('disconnect-peer')
   handleDisconnectPeer(@MessageBody() roomId: string, client: Socket) {
-    this.users[roomId] = this.users[roomId].filter(id => id !== client.id);
+    this.users[roomId] = this.users[roomId].filter((id) => id !== client.id);
     if (this.users[roomId].length === 0) {
       delete this.users[roomId];
     }

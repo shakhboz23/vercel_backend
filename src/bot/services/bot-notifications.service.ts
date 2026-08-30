@@ -21,7 +21,7 @@ export class BotNotificationsService {
     @InjectModel(BotChild) private botChildRepo: typeof BotChild,
     @InjectBot(BOT_NAME) private readonly bot: Telegraf<Context>,
     private readonly userService: UserService,
-  ) { }
+  ) {}
 
   async notifyPaymentDue(
     user_id: number,
@@ -73,7 +73,10 @@ export class BotNotificationsService {
     }
   }
 
-  private readonly attendanceStatusLabels: Record<number, { text: string; icon: string }> = {
+  private readonly attendanceStatusLabels: Record<
+    number,
+    { text: string; icon: string }
+  > = {
     0: { text: 'kelmadi', icon: '❌' },
     1: { text: 'kechikdi', icon: '⏰' },
     2: { text: 'keldi', icon: '✅' },
@@ -92,10 +95,14 @@ export class BotNotificationsService {
     let student: any;
     try {
       student = await this.userService.getById(user_id);
-    } catch (error) { }
+    } catch (error) {}
 
-    const studentName = [student?.name, student?.surname].filter(Boolean).join(' ') || "O'quvchi";
-    const statusInfo = this.attendanceStatusLabels[status] || { text: "noma'lum", icon: 'ℹ️' };
+    const studentName =
+      [student?.name, student?.surname].filter(Boolean).join(' ') || "O'quvchi";
+    const statusInfo = this.attendanceStatusLabels[status] || {
+      text: "noma'lum",
+      icon: 'ℹ️',
+    };
 
     const text =
       `${statusInfo.icon} <b>Davomat xabari</b>\n\n` +
@@ -120,9 +127,10 @@ export class BotNotificationsService {
     let student: any;
     try {
       student = await this.userService.getById(user_id);
-    } catch (error) { }
+    } catch (error) {}
 
-    const studentName = [student?.name, student?.surname].filter(Boolean).join(' ') || "O'quvchi";
+    const studentName =
+      [student?.name, student?.surname].filter(Boolean).join(' ') || "O'quvchi";
     const isIncrease = ballDifference > 0;
     const icon = isIncrease ? '📈' : '📉';
     const diffText = `${isIncrease ? '+' : ''}${ballDifference}`;
@@ -164,7 +172,11 @@ export class BotNotificationsService {
     lessonTitle: string,
     ball: number,
     total: number,
-    questionResults: { isCorrect: boolean; selectedLabel: string; correctLabel: string }[],
+    questionResults: {
+      isCorrect: boolean;
+      selectedLabel: string;
+      correctLabel: string;
+    }[],
   ): Promise<void> {
     const studentBot = await this.botRepo.findOne({ where: { user_id } });
     if (!studentBot?.status) return;

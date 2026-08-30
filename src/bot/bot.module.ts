@@ -19,7 +19,16 @@ import { BotLessonsService } from './services/bot-lessons.service';
 import { BotChildrenService } from './services/bot-children.service';
 
 @Module({
-  imports: [SequelizeModule.forFeature([Bot, BotChild, Group]), UserModule, RoleModule, forwardRef(() => SubscriptionsModule), CourseModule, LessonModule, forwardRef(() => TestsModule), forwardRef(() => ReytingModule)],
+  imports: [
+    SequelizeModule.forFeature([Bot, BotChild, Group]),
+    UserModule,
+    RoleModule,
+    forwardRef(() => SubscriptionsModule),
+    CourseModule,
+    LessonModule,
+    forwardRef(() => TestsModule),
+    forwardRef(() => ReytingModule),
+  ],
   providers: [
     BotService,
     BotUpdate,
@@ -29,6 +38,6 @@ import { BotChildrenService } from './services/bot-children.service';
     BotLessonsService,
     BotChildrenService,
   ],
-  exports: [BotService]
+  exports: [BotService],
 })
-export class BotModule { }
+export class BotModule {}

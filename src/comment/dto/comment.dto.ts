@@ -11,7 +11,7 @@ export class CommentDto {
   lesson_id: number;
 
   @ApiProperty({
-    example: "this is very good course that I have ever watched",
+    example: 'this is very good course that I have ever watched',
     description: 'Comment',
   })
   @IsNotEmpty()

@@ -52,10 +52,16 @@ export class CourseService {
     private readonly uploadedService: UploadedService,
     private readonly watchedService: WatchedService,
     private readonly filesService: FilesService,
-  ) { }
+  ) {}
 
-  private parseAttendanceDays(attendanceDays?: string): AttendanceDay[] | undefined {
-    if (attendanceDays === undefined || attendanceDays === null || attendanceDays === '') {
+  private parseAttendanceDays(
+    attendanceDays?: string,
+  ): AttendanceDay[] | undefined {
+    if (
+      attendanceDays === undefined ||
+      attendanceDays === null ||
+      attendanceDays === ''
+    ) {
       return undefined;
     }
 
@@ -84,7 +90,9 @@ export class CourseService {
       sat: AttendanceDay.sat,
       sun: AttendanceDay.sun,
     };
-    const normalizedDays = days.map((day) => aliases[String(day).trim().toLowerCase()]);
+    const normalizedDays = days.map(
+      (day) => aliases[String(day).trim().toLowerCase()],
+    );
 
     if (normalizedDays.some((day) => !day)) {
       throw new BadRequestException(
@@ -95,14 +103,22 @@ export class CourseService {
     return [...new Set(normalizedDays)];
   }
 
-  private parseSubgroups(subgroupsRaw?: string): CourseSubgroupInput[] | undefined {
-    if (subgroupsRaw === undefined || subgroupsRaw === null || subgroupsRaw === '') {
+  private parseSubgroups(
+    subgroupsRaw?: string,
+  ): CourseSubgroupInput[] | undefined {
+    if (
+      subgroupsRaw === undefined ||
+      subgroupsRaw === null ||
+      subgroupsRaw === ''
+    ) {
       return undefined;
     }
 
     let parsed: unknown;
     try {
-      parsed = Array.isArray(subgroupsRaw) ? subgroupsRaw : JSON.parse(subgroupsRaw);
+      parsed = Array.isArray(subgroupsRaw)
+        ? subgroupsRaw
+        : JSON.parse(subgroupsRaw);
     } catch {
       throw new BadRequestException(
         'subgroups must be a JSON array, for example [{"name":"1-guruh","attendance_days":["Mon","Wed","Fri"]}]',
@@ -125,7 +141,9 @@ export class CourseService {
           : item?.attendance_days,
       );
       if (!attendanceDays?.length) {
-        throw new BadRequestException(`"${name}" subgroup requires at least one attendance day`);
+        throw new BadRequestException(
+          `"${name}" subgroup requires at least one attendance day`,
+        );
       }
 
       return {
@@ -136,7 +154,11 @@ export class CourseService {
     });
   }
 
-  async create(courseDto: CourseDto, cover: any, user_id: number): Promise<object> {
+  async create(
+    courseDto: CourseDto,
+    cover: any,
+    user_id: number,
+  ): Promise<object> {
     try {
       const { title, attendance_days, subgroups, ...courseData } = courseDto;
       const attendanceDays = this.parseAttendanceDays(attendance_days);
@@ -167,7 +189,11 @@ export class CourseService {
       } else if (attendanceDays?.length) {
         await this.courseScheduleService.create(course.id, attendanceDays);
       }
-      await this.chatGroupService.create({ course_id: course.id, chat_type: ChatGroupType.group, group_id: courseDto.group_id })
+      await this.chatGroupService.create({
+        course_id: course.id,
+        chat_type: ChatGroupType.group,
+        group_id: courseDto.group_id,
+      });
       return {
         statusCode: HttpStatus.OK,
         message: 'Created successfully',
@@ -178,34 +204,41 @@ export class CourseService {
     }
   }
 
-  async getAll(subcategory_id: string, user_id: number, category_id: number): Promise<object> {
+  async getAll(
+    subcategory_id: string,
+    user_id: number,
+    category_id: number,
+  ): Promise<object> {
     try {
-      subcategory_id = JSON.parse(subcategory_id || "[]");
+      subcategory_id = JSON.parse(subcategory_id || '[]');
       let subcategory: any = {};
       let categoryInclude: any = {};
       if (!subcategory_id?.length && +category_id) {
         categoryInclude = {
-          include: [{
-            model: SubCategory,
-            include: [{
-              model: Category,
-              where: {
-                id: category_id
-              },
+          include: [
+            {
+              model: SubCategory,
+              include: [
+                {
+                  model: Category,
+                  where: {
+                    id: category_id,
+                  },
+                  required: true,
+                },
+              ],
               required: true,
             },
-            ],
-            required: true,
-          }]
-        }
+          ],
+        };
       } else if (subcategory_id?.length) {
         subcategory = {
           where: {
             subcategory_id: {
-              [Op.in]: subcategory_id
-            }
-          }
-        }
+              [Op.in]: subcategory_id,
+            },
+          },
+        };
       }
       const courses: any = await this.courseRepository.findAll({
         ...subcategory,
@@ -221,7 +254,15 @@ export class CourseService {
           {
             model: CourseSubgroup,
             as: 'subgroups',
-            include: [{ model: CourseSchedule, as: 'schedules', separate: true, limit: 1, order: [['createdAt', 'DESC']] }],
+            include: [
+              {
+                model: CourseSchedule,
+                as: 'schedules',
+                separate: true,
+                limit: 1,
+                order: [['createdAt', 'DESC']],
+              },
+            ],
             required: false,
           },
         ],
@@ -263,7 +304,7 @@ export class CourseService {
               `),
               'likes_count',
             ],
-          ]
+          ],
         },
         order: [['id', 'ASC']],
       });
@@ -282,7 +323,9 @@ export class CourseService {
         where: {
           id: course_id,
         },
-        include: [{ model: Lesson, as: 'lessons', where: { type: lessonType.lesson } }]
+        include: [
+          { model: Lesson, as: 'lessons', where: { type: lessonType.lesson } },
+        ],
       });
       if (!courses) {
         throw new NotFoundException('Courses not found');
@@ -293,20 +336,24 @@ export class CourseService {
     }
   }
 
-  async getByCourse(group_id: number, subcategory_id: string, user_id: number): Promise<Object> {
+  async getByCourse(
+    group_id: number,
+    subcategory_id: string,
+    user_id: number,
+  ): Promise<Object> {
     try {
-      subcategory_id = JSON.parse(subcategory_id || "[]");
+      subcategory_id = JSON.parse(subcategory_id || '[]');
 
-      let subcategory: any = {
+      const subcategory: any = {
         where: {
           group_id,
-        }
-      }
+        },
+      };
 
       if (subcategory_id?.length) {
         subcategory.where.subcategory_id = {
-          [Op.in]: subcategory_id
-        }
+          [Op.in]: subcategory_id,
+        };
       }
 
       const group: any = await this.groupService.getById(group_id, user_id);
@@ -329,7 +376,15 @@ export class CourseService {
           {
             model: CourseSubgroup,
             as: 'subgroups',
-            include: [{ model: CourseSchedule, as: 'schedules', separate: true, limit: 1, order: [['createdAt', 'DESC']] }],
+            include: [
+              {
+                model: CourseSchedule,
+                as: 'schedules',
+                separate: true,
+                limit: 1,
+                order: [['createdAt', 'DESC']],
+              },
+            ],
             required: false,
           },
         ],
@@ -371,7 +426,7 @@ export class CourseService {
               `),
               'likes_count',
             ],
-          ]
+          ],
         },
         replacements: {
           user_id,
@@ -384,23 +439,34 @@ export class CourseService {
     }
   }
 
-  async getUsersByGroupId(group_id: number, date: Date, user_id: number, course_id: number, page: string, lesson_id?: number): Promise<object> {
+  async getUsersByGroupId(
+    group_id: number,
+    date: Date,
+    user_id: number,
+    course_id: number,
+    page: string,
+    lesson_id?: number,
+  ): Promise<object> {
     try {
       course_id = +course_id || null;
       lesson_id = +lesson_id || null;
       const targetDate = new Date(date);
       const startOfDay = new Date(targetDate.setHours(0, 0, 0, 0)); // Kun boshidan
       const endOfDay = new Date(targetDate.setHours(23, 59, 59, 999)); // Kun oxirigacha
-      const attendanceWhere: any = { date: { [Op.between]: [startOfDay, endOfDay] } };
+      const attendanceWhere: any = {
+        date: { [Op.between]: [startOfDay, endOfDay] },
+      };
       if (course_id) {
         attendanceWhere.course_id = course_id;
       }
 
-      const userInclude: any[] = [{
-        model: Attendance,
-        where: attendanceWhere,
-        required: false,
-      }];
+      const userInclude: any[] = [
+        {
+          model: Attendance,
+          where: attendanceWhere,
+          required: false,
+        },
+      ];
 
       // Only join task (vazifa) status for a specific lesson - otherwise a
       // student would show one Reyting row per task-graded lesson in the
@@ -414,13 +480,19 @@ export class CourseService {
         });
       }
 
-      let user: any = await this.courseRepository.findAll({
+      const user: any = await this.courseRepository.findAll({
         where: { group_id },
         include: [
           {
-            model: Subscriptions, include: [{
-              model: User, required: false, include: userInclude
-            }, { model: Course }]
+            model: Subscriptions,
+            include: [
+              {
+                model: User,
+                required: false,
+                include: userInclude,
+              },
+              { model: Course },
+            ],
           },
           {
             model: CourseSchedule,
@@ -433,7 +505,15 @@ export class CourseService {
             model: CourseSubgroup,
             as: 'subgroups',
             required: false,
-            include: [{ model: CourseSchedule, as: 'schedules', separate: true, limit: 1, order: [['createdAt', 'DESC']] }],
+            include: [
+              {
+                model: CourseSchedule,
+                as: 'schedules',
+                separate: true,
+                limit: 1,
+                order: [['createdAt', 'DESC']],
+              },
+            ],
           },
         ],
       });
@@ -469,20 +549,34 @@ export class CourseService {
           {
             model: CourseSubgroup,
             as: 'subgroups',
-            include: [{ model: CourseSchedule, as: 'schedules', separate: true, limit: 1, order: [['createdAt', 'DESC']] }],
+            include: [
+              {
+                model: CourseSchedule,
+                as: 'schedules',
+                separate: true,
+                limit: 1,
+                order: [['createdAt', 'DESC']],
+              },
+            ],
             required: false,
           },
-          { model: User, as: 'teacher', },
+          { model: User, as: 'teacher' },
           {
-            model: Subscriptions, include: [{
-              model: User, include: [{
-                model: Payment,
-                where: paymentWhere,
-                required: false,
-                order: [['due_date', 'DESC']]
-              }]
-            }]
-          }
+            model: Subscriptions,
+            include: [
+              {
+                model: User,
+                include: [
+                  {
+                    model: Payment,
+                    where: paymentWhere,
+                    required: false,
+                    order: [['due_date', 'DESC']],
+                  },
+                ],
+              },
+            ],
+          },
         ],
         attributes: {
           include: [
@@ -501,7 +595,7 @@ export class CourseService {
                   ) s
                 )
               `),
-              'payment'
+              'payment',
             ],
             [
               Sequelize.literal(
@@ -511,7 +605,7 @@ export class CourseService {
             ],
             [
               Sequelize.literal(
-                `COALESCE((SELECT COALESCE(SUM("lesson"."duration"), 0) FROM "lesson" WHERE "lesson"."course_id" = :id)::int, 0)`
+                `COALESCE((SELECT COALESCE(SUM("lesson"."duration"), 0) FROM "lesson" WHERE "lesson"."course_id" = :id)::int, 0)`,
               ),
               'total_duration',
             ],
@@ -601,7 +695,12 @@ export class CourseService {
     }
   }
 
-  async update(id: number, courseDto: CourseDto, cover: any, user_id: number): Promise<object> {
+  async update(
+    id: number,
+    courseDto: CourseDto,
+    cover: any,
+    user_id: number,
+  ): Promise<object> {
     try {
       const course = await this.courseRepository.findByPk(id);
       if (!course) {
@@ -620,10 +719,13 @@ export class CourseService {
         }
         cover = await this.uploadedService.create(cover, file_type);
       }
-      const update = await this.courseRepository.update({ ...courseData, cover: cover || course.cover }, {
-        where: { id },
-        returning: true,
-      });
+      const update = await this.courseRepository.update(
+        { ...courseData, cover: cover || course.cover },
+        {
+          where: { id },
+          returning: true,
+        },
+      );
       if (parsedSubgroups) {
         await this.courseSubgroupService.sync(id, parsedSubgroups);
       } else if (attendanceDays !== undefined) {

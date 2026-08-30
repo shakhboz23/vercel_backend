@@ -28,7 +28,7 @@ export class RoleController {
   constructor(
     private readonly roleService: RoleService,
     private readonly jwtService: JwtService,
-  ) { }
+  ) {}
 
   @ApiOperation({ summary: 'Registration a new role' })
   @Post('/create')

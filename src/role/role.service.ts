@@ -98,8 +98,8 @@ export class RoleService {
           role,
         },
       });
-      let last_activity: Date = new Date();
-      let activity: string = String(
+      const last_activity: Date = new Date();
+      const activity: string = String(
         new Date().getTime() - new Date(+user.last_activity).getTime(),
       );
       await this.activityService.create({
@@ -109,7 +109,7 @@ export class RoleService {
       });
       if (user) {
         user = await this.roleRepository.update(
-          {  },
+          {},
           { where: { user_id: id, role }, returning: true },
         );
         return {
@@ -209,8 +209,8 @@ export class RoleService {
       const { class: class_data, subject_id } = roleReytingDto;
 
       const filter = [];
-      let data: any = {};
-      for (let i in roleReytingDto) {
+      const data: any = {};
+      for (const i in roleReytingDto) {
         if (roleReytingDto[i] && i != 'class' && i != 'subject_id') {
           data[i] = roleReytingDto[i];
         }
@@ -285,7 +285,7 @@ export class RoleService {
       const { class: class_data } = roleReytingDto;
 
       const filter = [];
-      for (let i in roleReytingDto) {
+      for (const i in roleReytingDto) {
         if (roleReytingDto[i] && i != 'class' && i != 'subject_id') {
           filter[i] = roleReytingDto[i];
         }
@@ -300,7 +300,7 @@ export class RoleService {
       const roles: any = await this.roleRepository.findAll({
         where: { role: 'teacher', ...filter },
       });
-      let result: any = [];
+      const result: any = [];
       let data: any;
       for (let i = 0; i < roles?.length; i++) {
         let totalReyting: number = 0;
@@ -352,7 +352,7 @@ export class RoleService {
           replacements: { subjectId: subject_id },
           order: [['totalReyting', 'DESC']],
         });
-        for (let total of data) {
+        for (const total of data) {
           totalReyting += +total.get('totalReyting');
         }
         result.push({ ...roles[i].toJSON(), totalReyting });
@@ -443,10 +443,7 @@ export class RoleService {
     }
   }
 
-  async updateProfile(
-    id: string,
-    updateDto: UpdateDto,
-  ): Promise<object> {
+  async updateProfile(id: string, updateDto: UpdateDto): Promise<object> {
     try {
       let role: any = await this.roleRepository.findByPk(id, {
         include: { model: User },
@@ -496,7 +493,7 @@ export class RoleService {
     try {
       const total_users = await this.roleRepository.count();
       const user_data = {};
-      for (let i of users) {
+      for (const i of users) {
         user_data[i] = await this.roleRepository.count({
           where: {
             role: i,
@@ -607,7 +604,7 @@ export class RoleService {
         }
       }
       const update = await this.roleRepository.update(
-        {  },
+        {},
         {
           where: { user_id, role },
           returning: true,

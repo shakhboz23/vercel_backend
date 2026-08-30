@@ -14,15 +14,11 @@ import { PaymentDto } from './dto/payment.dto';
 @ApiTags('Payment')
 @Controller('payment')
 export class PaymentController {
-  constructor(
-    private readonly paymentService: PaymentService,
-  ) {}
+  constructor(private readonly paymentService: PaymentService) {}
 
   @ApiOperation({ summary: 'Registration a new user' })
   @Post('/create')
-  async create(
-    @Body() paymentDto: PaymentDto,
-  ) {
+  async create(@Body() paymentDto: PaymentDto) {
     const data = await this.paymentService.create(paymentDto);
     return data;
   }

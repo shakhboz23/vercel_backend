@@ -41,7 +41,7 @@ export class AuthGuard implements CanActivate {
         if (date_now >= user.exp) {
           throw new UnauthorizedException({
             message: 'Token vaqti tugagan!',
-        statusCode: 401,
+            statusCode: 401,
           });
         } else {
           const jwt_payload = { id: req.user.id };

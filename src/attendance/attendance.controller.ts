@@ -14,15 +14,11 @@ import { AttendanceDto } from './dto/attendance.dto';
 @ApiTags('Attendance')
 @Controller('attendance')
 export class AttendanceController {
-  constructor(
-    private readonly attendanceService: AttendanceService,
-  ) {}
+  constructor(private readonly attendanceService: AttendanceService) {}
 
   @ApiOperation({ summary: 'Registration a new user' })
   @Post('/create')
-  async create(
-    @Body() attendanceDto: AttendanceDto,
-  ) {
+  async create(@Body() attendanceDto: AttendanceDto) {
     const data = await this.attendanceService.create(attendanceDto);
     return data;
   }

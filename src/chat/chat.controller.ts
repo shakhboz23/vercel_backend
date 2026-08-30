@@ -37,14 +37,15 @@ import { ChatGateway } from '../gateway/gateway';
 @WebSocketGateway({ cors: { origin: '*', credentials: true } }) // cors
 @Controller('chat')
 export class ChatController
-  implements OnGatewayConnection, OnGatewayDisconnect {
+  implements OnGatewayConnection, OnGatewayDisconnect
+{
   constructor(
     private readonly chatService: ChatService,
     private readonly roleService: RoleService,
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
     private readonly chatGateway: ChatGateway,
-  ) { }
+  ) {}
 
   @SubscribeMessage('joinChat')
   handleJoin(@MessageBody() chatId: string, @ConnectedSocket() client: Socket) {
@@ -53,14 +54,17 @@ export class ChatController
   }
 
   @SubscribeMessage('leaveChat')
-  handleLeave(@MessageBody() chatId: string, @ConnectedSocket() client: Socket) {
+  handleLeave(
+    @MessageBody() chatId: string,
+    @ConnectedSocket() client: Socket,
+  ) {
     client.leave(chatId);
   }
 
   async handleConnection(client: Socket) {
     try {
       this.chatGateway.server.on('connection', async (socket) => {});
-    } catch (_) { }
+    } catch (_) {}
   }
 
   async handleDisconnect(client: Socket) {}
@@ -114,13 +118,18 @@ export class ChatController
   ) {
     const user_id = extractUserIdFromToken(headers, this.jwtService, true);
     const chat: any = await this.chatService.create(chatDto, file, user_id);
-    this.chatGateway.server.to(String(chatDto.chatgroup_id)).emit('receiveMessage', chat);
+    this.chatGateway.server
+      .to(String(chatDto.chatgroup_id))
+      .emit('receiveMessage', chat);
     return chat;
   }
 
   @ApiOperation({ summary: 'Get all chats' })
   @SubscribeMessage('getAll/created')
-  async created(@MessageBody() { chatgroup_id, page }: { chatgroup_id: number, page: number }) {
+  async created(
+    @MessageBody()
+    { chatgroup_id, page }: { chatgroup_id: number; page: number },
+  ) {
     const chats = await this.chatService.findAll(page, chatgroup_id);
     this.chatGateway.server.emit('chats', chats);
   }

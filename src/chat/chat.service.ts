@@ -11,7 +11,7 @@ export class ChatService {
   constructor(
     @InjectModel(Chat) private readonly ChatRepository: typeof Chat,
     private readonly fileService: FilesService,
-  ) { }
+  ) {}
 
   async create(chatDto: ChatDto, file: any, user_id: number) {
     try {

@@ -24,7 +24,7 @@ export class LikeController {
   constructor(
     private readonly likeService: LikeService,
     private readonly jwtService: JwtService,
-  ) { }
+  ) {}
 
   @ApiOperation({ summary: 'Create a new like' })
   @Post('/create')

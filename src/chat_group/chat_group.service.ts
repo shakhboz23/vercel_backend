@@ -16,7 +16,7 @@ export class ChatGroupService {
   constructor(
     @InjectModel(ChatGroup) private chatGroupRepository: typeof ChatGroup,
     private readonly jwtService: JwtService,
-  ) { }
+  ) {}
 
   async create(chatGroupDto: ChatGroupDto): Promise<object> {
     try {
@@ -67,7 +67,7 @@ export class ChatGroupService {
     try {
       const chatGroup = await this.chatGroupRepository.findOne({
         where: { id },
-        include: [{ model: Chat }, { model: Course }]
+        include: [{ model: Chat }, { model: Course }],
       });
       if (!chatGroup) {
         throw new NotFoundException('Group chat not found');
@@ -83,7 +83,8 @@ export class ChatGroupService {
       const chatGroup = await this.chatGroupRepository.findAll({
         where: { group_id },
         include: [
-          { model: Course }, {
+          { model: Course },
+          {
             model: Chat,
             limit: 1,
             required: false,
@@ -104,7 +105,10 @@ export class ChatGroupService {
     try {
       const offset = (page - 1) * 10;
       const limit = 10;
-      const chatGroup = await this.chatGroupRepository.findAll({ offset, limit });
+      const chatGroup = await this.chatGroupRepository.findAll({
+        offset,
+        limit,
+      });
       const total_count = await this.chatGroupRepository.count();
       const total_pages = Math.ceil(total_count / 10);
       const response = {

@@ -25,7 +25,7 @@ export class LessonController {
   constructor(
     private readonly lessonService: LessonService,
     private readonly jwtService: JwtService,
-  ) { }
+  ) {}
 
   @ApiOperation({ summary: 'Create a new lesson' })
   @ApiConsumes('multipart/form-data')
@@ -80,13 +80,20 @@ export class LessonController {
 
   @ApiOperation({ summary: 'Get all lessons' })
   @Get('/')
-  getAll(@Query('subcategory_id') subcategory_id: string, @Query('category_id') category_id: number) {
+  getAll(
+    @Query('subcategory_id') subcategory_id: string,
+    @Query('category_id') category_id: number,
+  ) {
     return this.lessonService.getAll(subcategory_id, category_id);
   }
 
   @ApiOperation({ summary: 'Get all lessons' })
   @Get('/getByCourse/:id')
-  getByCourse(@Param('id') id: number, @Headers() headers: string, @Query('date') date: string,) {
+  getByCourse(
+    @Param('id') id: number,
+    @Headers() headers: string,
+    @Query('date') date: string,
+  ) {
     const user_id = extractUserIdFromToken(headers, this.jwtService, true);
     return this.lessonService.getByCourse(+id, user_id, date);
   }

@@ -84,7 +84,6 @@ export class CourseDto {
   @IsBooleanString()
   type: boolean;
 
-
   @ApiProperty({
     example: 'A',
     description: 'group type',
@@ -95,7 +94,8 @@ export class CourseDto {
 
   @ApiProperty({
     example: '["Mon", "Tue", "Wed"]',
-    description: 'JSON array of the days on which attendance is taken. Ignored when subgroups is present.',
+    description:
+      'JSON array of the days on which attendance is taken. Ignored when subgroups is present.',
     required: false,
   })
   @IsOptional()
@@ -103,7 +103,8 @@ export class CourseDto {
   attendance_days?: string;
 
   @ApiProperty({
-    example: '[{"name":"1-guruh","attendance_days":["Mon","Wed","Fri"]},{"name":"2-guruh","attendance_days":["Tue","Thu","Sat"]}]',
+    example:
+      '[{"name":"1-guruh","attendance_days":["Mon","Wed","Fri"]},{"name":"2-guruh","attendance_days":["Tue","Thu","Sat"]}]',
     description:
       'JSON array of subgroups for an offline course split across multiple weekly schedules (e.g. because one physical classroom cannot fit everyone). Lessons and tests stay shared by the whole course. Pass an existing subgroup "id" to rename it or change its days; omit it to create a new subgroup; omit a subgroup entirely to remove it.',
     required: false,

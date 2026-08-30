@@ -24,7 +24,7 @@ export class CommentController {
   constructor(
     private readonly commentService: CommentService,
     private readonly jwtService: JwtService,
-  ) { }
+  ) {}
 
   @ApiOperation({ summary: 'Create a new comment' })
   @Post('/create')
@@ -56,7 +56,10 @@ export class CommentController {
 
   @ApiOperation({ summary: 'Get comments with pagination' })
   @Get('pagination/:page/:lesson_id')
-  pagination(@Param('page') page: number, @Param('lesson_id') lesson_id: number) {
+  pagination(
+    @Param('page') page: number,
+    @Param('lesson_id') lesson_id: number,
+  ) {
     return this.commentService.pagination(page, lesson_id);
   }
 

@@ -13,14 +13,14 @@ export class Test_settingsService {
   constructor(
     @InjectModel(Test_settings)
     private test_settingsRepository: typeof Test_settings,
-  ) { }
+  ) {}
 
   async create(test_settingsDto: Test_settingsDto): Promise<object> {
     try {
       const { lesson_id } = test_settingsDto;
       let test_settings = await this.test_settingsRepository.findOne({
-        where: { lesson_id }
-      })
+        where: { lesson_id },
+      });
       if (test_settings) {
         return this.update(test_settings.id, test_settingsDto);
       }

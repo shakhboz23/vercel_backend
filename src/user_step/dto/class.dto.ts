@@ -1,8 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsNotEmpty,
-  IsNumber,
-} from 'class-validator';
+import { IsNotEmpty, IsNumber } from 'class-validator';
 
 export class UserStepDto {
   @ApiProperty({

@@ -28,7 +28,7 @@ interface CourseAttributes {
   cover: string;
   group_id: number;
   subcategory_id: number;
-  user_id: number
+  user_id: number;
   group_type: string;
   teacher_id: number;
   start_date: Date;
@@ -120,7 +120,6 @@ export class Course extends Model<Course, CourseAttributes> {
     foreignKey: 'teacher_id',
   })
   teacher: User;
-
 
   @ForeignKey(() => SubCategory)
   @Column({

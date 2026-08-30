@@ -1,18 +1,11 @@
-import {
-  Controller,
-  Get,
-  Param,
-  Delete,
-} from '@nestjs/common';
+import { Controller, Get, Param, Delete } from '@nestjs/common';
 import { UserStreakService } from './user_streak.service';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('UserStreak')
 @Controller('userStreak')
 export class UserStreakController {
-  constructor(
-    private readonly userStreakService: UserStreakService,
-  ) {}
+  constructor(private readonly userStreakService: UserStreakService) {}
 
   @ApiOperation({ summary: 'Get all users' })
   @Get('getByRole')

@@ -14,7 +14,10 @@ interface ResetpasswordAttributes {
 }
 
 @Table({ tableName: 'resetpassword' })
-export class Resetpassword extends Model<Resetpassword, ResetpasswordAttributes> {
+export class Resetpassword extends Model<
+  Resetpassword,
+  ResetpasswordAttributes
+> {
   @Column({
     type: DataType.INTEGER,
     autoIncrement: true,

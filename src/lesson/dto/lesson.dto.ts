@@ -29,7 +29,6 @@ export class LessonDto {
   @IsNumberString()
   course_id: number;
 
-
   @ApiProperty({
     example: 1,
     description: 'Course id',

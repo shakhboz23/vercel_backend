@@ -29,7 +29,6 @@ export class Role extends Model<Role, RoleAttributes> {
   })
   id: number;
 
-
   @Column({ type: DataType.ARRAY(DataType.STRING), allowNull: true })
   subjects: string[];
 

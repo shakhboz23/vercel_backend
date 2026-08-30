@@ -1,5 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import {
+  IsArray,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 
 export class TeacherDto {
   @ApiProperty({
@@ -35,7 +41,13 @@ export class TeacherDto {
   subjects: string[];
 
   @ApiProperty({
-    example: [["1", "A"], ["2", "B"], ["3", "C"], ["4", "D"], ["5", "E"]],
+    example: [
+      ['1', 'A'],
+      ['2', 'B'],
+      ['3', 'C'],
+      ['4', 'D'],
+      ['5', 'E'],
+    ],
     description: 'Classes of the user',
   })
   @IsNotEmpty()

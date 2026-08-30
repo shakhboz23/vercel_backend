@@ -42,7 +42,7 @@ export class GroupController {
     private readonly groupService: GroupService,
     private readonly jwtService: JwtService,
     private readonly chatGateway: ChatGateway,
-  ) { }
+  ) {}
 
   @ApiOperation({ summary: 'Create a new group' })
   @ApiConsumes('multipart/form-data')
@@ -76,10 +76,7 @@ export class GroupController {
 
   @ApiOperation({ summary: 'Get group by ID' })
   @Get('/getById/:id')
-  getById(
-    @Param('id') id: number,
-    @Headers() headers: Record<string, string>
-  ) {
+  getById(@Param('id') id: number, @Headers() headers: Record<string, string>) {
     const user_id = extractUserIdFromToken(headers, this.jwtService, true);
     return this.groupService.getById(id, user_id);
   }
@@ -93,7 +90,10 @@ export class GroupController {
 
   @ApiOperation({ summary: 'Get all groups' })
   @Get('/get-analytics/:category_id')
-  getAllAnalytics(@Param('category_id') category_id: number, @Headers() headers: string) {
+  getAllAnalytics(
+    @Param('category_id') category_id: number,
+    @Headers() headers: string,
+  ) {
     const user_id = extractUserIdFromToken(headers, this.jwtService, true);
     return this.groupService.getAllAnalytics(category_id, user_id);
   }

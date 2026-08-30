@@ -13,7 +13,7 @@ import { SubCategory } from 'src/subcategory/models/subcategory.models';
 export class CategoryService {
   constructor(
     @InjectModel(Category) private categoryRepository: typeof Category,
-  ) { }
+  ) {}
 
   async create(categoryDto: CategoryDto): Promise<object> {
     try {

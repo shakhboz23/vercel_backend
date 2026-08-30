@@ -36,12 +36,9 @@ export class UserAuthService {
     @InjectModel(User) private userRepository: typeof User,
     private readonly jwtService: JwtService,
     private readonly roleService: RoleService,
-  ) { }
+  ) {}
 
-  async register(
-    registerUserDto: RegisterUserDto,
-    type?: string,
-  ) {
+  async register(registerUserDto: RegisterUserDto, type?: string) {
     try {
       let is_new_role = false;
       let { phone, role, password } = registerUserDto;
@@ -115,7 +112,15 @@ export class UserAuthService {
 
         const user_data: any = await this.userRepository.findByPk(user.id, {
           include: { model: Role },
-          attributes: { exclude: ['activation_link', 'hashed_password', 'is_active', 'hashed_refresh_token', ''] },
+          attributes: {
+            exclude: [
+              'activation_link',
+              'hashed_password',
+              'is_active',
+              'hashed_refresh_token',
+              '',
+            ],
+          },
         });
 
         return {
@@ -131,17 +136,21 @@ export class UserAuthService {
   }
 
   async createUsers(names: any[]) {
-    let user_list: any = [];
+    const user_list: any = [];
     const users = names.map(async (name) => {
       const password = this.generateRandomPassword();
       name = name.split(' ');
-      user_list.push({ login: name[0] + password.slice(0, 2) + '@gmail.com', password, user: name.join(' ') });
+      user_list.push({
+        login: name[0] + password.slice(0, 2) + '@gmail.com',
+        password,
+        user: name.join(' '),
+      });
       await this.register({
         name: name[0],
         surname: name[1],
         password,
         role: RoleName.student,
-      })
+      });
     });
     return user_list;
   }
@@ -179,7 +188,7 @@ export class UserAuthService {
       throw new BadRequestException('User already activated');
     }
     const updateduser = await this.userRepository.update(
-      { is_active: true, activation_link: "" },
+      { is_active: true, activation_link: '' },
       { where: { activation_link }, returning: true },
     );
     const { access_token, refresh_token } = await generateToken(
@@ -193,10 +202,7 @@ export class UserAuthService {
     };
   }
 
-  async login(
-    loginUserDto: LoginUserDto,
-    type?: string,
-  ) {
+  async login(loginUserDto: LoginUserDto, type?: string) {
     try {
       const user = await this.userRepository.findOne({
         where: { phone: loginUserDto.phone },
@@ -249,10 +255,7 @@ export class UserAuthService {
   }
 
   async getWebAppUser(initData: any) {
-    const isValid = validateTelegramInitData(
-      initData,
-      process.env.BOT_TOKEN
-    );
+    const isValid = validateTelegramInitData(initData, process.env.BOT_TOKEN);
 
     if (!isValid) {
       throw new NotFoundException('User not found!');
@@ -262,9 +265,10 @@ export class UserAuthService {
     const bot_id = JSON.parse(params.get('user'))?.id;
     const user: any = await this.userRepository.findOne({
       include: {
-        model: Bot, where: { bot_id }
-      }
-    })
+        model: Bot,
+        where: { bot_id },
+      },
+    });
 
     if (!user) {
       throw new NotFoundException('User not found!');
@@ -286,7 +290,7 @@ export class UserAuthService {
   // checkEmail/newPassword/changeEmail/googleAuth: kept as no-ops (their
   // implementations were already fully commented out before this file was
   // split out of user.service.ts) so behavior is unchanged.
-  async checkEmail(email: string) { }
+  async checkEmail(email: string) {}
 
   async checkPassword(checkDto: CheckDto) {
     const res: any = await this.roleService.checkPassword(checkDto);
@@ -303,7 +307,7 @@ export class UserAuthService {
     }
   }
 
-  async newPassword(newPasswordDto: NewPasswordDto) { }
+  async newPassword(newPasswordDto: NewPasswordDto) {}
 
   async updatePassword(password: string, phone: string) {
     try {
@@ -312,17 +316,15 @@ export class UserAuthService {
         { hashed_password },
         { where: { phone }, returning: true },
       );
-      return updated_info[1][0]
+      return updated_info[1][0];
     } catch (error) {
       throw new BadRequestException(error.message);
     }
   }
 
-  async changeEmail(user_id: number, changeUserEmailDto: ChangeUserEmailDto) { }
+  async changeEmail(user_id: number, changeUserEmailDto: ChangeUserEmailDto) {}
 
-  async forgotPassword(
-    phoneUserDto: PhoneUserDto,
-  ) {
+  async forgotPassword(phoneUserDto: PhoneUserDto) {
     try {
       const { phone } = phoneUserDto;
       const activation_link: string = uuid.v4();
@@ -334,7 +336,7 @@ export class UserAuthService {
 
       return {
         statusCode: HttpStatus.OK,
-        message: "Emailingizga link yuborildi",
+        message: 'Emailingizga link yuborildi',
         data: {
           user: updated_info[1][0],
         },
@@ -344,15 +346,12 @@ export class UserAuthService {
     }
   }
 
-  async resetPassword(
-    forgotPasswordDto: ForgotPasswordDto,
-  ) {
+  async resetPassword(forgotPasswordDto: ForgotPasswordDto) {
     try {
-      const { activation_link, new_password } =
-        forgotPasswordDto;
+      const { activation_link, new_password } = forgotPasswordDto;
       const user = await this.userRepository.findOne({
-        where: { activation_link }
-      })
+        where: { activation_link },
+      });
       const hashed_password = await hash(new_password, 7);
       const updated_info = await this.userRepository.update(
         { hashed_password },
@@ -366,13 +365,9 @@ export class UserAuthService {
     }
   }
 
-  async changePassword(
-    user_id: number,
-    changePasswordDto: ChangePasswordDto,
-  ) {
+  async changePassword(user_id: number, changePasswordDto: ChangePasswordDto) {
     try {
-      const { old_password, new_password } =
-        changePasswordDto;
+      const { old_password, new_password } = changePasswordDto;
       const user = await this.userRepository.findByPk(user_id);
       const isMatchPass = await bcrypt.compare(
         changePasswordDto.old_password,
@@ -426,7 +421,7 @@ export class UserAuthService {
         audience: process.env.FLUTTER_CLIENT_ID,
       });
     } else if (type == 'desktop') {
-      const client = new OAuth2Client(process.env.DESKTOP_CLIENT_ID)
+      const client = new OAuth2Client(process.env.DESKTOP_CLIENT_ID);
       ticket = await client.verifyIdToken({
         idToken: token,
         audience: process.env.DESKTOP_CLIENT_ID,
@@ -442,7 +437,7 @@ export class UserAuthService {
     return payload;
   }
 
-  async googleAuth(credential: string, type?: string) { }
+  async googleAuth(credential: string, type?: string) {}
 
   async createDefaultUser() {
     try {
@@ -452,6 +447,6 @@ export class UserAuthService {
         password: process.env.INITIAL_PASSWORD,
         role: RoleName.super_admin,
       });
-    } catch { }
+    } catch {}
   }
 }

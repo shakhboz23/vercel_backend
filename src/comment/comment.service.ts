@@ -23,11 +23,14 @@ export class CommentService {
     @InjectModel(Comment) private commentRepository: typeof Comment,
     private readonly userService: UserService,
     private uploadedService: UploadedService,
-  ) { }
+  ) {}
 
   async create(commentDto: CommentDto, user_id: number): Promise<object> {
     try {
-      const comment = await this.commentRepository.create({ user_id, ...commentDto });
+      const comment = await this.commentRepository.create({
+        user_id,
+        ...commentDto,
+      });
       return this.commentRepository.findOne({
         where: { id: comment.id },
         include: [
@@ -45,20 +48,29 @@ export class CommentService {
   async getAll(group_id: number): Promise<object> {
     try {
       let comments: any = await this.commentRepository.findAll({
-        include: [{ model: User }, {
-          model: Lesson,
-          include: [{
-            model: Course, include: [{
-              model: Group, where: { id: group_id }
-            }]
-          }]
-        }],
+        include: [
+          { model: User },
+          {
+            model: Lesson,
+            include: [
+              {
+                model: Course,
+                include: [
+                  {
+                    model: Group,
+                    where: { id: group_id },
+                  },
+                ],
+              },
+            ],
+          },
+        ],
         order: [[Sequelize.col('Comment.createdAt'), 'ASC']],
         attributes: {
           include: [
             [
               Sequelize.literal(
-                `EXTRACT(EPOCH FROM "Comment"."createdAt")::int`
+                `EXTRACT(EPOCH FROM "Comment"."createdAt")::int`,
               ),
               'createdAt',
             ],
@@ -82,8 +94,7 @@ export class CommentService {
         return acc;
       }, {});
 
-      let commentsList = await this.pagination(1, group_id);
-
+      const commentsList = await this.pagination(1, group_id);
 
       comments = Object.keys(groupedByYearMonth).map((key, index) => {
         const [year, month] = key.split('-');
@@ -124,7 +135,8 @@ export class CommentService {
       const limit = 30;
       const comments = await this.commentRepository.findAll({
         where: { lesson_id },
-        offset, limit,
+        offset,
+        limit,
         include: [{ model: User }],
         order: [['createdAt', 'DESC']],
       });

@@ -9,7 +9,7 @@ import {
 import { Lesson } from '../../lesson/models/lesson.models';
 
 interface Test_settingsAttributes {
-  test_type: string,
+  test_type: string;
   start_date: Date;
   end_date: Date;
   sort_level: any[];
@@ -30,7 +30,7 @@ export class Test_settings extends Model<
   })
   id: number;
 
-   @Column({
+  @Column({
     type: DataType.STRING,
   })
   test_type: string;

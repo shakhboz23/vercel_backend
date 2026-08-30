@@ -28,7 +28,7 @@ export class LessonService {
     private readonly watchedService: WatchedService,
     private readonly filesService: FilesService,
     private readonly commentService: CommentService,
-  ) { }
+  ) {}
 
   async create(lessonDto: LessonDto, video: any): Promise<object> {
     try {
@@ -79,40 +79,50 @@ export class LessonService {
 
   async getAll(subcategory_id: string, category_id: number): Promise<object> {
     try {
-      subcategory_id = JSON.parse(subcategory_id || "[]");
-      let category: any = {}
+      subcategory_id = JSON.parse(subcategory_id || '[]');
+      let category: any = {};
       let categoryInclude: any = {};
 
       if (!subcategory_id?.length && +category_id) {
         categoryInclude = {
-          include: [{
-            model: SubCategory,
-            include: [{
-              model: Category,
-              where: {
-                id: category_id
-              },
+          include: [
+            {
+              model: SubCategory,
+              include: [
+                {
+                  model: Category,
+                  where: {
+                    id: category_id,
+                  },
+                  required: true,
+                },
+              ],
               required: true,
             },
-            ],
-            required: true,
-          }]
-        }
+          ],
+        };
       } else if (subcategory_id?.length) {
         category = {
           where: {
             subcategory_id: {
-              [Op.in]: subcategory_id
-            }
-          }
-        }
+              [Op.in]: subcategory_id,
+            },
+          },
+        };
       }
 
       const lessons: any = await this.lessonRepository.findAll({
         where: { type: 'lesson' },
-        include: [{ model: Lesson }, {
-          model: Course, attributes: [], ...category, ...categoryInclude, required: true
-        }],
+        include: [
+          { model: Lesson },
+          {
+            model: Course,
+            attributes: [],
+            ...category,
+            ...categoryInclude,
+            required: true,
+          },
+        ],
         attributes: {
           include: [
             [
@@ -124,7 +134,7 @@ export class LessonService {
               `),
               'likes_count',
             ],
-          ]
+          ],
         },
         order: [['id', 'ASC']],
       });
@@ -137,7 +147,7 @@ export class LessonService {
   async getReyting(lesson_id: number): Promise<object> {
     try {
       const reyting: any = await this.lessonRepository.findAll({
-        include: [{ model: Reyting }]
+        include: [{ model: Reyting }],
       });
       return reyting;
     } catch (error) {
@@ -145,7 +155,11 @@ export class LessonService {
     }
   }
 
-  async getByCourse(course_id: number, user_id: number, date?: string): Promise<Object> {
+  async getByCourse(
+    course_id: number,
+    user_id: number,
+    date?: string,
+  ): Promise<Object> {
     try {
       user_id = user_id || null;
       const lessons: any = await this.lessonRepository.findAll({
@@ -160,10 +174,24 @@ export class LessonService {
           },
           {
             model: Lesson,
-            include: [{
-              model: Lesson,
-              include: [{
+            include: [
+              {
                 model: Lesson,
+                include: [
+                  {
+                    model: Lesson,
+                    attributes: {
+                      include: [
+                        [
+                          Sequelize.literal(
+                            `(CASE WHEN EXISTS (SELECT 1 FROM "reyting" WHERE "reyting"."lesson_id" = "Lesson"."id" AND "reyting"."user_id" = :user_id AND "reyting"."is_finished" = true) THEN true ELSE false END)`,
+                          ),
+                          'is_finished',
+                        ],
+                      ],
+                    },
+                  },
+                ],
                 attributes: {
                   include: [
                     [
@@ -174,18 +202,8 @@ export class LessonService {
                     ],
                   ],
                 },
-              }],
-              attributes: {
-                include: [
-                  [
-                    Sequelize.literal(
-                      `(CASE WHEN EXISTS (SELECT 1 FROM "reyting" WHERE "reyting"."lesson_id" = "Lesson"."id" AND "reyting"."user_id" = :user_id AND "reyting"."is_finished" = true) THEN true ELSE false END)`,
-                    ),
-                    'is_finished',
-                  ],
-                ],
               },
-            }],
+            ],
             attributes: {
               include: [
                 [
@@ -310,7 +328,7 @@ export class LessonService {
             ],
             [
               Sequelize.literal(
-                `COALESCE((SELECT COALESCE(SUM("lesson"."duration"), 0) FROM "lesson" WHERE "lesson"."course_id" = "Lesson"."course_id")::int, 0)`
+                `COALESCE((SELECT COALESCE(SUM("lesson"."duration"), 0) FROM "lesson" WHERE "lesson"."course_id" = "Lesson"."course_id")::int, 0)`,
               ),
               'total_duration',
             ],
@@ -320,12 +338,12 @@ export class LessonService {
               ),
               'is_subscribed',
             ],
-          ]
+          ],
         },
         replacements: { user_id },
       });
       lesson = lesson.get({ plain: true });
-      const comments = await this.commentService.pagination(1, id)
+      const comments = await this.commentService.pagination(1, id);
       lesson.comments = comments;
       if (!lesson) {
         throw new NotFoundException('Lesson not found');

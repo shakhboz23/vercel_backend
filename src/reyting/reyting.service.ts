@@ -34,7 +34,7 @@ export class ReytingService {
     private readonly testsService: TestsService,
     @Inject(forwardRef(() => BotService))
     private readonly botService: BotService,
-  ) { }
+  ) {}
 
   // Looks up display info for a rating-change notification: the course
   // title (via the lesson if the reyting is lesson-based, or directly if
@@ -80,8 +80,12 @@ export class ReytingService {
 
     this.resolveRatingContext(lesson_id, course_id)
       .then(({ courseTitle, lessonTitle }) => {
-        const reason = (finished_type && RATING_REASON_LABELS[finished_type]) || 'Yangilandi';
-        const reasonText = lessonTitle ? `${reason} — "${lessonTitle}"` : reason;
+        const reason =
+          (finished_type && RATING_REASON_LABELS[finished_type]) ||
+          'Yangilandi';
+        const reasonText = lessonTitle
+          ? `${reason} — "${lessonTitle}"`
+          : reason;
         return this.botService.notifyRatingChanged(
           user_id,
           courseTitle,
@@ -141,13 +145,16 @@ export class ReytingService {
         };
       } else {
         const oldBall = is_reyting.ball;
-        const reyting = await this.reytingRepository.update({
-          ...reytingDto,
-          user_id,
-        }, {
-          where: { id: is_reyting.id },
-          returning: true,
-        });
+        const reyting = await this.reytingRepository.update(
+          {
+            ...reytingDto,
+            user_id,
+          },
+          {
+            where: { id: is_reyting.id },
+            returning: true,
+          },
+        );
         const updated = reyting[1][0];
         this.notifyRatingChange(
           user_id,
@@ -179,7 +186,10 @@ export class ReytingService {
     return !!reyting;
   }
 
-  async getTaskStatus(user_id: number, lesson_id: number): Promise<Reyting | null> {
+  async getTaskStatus(
+    user_id: number,
+    lesson_id: number,
+  ): Promise<Reyting | null> {
     return this.reytingRepository.findOne({
       where: { user_id, lesson_id, finished_type: FinishedType.task },
     });
@@ -260,16 +270,21 @@ export class ReytingService {
     const testsCount = await this.testsService.getLessonTestsCount(lesson_id);
 
     if (testsCount > 0) {
-      throw new BadRequestException('Bu darsda test bor, faqat test orqali tugatish mumkin.');
+      throw new BadRequestException(
+        'Bu darsda test bor, faqat test orqali tugatish mumkin.',
+      );
     }
 
-    const reyting = await this.reytingRepository.update({
-      is_finished: true,
-      finished_type: FinishedType.manual,
-    }, {
-      where: { lesson_id, user_id },
-      returning: true,
-    });
+    const reyting = await this.reytingRepository.update(
+      {
+        is_finished: true,
+        finished_type: FinishedType.manual,
+      },
+      {
+        where: { lesson_id, user_id },
+        returning: true,
+      },
+    );
 
     return reyting[1][0];
   }
@@ -323,10 +338,7 @@ export class ReytingService {
     }
   }
 
-  async getLessonsReyting(
-    lesson_id: number,
-    user_id: number,
-  ): Promise<object> {
+  async getLessonsReyting(lesson_id: number, user_id: number): Promise<object> {
     try {
       const reytings = await this.reytingRepository.findAll({
         where: { lesson_id },

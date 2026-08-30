@@ -27,18 +27,14 @@ export class BotOnboardingService {
     @InjectBot(BOT_NAME) private readonly bot: Telegraf<Context>,
     private readonly userService: UserService,
     private readonly roleService: RoleService,
-  ) { }
+  ) {}
 
   mainMenuButtons(role: string): string[][] {
     if (role === 'parent') {
       return [['Farzandlarim'], ['Profil']];
     }
 
-    return [
-      ['Statistika', 'Kurslar'],
-      ['Reyting', 'Davomat'],
-      ['Profil'],
-    ];
+    return [['Statistika', 'Kurslar'], ['Reyting', 'Davomat'], ['Profil']];
   }
 
   async start(ctx: Context) {
@@ -55,7 +51,7 @@ export class BotOnboardingService {
 
       return this.askRole(ctx);
     } catch (error) {
-      console.log(error)
+      console.log(error);
     }
   }
 
@@ -101,9 +97,7 @@ export class BotOnboardingService {
       let user;
       try {
         user = await this.userService.getById(botUser?.user_id);
-      } catch (error) {
-
-      }
+      } catch (error) {}
 
       if (!botUser.dataValues.status) {
         await ctx.reply(
@@ -127,15 +121,12 @@ export class BotOnboardingService {
         }
         await this.bot.telegram.sendChatAction(bot_id, 'typing');
 
-        await ctx.reply(
-          'Academic Success Hub ga xush kelibsiz',
-          {
-            parse_mode: 'HTML',
-            ...Markup.keyboard(this.mainMenuButtons(botUser.dataValues.role))
-              .oneTime()
-              .resize(),
-          },
-        );
+        await ctx.reply('Academic Success Hub ga xush kelibsiz', {
+          parse_mode: 'HTML',
+          ...Markup.keyboard(this.mainMenuButtons(botUser.dataValues.role))
+            .oneTime()
+            .resize(),
+        });
 
         await ctx.reply(
           'Click the button below to Academic Success Hub:',
@@ -148,7 +139,7 @@ export class BotOnboardingService {
         );
       }
     } catch (error) {
-      console.log(error)
+      console.log(error);
     }
   }
 
@@ -228,7 +219,7 @@ export class BotOnboardingService {
           { phone, status: true },
           {
             where: { bot_id },
-            returning: true
+            returning: true,
           },
         );
         if (is_phone) {
@@ -254,21 +245,26 @@ export class BotOnboardingService {
     const user = await this.botRepo.findOne({ where: { bot_id } });
     let bot_user: any;
     if (!user?.user_id) {
-      bot_user = await this.userService.register({ password, name: user.name, surname: user.surname, role: user.role || RoleName.student, phone: user.phone, is_active: true });
-      await this.botRepo.update({ user_id: bot_user?.data.get('id'), step: null }, {
-        where: { bot_id: user.bot_id },
-        returning: true
-      })
-      const url = `https://www.ashacademy.uz/login?token=${bot_user.token}`;
-      await ctx.reply(
-        'Ro\'yxatdan muvaffaqiyatli o\'tdingiz!',
+      bot_user = await this.userService.register({
+        password,
+        name: user.name,
+        surname: user.surname,
+        role: user.role || RoleName.student,
+        phone: user.phone,
+        is_active: true,
+      });
+      await this.botRepo.update(
+        { user_id: bot_user?.data.get('id'), step: null },
         {
-          parse_mode: 'HTML',
-          ...Markup.keyboard(this.mainMenuButtons(user.role))
-            .oneTime()
-            .resize(),
+          where: { bot_id: user.bot_id },
+          returning: true,
         },
       );
+      const url = `https://www.ashacademy.uz/login?token=${bot_user.token}`;
+      await ctx.reply("Ro'yxatdan muvaffaqiyatli o'tdingiz!", {
+        parse_mode: 'HTML',
+        ...Markup.keyboard(this.mainMenuButtons(user.role)).oneTime().resize(),
+      });
       await ctx.reply(
         'Academic Success Hub saytiga kirish uchun shu yerga bosing',
         Markup.inlineKeyboard([
@@ -287,9 +283,12 @@ export class BotOnboardingService {
     const message = ctx.message as Message.TextMessage;
     const name = message.text.trim();
 
-    await this.botRepo.update({ name, step: SURNAME_STEP }, {
-      where: { bot_id },
-    });
+    await this.botRepo.update(
+      { name, step: SURNAME_STEP },
+      {
+        where: { bot_id },
+      },
+    );
     await ctx.reply('Iltimos familiyangizni kiriting: 👇', {
       parse_mode: 'HTML',
       ...Markup.removeKeyboard(),
@@ -301,13 +300,16 @@ export class BotOnboardingService {
     const message = ctx.message as Message.TextMessage;
     const surname = message.text.trim();
 
-    await this.botRepo.update({ surname }, {
-      where: { bot_id },
-    });
+    await this.botRepo.update(
+      { surname },
+      {
+        where: { bot_id },
+      },
+    );
     return this.handlePassword(ctx);
   }
 
-  async onStop(ctx: Context) { }
+  async onStop(ctx: Context) {}
 
   async sendOTP(phone: string, OTP: string): Promise<boolean> {
     const user = await this.botRepo.findOne({ where: { phone } });

@@ -31,7 +31,10 @@ export enum SubscriptionActivityStatus {
 }
 
 @Table({ tableName: 'subscription_activity' })
-export class SubscriptionActivity extends Model<SubscriptionActivity, SubscriptionActivityAttributes> {
+export class SubscriptionActivity extends Model<
+  SubscriptionActivity,
+  SubscriptionActivityAttributes
+> {
   @Column({
     type: DataType.INTEGER,
     autoIncrement: true,

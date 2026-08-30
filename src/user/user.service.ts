@@ -36,7 +36,7 @@ export class UserService {
     private readonly filesService: FilesService,
     private readonly userAuthService: UserAuthService,
     private readonly userAnalyticsService: UserAnalyticsService,
-  ) { }
+  ) {}
 
   async getAll(role: string) {
     try {
@@ -109,8 +109,7 @@ export class UserService {
           {
             model: Role,
             attributes: {
-              include: [
-              ],
+              include: [],
             },
           },
           {
@@ -118,7 +117,7 @@ export class UserService {
           },
           {
             model: Course,
-          }
+          },
         ],
       });
       if (!user) {
@@ -195,11 +194,7 @@ export class UserService {
     }
   }
 
-  async updateProfile(
-    id: number,
-    updateDto: UpdateDto,
-    image: any
-  ) {
+  async updateProfile(id: number, updateDto: UpdateDto, image: any) {
     try {
       let user: any = await this.userRepository.findByPk(id);
       if (!user) {

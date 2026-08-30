@@ -37,7 +37,7 @@ interface UserAttributes {
 export enum RoleName {
   student = 'student',
   teacher = 'teacher',
-  super_admin = 'super_admin'
+  super_admin = 'super_admin',
 }
 
 @Table({ tableName: 'user' })
@@ -163,7 +163,7 @@ export class User extends Model<User, UserAttributes> {
     hooks: true,
   })
   reyting: Reyting[];
- 
+
   @HasOne(() => Bot, {
     onDelete: 'CASCADE',
     hooks: true,

@@ -15,7 +15,7 @@ export class BotDashboardService {
     @Inject(forwardRef(() => SubscriptionsService))
     private readonly subscriptionsService: SubscriptionsService,
     private readonly userService: UserService,
-  ) { }
+  ) {}
 
   async reyting_courses(ctx: Context) {
     const bot_id = ctx.from.id;
@@ -30,7 +30,7 @@ export class BotDashboardService {
     let courses: any;
     try {
       courses = await this.subscriptionsService.getByUserId(user?.user_id);
-    } catch (error) { }
+    } catch (error) {}
 
     if (!courses?.length) {
       await ctx.reply('Sizda hozircha kurslar mavjud emas.');
@@ -68,7 +68,7 @@ export class BotDashboardService {
     let courses: any;
     try {
       courses = await this.subscriptionsService.getByUserId(user?.user_id);
-    } catch (error) { }
+    } catch (error) {}
 
     const subscription = (courses || []).find(
       (item: any) => item.dataValues.course?.id == course_id,
@@ -162,7 +162,11 @@ export class BotDashboardService {
     return this.sendStatistics(ctx, botUser.user_id, group_id);
   }
 
-  async childStatisticsForGroup(ctx: Context, student_id: number, group_id: number) {
+  async childStatisticsForGroup(
+    ctx: Context,
+    student_id: number,
+    group_id: number,
+  ) {
     return this.sendStatistics(ctx, student_id, group_id);
   }
 
@@ -204,8 +208,10 @@ export class BotDashboardService {
 
     let subscriptions: any;
     try {
-      subscriptions = await this.subscriptionsService.getByUserId(botUser.user_id);
-    } catch (error) { }
+      subscriptions = await this.subscriptionsService.getByUserId(
+        botUser.user_id,
+      );
+    } catch (error) {}
 
     const courses = ((subscriptions as any[]) || [])
       .map((subscription: any) => subscription.dataValues.course)
@@ -237,8 +243,10 @@ export class BotDashboardService {
 
     let subscriptions: any;
     try {
-      subscriptions = await this.subscriptionsService.getByUserId(botUser.user_id);
-    } catch (error) { }
+      subscriptions = await this.subscriptionsService.getByUserId(
+        botUser.user_id,
+      );
+    } catch (error) {}
 
     const subscription = ((subscriptions as any[]) || []).find(
       (item: any) => item.dataValues.course?.id == course_id,
@@ -253,7 +261,10 @@ export class BotDashboardService {
 
     let analytics: any;
     try {
-      analytics = await this.userService.getUserAnalytics(botUser.user_id, course.group_id);
+      analytics = await this.userService.getUserAnalytics(
+        botUser.user_id,
+        course.group_id,
+      );
     } catch (error) {
       console.log(error);
       await ctx.reply('Davomatni olishda xatolik yuz berdi.');
@@ -271,9 +282,9 @@ export class BotDashboardService {
 
     await ctx.reply(
       `📅 <b>${course.title}</b> — Davomat\n\n` +
-      `✅ Qatnashgan darslar: <b>${attendance.attended_classes}</b>\n` +
-      `📚 Jami darslar: <b>${attendance.scheduled_classes}</b>\n` +
-      `📊 Foiz: <b>${attendance.percentage}%</b>`,
+        `✅ Qatnashgan darslar: <b>${attendance.attended_classes}</b>\n` +
+        `📚 Jami darslar: <b>${attendance.scheduled_classes}</b>\n` +
+        `📊 Foiz: <b>${attendance.percentage}%</b>`,
       { parse_mode: 'HTML' },
     );
   }
@@ -308,7 +319,10 @@ export class BotDashboardService {
       return;
     }
 
-    const roleLabel = this.roleLabels[user.current_role] || user.current_role || "ko'rsatilmagan";
+    const roleLabel =
+      this.roleLabels[user.current_role] ||
+      user.current_role ||
+      "ko'rsatilmagan";
 
     await ctx.reply(
       `👤 <b>Profil ma'lumotlari</b>\n\n` +
@@ -316,7 +330,7 @@ export class BotDashboardService {
         `👤 Ism: <b>${user.name || "ko'rsatilmagan"}</b>\n` +
         `👤 Familiya: <b>${user.surname || "ko'rsatilmagan"}</b>\n` +
         `📞 Telefon: <b>${user.phone || "ko'rsatilmagan"}</b>\n` +
-      `🎓 Rol: <b>${roleLabel}</b>`,
+        `🎓 Rol: <b>${roleLabel}</b>`,
       {
         parse_mode: 'HTML',
         ...Markup.keyboard([
@@ -332,7 +346,7 @@ export class BotDashboardService {
     let subscriptions: any;
     try {
       subscriptions = await this.subscriptionsService.getByUserId(user_id);
-    } catch (error) { }
+    } catch (error) {}
 
     const groups = new Map<number, string>();
     for (const subscription of (subscriptions as any[]) || []) {
@@ -347,12 +361,23 @@ export class BotDashboardService {
   }
 
   private readonly monthNames = [
-    'Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'Iyun',
-    'Iyul', 'Avgust', 'Sentabr', 'Oktabr', 'Noyabr', 'Dekabr',
+    'Yanvar',
+    'Fevral',
+    'Mart',
+    'Aprel',
+    'May',
+    'Iyun',
+    'Iyul',
+    'Avgust',
+    'Sentabr',
+    'Oktabr',
+    'Noyabr',
+    'Dekabr',
   ];
 
   private statusIcon(status: string): string {
-    if (status === "ko'tarildi" || status === 'oshdi' || status === 'yangi') return '📈';
+    if (status === "ko'tarildi" || status === 'oshdi' || status === 'yangi')
+      return '📈';
     if (status === 'tushdi' || status === 'kamaydi') return '📉';
     return '➖';
   }
@@ -380,15 +405,15 @@ export class BotDashboardService {
       '📊 <b>Statistika</b>',
       '',
       `🏆 Umumiy ball: <b>${ratingBall.currentBall || 0}</b>` +
-      (ratingBall.difference
-        ? ` (${this.statusIcon(ratingBall.status)} ${ratingBall.difference} ball ${ratingBall.status})`
-        : ''),
+        (ratingBall.difference
+          ? ` (${this.statusIcon(ratingBall.status)} ${ratingBall.difference} ball ${ratingBall.status})`
+          : ''),
       `👥 Guruh reytingi: <b>#${ratingPosition.currentPosition || 0}</b>` +
-      (ratingPosition.difference
-        ? ` (${this.statusIcon(ratingPosition.status)} ${ratingPosition.difference} o'rin ${ratingPosition.status})`
-        : ''),
+        (ratingPosition.difference
+          ? ` (${this.statusIcon(ratingPosition.status)} ${ratingPosition.difference} o'rin ${ratingPosition.status})`
+          : ''),
       `📅 Davomat (${monthLabel}): <b>${attendance.percentage ?? 0}%</b>` +
-      ` (✅ ${attendance.present || 0}, ⏱ ${attendance.late || 0}, ❌ ${attendance.absent || 0})`,
+        ` (✅ ${attendance.present || 0}, ⏱ ${attendance.late || 0}, ❌ ${attendance.absent || 0})`,
       `📝 Navbatdagi testlar: <b>${upcomingTests.length}</b>`,
     ];
 
@@ -419,7 +444,7 @@ export class BotDashboardService {
     let courses: any;
     try {
       courses = await this.subscriptionsService.getByUserId(user?.user_id);
-    } catch (error) { }
+    } catch (error) {}
 
     if (!courses?.length) {
       await ctx.reply('Sizda hozircha kurslar mavjud emas.');

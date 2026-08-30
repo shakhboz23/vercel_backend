@@ -18,7 +18,7 @@ export class UserStreakService {
   constructor(
     @InjectModel(UserStreak) private userStreakRepository: typeof UserStreak,
     private reytingService: ReytingService,
-  ) { }
+  ) {}
 
   async create(userStreakDto: UserStreakDto): Promise<object> {
     let data: any;
@@ -68,14 +68,17 @@ export class UserStreakService {
       // and returns 0. That's not a "no activity expected" case, it's a
       // same-day re-save, so skip the streak recalculation entirely instead
       // of bailing out.
-      const alreadyUpdatedToday = !!user && dayjs(user.lastActivityDate).isSame(today, 'day');
+      const alreadyUpdatedToday =
+        !!user && dayjs(user.lastActivityDate).isSame(today, 'day');
 
       if (!alreadyUpdatedToday) {
-        const expectedLessons = user ? this.expectedLessonsBetween(
-          user?.lastActivityDate,
-          today.toDate(),
-          attendanceDays,
-        ) : 1;
+        const expectedLessons = user
+          ? this.expectedLessonsBetween(
+              user?.lastActivityDate,
+              today.toDate(),
+              attendanceDays,
+            )
+          : 1;
 
         if (expectedLessons === 0) {
           return;
@@ -110,10 +113,7 @@ export class UserStreakService {
           finished_type: FinishedType.attendance,
           course_id: userStreakDto.course_id,
         };
-        await this.reytingService.create(
-          reyting,
-          userStreakDto.user_id,
-        );
+        await this.reytingService.create(reyting, userStreakDto.user_id);
       } else {
         data = await this.userStreakRepository.create(userStreakDto);
         const reyting: ReytingDto = {
@@ -121,10 +121,7 @@ export class UserStreakService {
           finished_type: FinishedType.attendance,
           course_id: userStreakDto.course_id,
         };
-        await this.reytingService.create(
-          reyting,
-          userStreakDto.user_id,
-        );
+        await this.reytingService.create(reyting, userStreakDto.user_id);
       }
 
       return {

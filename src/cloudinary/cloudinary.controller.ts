@@ -1,9 +1,16 @@
-import { Controller, Post, UploadedFile, UseInterceptors, Get, Query, Body } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  UploadedFile,
+  UseInterceptors,
+  Get,
+  Query,
+  Body,
+} from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CloudinaryService } from './cloudinary.service';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import cloudinary from '../../cloudinary.config';
-
 
 @ApiTags('Cloudinary')
 @Controller('videos')
@@ -21,13 +28,16 @@ export class VideoController {
   @ApiOperation({ summary: 'upload' })
   @Get('signature')
   async getVideoSignature(@Query('publicId') publicId: string) {
-    const signatureData = this.cloudinaryService.generateVideoSignature(publicId);
+    const signatureData =
+      this.cloudinaryService.generateVideoSignature(publicId);
     return signatureData;
   }
 
   @ApiOperation({ summary: 'upload' })
   @Post('get-signed-url')
-  async getSignedUrl(@Body() body: { public_id: string; format: string; resource_type: string }) {
+  async getSignedUrl(
+    @Body() body: { public_id: string; format: string; resource_type: string },
+  ) {
     const url = cloudinary.url(body.public_id, {
       resource_type: body.resource_type,
       type: 'authenticated',

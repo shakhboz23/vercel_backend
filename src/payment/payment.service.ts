@@ -27,7 +27,7 @@ export class PaymentService {
     private userStreakService: UserStreakService,
     private subscriptionsService: SubscriptionsService,
     private botService: BotService,
-  ) { }
+  ) {}
 
   async create(paymentDto: PaymentDto): Promise<object> {
     let data: any;
@@ -47,8 +47,11 @@ export class PaymentService {
       });
 
       if (payment) {
-        const monthlyPayment = Number(payment.monthly_payment ?? payment.course.price);
-        const newAmount = Number(payment.amount || 0) + Number(paymentDto.amount);
+        const monthlyPayment = Number(
+          payment.monthly_payment ?? payment.course.price,
+        );
+        const newAmount =
+          Number(payment.amount || 0) + Number(paymentDto.amount);
 
         if (newAmount > monthlyPayment) {
           throw new BadRequestException("To'lov miqdordan oshiqcha");
@@ -59,7 +62,8 @@ export class PaymentService {
           {
             amount: newAmount,
             debt: newDebt,
-            status: newDebt <= 0 ? PaymentStatus.SUCCESS : PaymentStatus.PENDING,
+            status:
+              newDebt <= 0 ? PaymentStatus.SUCCESS : PaymentStatus.PENDING,
             payment_method: PaymentMethod.CASH,
             comment: paymentDto.comment ?? payment.comment,
           },
@@ -70,7 +74,9 @@ export class PaymentService {
         );
         data = update[1][0];
       } else {
-        const course = await this.courseRepository.findByPk(paymentDto.course_id);
+        const course = await this.courseRepository.findByPk(
+          paymentDto.course_id,
+        );
 
         if (!course) {
           throw new NotFoundException('Course not found');
@@ -113,7 +119,9 @@ export class PaymentService {
     for (const subscription of subscriptions as any[]) {
       if (!subscription.start_date || !subscription.course) continue;
 
-      let dueDate = dayjs(subscription.start_date).add(1, 'month').startOf('day');
+      let dueDate = dayjs(subscription.start_date)
+        .add(1, 'month')
+        .startOf('day');
 
       while (!dueDate.isAfter(today)) {
         await this.paymentRepository.findOrCreate({

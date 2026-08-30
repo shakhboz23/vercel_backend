@@ -35,9 +35,7 @@ export class NotificationController
 {
   @WebSocketServer() server: Server;
 
-  constructor(
-    private readonly notificationService: NotificationService,
-  ) {}
+  constructor(private readonly notificationService: NotificationService) {}
 
   async handleConnection(client: Socket) {
     this.server.on('connection', async (socket) => {});

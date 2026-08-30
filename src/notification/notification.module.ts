@@ -6,7 +6,7 @@ import { Notification } from './models/notification.model';
 import { FilesModule } from '../files/files.module';
 import { UserModule } from '../user/user.module';
 @Module({
-  imports: [SequelizeModule.forFeature([Notification]), FilesModule ],
+  imports: [SequelizeModule.forFeature([Notification]), FilesModule],
   controllers: [NotificationController],
   providers: [NotificationService, NotificationController],
   exports: [NotificationService],

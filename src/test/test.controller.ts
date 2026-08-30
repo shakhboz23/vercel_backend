@@ -25,7 +25,7 @@ export class TestsController {
   constructor(
     private readonly testsService: TestsService,
     private readonly jwtService: JwtService,
-  ) { }
+  ) {}
 
   @ApiOperation({ summary: 'Create a new tests' })
   @Post('/create')

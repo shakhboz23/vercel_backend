@@ -18,7 +18,7 @@ export class UploadedService {
     @InjectModel(Uploaded) private uploadedRepository: typeof Uploaded,
     private readonly jwtService: JwtService,
     private readonly fileService: FilesService,
-  ) { }
+  ) {}
 
   async getVideoDuration(youtube: string) {
     const apiKey = process.env.Youtube_key;
@@ -27,7 +27,7 @@ export class UploadedService {
       const response = await axios.get(
         `https://www.googleapis.com/youtube/v3/videos?id=${youtube_id}&part=contentDetails&key=${apiKey}`,
       );
-      let duration = response.data.items[0].contentDetails.duration;
+      const duration = response.data.items[0].contentDetails.duration;
       return this.parseDuration(duration);
     } catch (error) {
       console.error('Error fetching video details:', error);
@@ -35,7 +35,8 @@ export class UploadedService {
   }
 
   extractYoutubeId(url: string): string | null {
-    const regex = /(?:https?:\/\/)?(?:www\.)?youtube\.com\/(?:watch\?v=|embed\/|v\/|.+\?v=)?([a-zA-Z0-9_-]{11})|youtu\.be\/([a-zA-Z0-9_-]{11})/;
+    const regex =
+      /(?:https?:\/\/)?(?:www\.)?youtube\.com\/(?:watch\?v=|embed\/|v\/|.+\?v=)?([a-zA-Z0-9_-]{11})|youtu\.be\/([a-zA-Z0-9_-]{11})/;
     const matches = url.match(regex);
     return matches ? matches[1] || matches[2] : null;
   }
@@ -52,12 +53,9 @@ export class UploadedService {
     try {
       let file_data: any;
       if (file_type != 'youtube') {
-        file_data = await this.fileService.createFile(
-          file,
-          file_type,
-        );
+        file_data = await this.fileService.createFile(file, file_type);
       }
-      let data = await this.uploadedRepository.create({
+      const data = await this.uploadedRepository.create({
         duration: Math.floor(file_data.duration) || null,
         file_type,
         url: file_data.secure_url,

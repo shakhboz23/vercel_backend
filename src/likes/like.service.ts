@@ -23,7 +23,7 @@ export class LikeService {
     @InjectModel(Like) private likeRepository: typeof Like,
     private readonly userService: UserService,
     private uploadedService: UploadedService,
-  ) { }
+  ) {}
 
   async create(likeDto: LikeDto, user_id: number): Promise<object> {
     try {
@@ -44,21 +44,28 @@ export class LikeService {
   async getAll(group_id: number): Promise<object> {
     try {
       let likes: any = await this.likeRepository.findAll({
-        include: [{ model: User }, {
-          model: Lesson,
-          include: [{
-            model: Course, include: [{
-              model: Group, where: { id: group_id }
-            }]
-          }]
-        }],
+        include: [
+          { model: User },
+          {
+            model: Lesson,
+            include: [
+              {
+                model: Course,
+                include: [
+                  {
+                    model: Group,
+                    where: { id: group_id },
+                  },
+                ],
+              },
+            ],
+          },
+        ],
         order: [[Sequelize.col('Like.createdAt'), 'ASC']],
         attributes: {
           include: [
             [
-              Sequelize.literal(
-                `EXTRACT(EPOCH FROM "Like"."createdAt")::int`
-              ),
+              Sequelize.literal(`EXTRACT(EPOCH FROM "Like"."createdAt")::int`),
               'createdAt',
             ],
           ],
@@ -81,8 +88,7 @@ export class LikeService {
         return acc;
       }, {});
 
-      let likesList = await this.pagination(1, group_id);
-
+      const likesList = await this.pagination(1, group_id);
 
       likes = Object.keys(groupedByYearMonth).map((key, index) => {
         const [year, month] = key.split('-');
@@ -122,15 +128,25 @@ export class LikeService {
       const offset = (page - 1) * 10;
       const limit = 10;
       const likes = await this.likeRepository.findAll({
-        offset, limit,
-        include: [{ model: User }, {
-          model: Lesson,
-          include: [{
-            model: Course, include: [{
-              model: Group, where: { id: group_id }
-            }]
-          }]
-        }],
+        offset,
+        limit,
+        include: [
+          { model: User },
+          {
+            model: Lesson,
+            include: [
+              {
+                model: Course,
+                include: [
+                  {
+                    model: Group,
+                    where: { id: group_id },
+                  },
+                ],
+              },
+            ],
+          },
+        ],
       });
       const total_count = await this.likeRepository.count();
       const total_pages = Math.ceil(total_count / 10);

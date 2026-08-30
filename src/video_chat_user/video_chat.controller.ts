@@ -34,14 +34,15 @@ import { RoleService } from '../role/role.service';
 @WebSocketGateway({ cors: { origin: '*', credentials: true } }) // cors
 @Controller('videochat')
 export class VideoChatController
-  implements OnGatewayConnection, OnGatewayDisconnect {
+  implements OnGatewayConnection, OnGatewayDisconnect
+{
   @WebSocketServer() server: Server;
 
   constructor(
     private readonly videoChatService: VideoChatService,
     private readonly roleService: RoleService,
     private readonly userService: UserService,
-  ) { }
+  ) {}
 
   async handleConnection(client: Socket) {
     try {
@@ -57,7 +58,7 @@ export class VideoChatController
           this.server.emit('connected', data);
         }
       });
-    } catch (_) { }
+    } catch (_) {}
   }
 
   async handleDisconnect(client: Socket) {
@@ -70,7 +71,7 @@ export class VideoChatController
         user.data.current_role,
       );
       this.server.emit('disconnected', data);
-    } catch (_) { }
+    } catch (_) {}
   }
 
   @ApiOperation({ summary: 'Join to video chat' })

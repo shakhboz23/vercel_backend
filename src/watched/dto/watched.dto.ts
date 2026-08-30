@@ -1,9 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsNotEmpty,
-  IsNumber,
-  IsOptional,
-} from 'class-validator';
+import { IsNotEmpty, IsNumber, IsOptional } from 'class-validator';
 
 export class WatchedDto {
   @ApiProperty({
@@ -28,5 +24,5 @@ export class WatchedDto {
   })
   @IsOptional()
   @IsNumber()
-  group_id?: number;  
+  group_id?: number;
 }

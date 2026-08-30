@@ -28,10 +28,15 @@ const DEFAULT_CORS_ORIGINS = [
 
 async function bootstrap() {
   try {
-    const app = await NestFactory.create<NestExpressApplication>(AppModule, { rawBody: true });
+    const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+      rawBody: true,
+    });
 
     // Serve static files for Swagger UI
-    app.use('/swagger-ui', express.static(join(__dirname, '../node_modules/swagger-ui-dist')));
+    app.use(
+      '/swagger-ui',
+      express.static(join(__dirname, '../node_modules/swagger-ui-dist')),
+    );
 
     const PORT = process.env.PORT || 4200;
     const corsOrigins = process.env.CORS_ORIGINS
@@ -41,7 +46,7 @@ async function bootstrap() {
       origin: corsOrigins,
       methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
       allowedHeaders: 'Content-Type, Authorization',
-      credentials: true
+      credentials: true,
     });
     app.setGlobalPrefix('api');
 

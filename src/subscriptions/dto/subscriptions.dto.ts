@@ -1,11 +1,18 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsDateString, IsEnum, IsNotEmpty, IsNumber, IsOptional } from 'class-validator';
+import {
+  IsDateString,
+  IsEnum,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+} from 'class-validator';
 import { RoleName } from 'src/activity/models/activity.models';
 
 export class SubscriptionsDto {
   @ApiProperty({
     example: 1,
-    description: 'Which of the course subgroups (weekday schedule) the student follows, when the course is split. Omit for courses without subgroups.',
+    description:
+      'Which of the course subgroups (weekday schedule) the student follows, when the course is split. Omit for courses without subgroups.',
     required: false,
   })
   @IsOptional()

@@ -11,4 +11,3 @@ import { JwtModule } from '@nestjs/jwt';
   providers: [SubCategoryService],
 })
 export class SubCategoryModule {}
- 

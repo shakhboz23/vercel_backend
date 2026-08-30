@@ -11,9 +11,16 @@ import { FilesModule } from 'src/files/files.module';
 import { CommentModule } from 'src/comment/comment.module';
 
 @Module({
-  imports: [SequelizeModule.forFeature([Lesson]), CourseModule, UploadedModule, WatchedModule, FilesModule, CommentModule,],
+  imports: [
+    SequelizeModule.forFeature([Lesson]),
+    CourseModule,
+    UploadedModule,
+    WatchedModule,
+    FilesModule,
+    CommentModule,
+  ],
   controllers: [LessonController],
   providers: [LessonService],
   exports: [LessonService],
 })
-export class LessonModule { }
+export class LessonModule {}

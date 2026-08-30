@@ -22,7 +22,7 @@ export class AttendanceService {
     @InjectModel(Course) private courseRepository: typeof Course,
     private userStreakService: UserStreakService,
     private botService: BotService,
-  ) { }
+  ) {}
 
   // A course can be split into subgroups that meet on different weekdays
   // (e.g. because one physical classroom can't fit everyone). Resolves the
@@ -75,13 +75,10 @@ export class AttendanceService {
       });
 
       if (attendance) {
-        const update = await this.attendanceRepository.update(
-          attendanceDto,
-          {
-            where: attendanceWhere,
-            returning: true,
-          },
-        );
+        const update = await this.attendanceRepository.update(attendanceDto, {
+          where: attendanceWhere,
+          returning: true,
+        });
         data = update[1][0];
       } else {
         data = await this.attendanceRepository.create(attendanceDto);
