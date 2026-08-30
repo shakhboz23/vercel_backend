@@ -12,9 +12,7 @@ import Stripe from 'stripe';
 
 @Controller('/webhook')
 export class WebhookController {
-  private stripe = new Stripe(process.env.STRIPE_API_KEY, {
-    // apiVersion: '2023-10-16',
-  });
+  private stripe = new Stripe(process.env.STRIPE_API_KEY, {});
 
   private endpointSecret = process.env.STRIPE_SIGNING_SECRET;
 
@@ -35,7 +33,6 @@ export class WebhookController {
         signature,
         this.endpointSecret,
       );
-      console.log(event)
     } catch (err: any) {
       console.error('❌ Webhook signature verification failed:', err.message);
       return res.status(400).send(`Webhook Error: ${err.message}`);
@@ -45,11 +42,6 @@ export class WebhookController {
     switch (event.type) {
       case 'checkout.session.completed':
         const session = event.data.object as Stripe.Checkout.Session;
-
-        console.log('✅ Payment succeeded!');
-        console.log('Session ID:', session.id);
-        console.log('Email:', session.customer_email);
-        console.log('Amount:', session.amount_total);
 
         // ➕ Bu yerda: kursga yozish, DB ga yozish, email yuborish va hokazo
         break;

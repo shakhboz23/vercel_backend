@@ -25,7 +25,6 @@ interface SubscriptionsAttributes {
 
 
 export enum SubscribeActive {
-  // not_found = 'not_found',
   requested = 'requested',
   pending = 'pending',
   active = 'active',

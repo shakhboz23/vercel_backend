@@ -35,9 +35,7 @@ export class GroupService {
     user_id: number,
     cover: any,
   ): Promise<object> {
-    console.log(cover);
     try {
-      console.log('Hi');
       const { title } = groupDto;
       const exist = await this.groupRepository.findOne({
         where: { title },

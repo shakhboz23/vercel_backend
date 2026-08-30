@@ -40,7 +40,6 @@ export class UserStepService {
         data: id,
       };
     } catch (error) {
-      // throw new BadRequestException(error.message);
       return error.message;
     }
   }
@@ -48,10 +47,7 @@ export class UserStepService {
   async getAll(): Promise<object> {
     try {
       const classs = await this.classRepository.findAll({
-        order: [
-          // ['class_number', 'ASC'],
-          // ['name', 'ASC'],
-        ],
+        order: [],
         include: [{ model: Role }],
       });
       return {

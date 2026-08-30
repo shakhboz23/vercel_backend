@@ -30,7 +30,6 @@ export class BotUpdate {
 
   @Help()
   async help(@Ctx() ctx: Context) {
-    console.log(ctx);
     await ctx.reply('Send me a sticker');
   }
 
@@ -61,7 +60,6 @@ export class BotUpdate {
 
   @Hears('Kurslar')
   async courses(@Ctx() ctx: Context) {
-    // await ctx.reply('working...');
     return this.botService.my_courses(ctx);
   }
 

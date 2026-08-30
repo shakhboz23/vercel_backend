@@ -6,7 +6,6 @@ import {
   Body,
   Param,
   Delete,
-  Res,
   Put,
   Headers,
   UploadedFile,
@@ -14,7 +13,6 @@ import {
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { ApiBody, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { Response } from 'express';
 import { RegisterUserDto } from './dto/register.dto';
 import { LoginUserDto } from './dto/login.dto';
 import { CheckDto } from './dto/check.dto';
@@ -62,24 +60,9 @@ export class UserController {
   @Post('login')
   login(
     @Body() loginUserDto: LoginUserDto,
-    // @Req() req: Request,
   ) {
-    // const userAgent = req.headers['user-agent'];
-    // const ua = new UserAgent(userAgent);
-
-    // const browser = ua.browser; // String representing the browser name (e.g., 'Chrome')
-    // const version = ua.version; // String representing the browser version (e.g., '107.0.0.0')
-    // const os = ua.os; // Object containing information about the operating system
-
-    // console.log(`Browser: ${browser}, Version: ${version}, OS: ${os.name}`);
     return this.userService.login(loginUserDto);
   }
-
-  // @ApiOperation({ summary: 'Login user with send OTP' })
-  // @Post('/addchild')
-  // addChild(@Body() addChildDto: AddChildDto) {
-  //   // return this.userService.addChild(addChildDto);
-  // }
 
   @ApiOperation({ summary: 'Get all users' })
   // @UseGuards(AuthGuard)
@@ -119,7 +102,6 @@ export class UserController {
   // @UseGuards(AuthGuard)
   @Post('/telegram_info')
   getWebAppUser(@Body() initData: any) {
-    console.log(initData);
     return this.userService.getWebAppUser(initData);
   }
 
@@ -188,7 +170,6 @@ export class UserController {
     @UploadedFile(new ImageValidationPipe()) image: Express.Multer.File,
     @Headers() headers?: string) {
     const user_id = extractUserIdFromToken(headers, this.jwtService, true);
-    console.log("HI")
     return this.userService.updateProfile(user_id, updateDto, image);
   }
 
@@ -251,48 +232,12 @@ export class UserController {
     return this.userService.update(id, updateDto);
   }
 
-  // create_app(
-  //   @Body() chatDto: ChatDto,
-  //   @UploadedFile(new ImageValidationPipe()) file: Express.Multer.File,
-  // ) {
-  //   return this.chatService.create(chatDto, file);
-  // }
-
-  // @ApiOperation({ summary: 'Update profile image' })
-  // @ApiConsumes('multipart/form-data')
-  // @ApiBody({
-  //   schema: {
-  //     type: 'object',
-  //     properties: {
-  //       image: {
-  //         type: 'string',
-  //         format: 'binary',
-  //       },
-  //     },
-  //   },
-  // })
-  // // @UseGuards(AuthGuard)
-  // @Put('profileImage/:id')
-  // @UseInterceptors(FileInterceptor('image'))
-  // updateProfileImage(
-  //   @Param('id') id: string,
-  //   @UploadedFile(new ImageValidationPipe()) image: Express.Multer.File,
-  // ) {
-  //   return this.userService.updateProfileImage(id, image);
-  // }
-
   @ApiOperation({ summary: 'Delete user by ID' })
   // @UseGuards(AuthGuard)
   @Delete(':id')
   deleteUser(@Param('id') id: string) {
     return this.userService.deleteUser(id);
   }
-
-  // @ApiOperation({ summary: 'Get orders with pagination' })
-  // @Get('orders/pagination/:page/:limit')
-  // orderPagination(@Param('page') page: number, @Param('limit') limit: number) {
-  //   return this.orderService.pagination(page, limit);
-  // }
 
   @ApiOperation({ summary: 'Delete user by ID' })
   // @UseGuards(AuthGuard)

@@ -35,7 +35,6 @@ export class LessonDto {
     description: 'Course id',
   })
   @IsOptional()
-  // @IsNumberString()
   lesson_id: number;
 
   @ApiProperty({
@@ -59,7 +58,6 @@ export class LessonDto {
     description: 'Video content',
   })
   @IsOptional()
-  // @IsString()
   youtube?: string;
 
   @ApiProperty({
