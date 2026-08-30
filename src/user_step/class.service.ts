@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { UserStep } from './models/class.models';
+import { UserStep } from './models/user_step.models';
 import { InjectModel } from '@nestjs/sequelize';
 import { JwtService } from '@nestjs/jwt';
 import { UserStepDto } from './dto/class.dto';

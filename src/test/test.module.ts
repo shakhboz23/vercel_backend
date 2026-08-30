@@ -4,7 +4,7 @@ import { TestsController } from './test.controller';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { Tests } from './models/test.models';
 import { ReytingModule } from '../reyting/reyting.module';
-import { UserStepModule } from '../user_step/class.module';
+import { UserStepModule } from '../user_step/user_step.module';
 import { Test_settingsModule } from '../test_settings/test_settings.module';
 import { JwtModule } from '@nestjs/jwt';
 import { LessonModule } from 'src/lesson/lesson.module';
