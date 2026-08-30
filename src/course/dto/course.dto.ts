@@ -26,9 +26,8 @@ export class CourseDto {
     example: 'Description',
     description: 'Course Description',
   })
-  @IsNotEmpty()
-  @IsString()
-  description: string;
+  @IsOptional()
+  description?: string;
 
   @ApiProperty({
     example: 12,

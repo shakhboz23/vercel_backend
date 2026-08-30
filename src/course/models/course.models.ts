@@ -46,13 +46,11 @@ export class Course extends Model<Course, CourseAttributes> {
   @Column({
     type: DataType.STRING,
     allowNull: false,
-    unique: true,
   })
   title: string;
 
   @Column({
     type: DataType.TEXT,
-    allowNull: false,
   })
   description: string;
 
