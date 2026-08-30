@@ -290,42 +290,87 @@ export class TestsService {
     }
   }
 
-  async checkById(id: number, answer: string): Promise<object> {
+  // How many points a question is worth. A "fill" question with several
+  // accepted variants (see labelFillVariants on the frontend) is worth one
+  // point per variant, so a partially-correct answer still earns partial
+  // credit; every other question type is worth a flat 1 point.
+  private getMaxPoints(test: any): number {
+    if (test?.type == 'fill' && Array.isArray(test.variants)) {
+      return Math.max(test.variants.length, 1);
+    }
+    return 1;
+  }
+
+  // A "fill" question's `variants` are all independently-acceptable correct
+  // answers (not alternate phrasings of a single answer): the student is
+  // given one input per variant, and each of their answers that matches a
+  // distinct variant earns one point, regardless of which input it came
+  // from (so answering the variants out of order still gets full credit).
+  private checkFillAnswer(id: number, test: any, answer: any): any[] {
+    const variantsList: any[] = Array.isArray(test.variants) ? test.variants : [];
+    const studentAnswers: any[] = (Array.isArray(answer) ? answer : [answer]).filter(
+      (a) => a != null && String(a).trim() !== '',
+    );
+    const maxPoints = this.getMaxPoints(test);
+
+    if (!studentAnswers.length) {
+      return [id, [false], test, [], 0, maxPoints];
+    }
+
+    const normalizedVariants = variantsList.map((v) => this.containsAnswer(v.toString()));
+    const usedIndexes = new Set<number>();
+    let matchedCount = 0;
+
+    for (const studentAnswer of studentAnswers) {
+      const normalized = this.containsAnswer(studentAnswer.toString());
+      const matchIndex = normalizedVariants.findIndex(
+        (v, i) => v === normalized && !usedIndexes.has(i),
+      );
+      if (matchIndex >= 0) {
+        usedIndexes.add(matchIndex);
+        matchedCount++;
+      }
+    }
+
+    // Any one matching variant is enough to mark the whole question
+    // "correct" (green/red banner); the actual score still only credits the
+    // distinct variants matched (see matchedCount below), so a 1-of-2 match
+    // shows as correct but still earns 1 point out of 2, not full marks.
+    const isCorrect = matchedCount > 0;
+    return [id, [isCorrect], test, studentAnswers, matchedCount, maxPoints];
+  }
+
+  async checkById(id: number, answer: any): Promise<object> {
     try {
       const test = await this.testsRepository.findByPk(id);
 
       if (!test) {
         throw new NotFoundException('Tests not found');
       }
+      const maxPoints = this.getMaxPoints(test);
+      if (!answer || !answer?.length) {
+        return [id, [false], test, [], 0, maxPoints];
+      }
+      if (test.type == 'fill') {
+        return this.checkFillAnswer(id, test, answer);
+      }
       let t = 0;
       let true_list = [];
       let selected_list: any[] = [];
-      console.log(answer);
-      if (!answer || !answer?.length) {
-        return [id, [false], test, selected_list];
-      }
-      if (test.type == 'fill') {
-        for (let i of test.variants) {
-          if (this.containsAnswer(i.toString()) == this.containsAnswer(answer)) {
-            return [id, [true], test, [answer]];
-          }
+      for (let i of test.true_answer) {
+        selected_list.push(answer[0]?.[t]);
+        if (test.variants[i] == answer[0][t]) {
+          true_list.push(true);
+        } else {
+          true_list.push(false);
         }
-        return [id, [false], test, [answer]];
-      } else {
-        for (let i of test.true_answer) {
-          selected_list.push(answer[0]?.[t]);
-          if (test.variants[i] == answer[0][t]) {
-            true_list.push(true);
-          } else {
-            true_list.push(false);
-          }
-          t++;
-        }
+        t++;
       }
       if (!true_list?.length) {
-        true_list.push(false, test);
+        true_list.push(false);
       }
-      return [id, true_list, test, selected_list];
+      const isCorrect = this.checkAnswerList(true_list);
+      return [id, true_list, test, selected_list, isCorrect ? 1 : 0, 1];
     } catch (error) {
       throw new BadRequestException(error.message);
     }
@@ -342,7 +387,9 @@ export class TestsService {
       const results = {};
       const questionResults: { isCorrect: boolean; selectedLabel: string; correctLabel: string }[] = [];
       let student: any;
-      let res: any[], id: number, answer: string;
+      let res: any[], id: number, answer: any;
+      let ball = 0;
+      let maxBall = 0;
       for (let i of answers) {
         if (!i?.length) {
           continue
@@ -352,15 +399,13 @@ export class TestsService {
         res = await this.checkById(id, answer) as any[];
         const isCorrect = this.checkAnswerList(res[1]);
         results[res[0]] = isCorrect;
+        const points = typeof res[4] == 'number' ? res[4] : (isCorrect ? 1 : 0);
+        const maxPoints = typeof res[5] == 'number' ? res[5] : 1;
+        ball += points;
+        maxBall += maxPoints;
         questionResults.push({ isCorrect, ...this.describeAnswer(res[2], res[3]) });
       }
-      let ball = 0;
-      for (let i in results) {
-        if (results[i]) {
-          ball += 1;
-        }
-      }
-      const percentage = (ball / Object.keys(results)?.length) * 100;
+      const percentage = maxBall > 0 ? (ball / maxBall) * 100 : 0;
       console.log(percentage);
       // if (percentage >= 70) {
       const lesson: any = await this.lessonService.getById(lesson_id);
@@ -386,7 +431,7 @@ export class TestsService {
           user_id,
           lesson?.title,
           ball,
-          Object.keys(results)?.length,
+          maxBall,
           questionResults,
         )
         .catch((error) => console.log(error));
@@ -559,7 +604,11 @@ export class TestsService {
   private getCorrectAnswerText(test: any): string {
     if (!test) return '';
     if (test.type == 'fill') {
-      return this.stripHtml(String(test.variants?.[0] ?? ''));
+      const variants: any[] = Array.isArray(test.variants) ? test.variants : [];
+      return variants
+        .map((v) => this.stripHtml(String(v ?? '')))
+        .filter(Boolean)
+        .join(', ');
     }
     const indices: number[] = Array.isArray(test.true_answer) ? test.true_answer : [];
     return indices
@@ -584,8 +633,12 @@ export class TestsService {
       return { selectedLabel: '', correctLabel: '' };
     }
     if (test.type == 'fill') {
+      const selectedLabel = (selected || [])
+        .map((value) => this.stripHtml(String(value ?? '')))
+        .filter(Boolean)
+        .join(', ');
       return {
-        selectedLabel: this.stripHtml(String(selected?.[0] ?? '')),
+        selectedLabel,
         correctLabel: this.getCorrectAnswerText(test),
       };
     }
