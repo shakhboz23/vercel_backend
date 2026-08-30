@@ -20,7 +20,6 @@ export class Subscription_activityService {
 
   async create(
     subscriptionActivityDto: SubscriptionActivityDto,
-    // user_id: number,
   ): Promise<object> {
     try {
       const { subscription_id, course_id, status, date } = subscriptionActivityDto
@@ -65,11 +64,6 @@ export class Subscription_activityService {
 
   async getAll(): Promise<object> {
     try {
-      // const user_data: any = await this.userService.getById(user_id);
-      // if (!user_data) {
-      //   new BadRequestException('User not found!');
-      // }
-
       const subscriptionss: any = await this.subscription_activityRepository.findAll({
         order: [['id', 'ASC']],
       });
@@ -123,34 +117,6 @@ export class Subscription_activityService {
       throw new BadRequestException(error.message);
     }
   }
-
-  // async update(
-  //   id: number,
-  //   subscriptionsDto: SubscriptionsDto,
-  // ): Promise<object> {
-  //   try {
-  //     const subscriptions = await this.subscription_activityRepository.findByPk(id);
-  //     if (!subscriptions) {
-  //       throw new NotFoundException('Subscriptions not found');
-  //     }
-  //     const update = await this.subscription_activityRepository.update(
-  //       subscriptionsDto,
-  //       {
-  //         where: { id },
-  //         returning: true,
-  //       },
-  //     );
-  //     return {
-  //       statusCode: HttpStatus.OK,
-  //       message: 'Updated successfully',
-  //       data: {
-  //         subscriptions: update[1][0],
-  //       },
-  //     };
-  //   } catch (error) {
-  //     throw new BadRequestException(error.message);
-  //   }
-  // }
 
   async delete(id: number): Promise<object> {
     try {

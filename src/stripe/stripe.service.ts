@@ -7,7 +7,6 @@ import { InjectModel } from '@nestjs/sequelize';
 import { PaymentStatus, PaymentStripe } from './models/stripe.models';
 import { CourseService } from 'src/course/course.service';
 import { SubscriptionsService } from 'src/subscriptions/subscriptions.service';
-import { RoleName } from 'src/activity/models/activity.models';
 import { Op } from 'sequelize';
 import { Course } from 'src/course/models/course.models';
 import { Sequelize } from 'sequelize-typescript';
@@ -21,12 +20,9 @@ export class StripeService {
     private readonly courseService: CourseService,
     private readonly subscriptionsService: SubscriptionsService,
     private readonly sequelize: Sequelize,
-    // private readonly jwtService: JwtService,
   ) { }
 
-  private stripe = new Stripe(process.env.STRIPE_API_KEY, {
-    // apiVersion: '2023-10-16',
-  });
+  private stripe = new Stripe(process.env.STRIPE_API_KEY, {});
   private endpointSecret = process.env.STRIPE_SIGNING_SECRET;
 
   async createCheckoutSession(user_id: number, stripeDto: StripeDto) {
@@ -40,52 +36,13 @@ export class StripeService {
     if (isPaid) {
       throw new BadRequestException("You already subscribed to this course");
     }
-    // const course: any = await this.courseService.getById(stripeDto.course_id, user_id);
     let session: any = { id: "" };
-    // if (course.price) {
-    //   session = await this.stripe.checkout.sessions.create({
-    //     payment_method_types: ['card'],
-    //     line_items: [
-    //       {
-    //         price_data: {
-    //           currency: 'usd',
-    //           product_data: {
-    //             name: `Course #${stripeDto.course_id}`,
-    //           },
-    //           unit_amount: course.price * 100, // dollar to cent
-    //         },
-    //         quantity: 1,
-    //       },
-    //     ],
-    //     mode: 'payment',
-    //     success_url: `https://ilmnur.online/course/${stripeDto.course_id}`,
-    //     cancel_url: `https://ilmnur.online/course/${stripeDto.course_id}`,
-    //   });
-    // }
-
-    // await this.stripeRepository.create({
-    //   user_id, ...stripeDto, amount: course.price, status: course.price ? PaymentStatus.pending : PaymentStatus.completed, stripe_id: session.id,
-    // });
-    // await this.subscriptionsService.create({ role: RoleName.student, course_id: stripeDto.course_id }, user_id)
-
-    // if (course.price) {
-    //   return { url: session.url };
-    // } else {
-    //   return {
-    //     message: "Successfully joined!",
-    //   }
-    // }
   }
 
   async handleStripeWebhook(req: RawBodyRequest<Request>) {
     try {
-      // const payload = req.body.toString('utf-8');
       const payload = req.rawBody;
       const signature = req.header('stripe-signature');
-      // return req.rawBody;
-
-      // return res.status(200).send(req.body);
-      // const buf = req.body as Buffer;
       let event: Stripe.Event;
 
       try {
@@ -114,7 +71,6 @@ export class StripeService {
               { status: PaymentStatus.completed },
               { where: { stripe_id: session.id }, returning: true },
             );
-            // await this.subscriptionsService.create({ role: RoleName.student, course_id: stripeData.course_id, start_date:  }, stripeData.user_id)
           }
           break;
         default:

@@ -39,19 +39,15 @@ export class SubscriptionsService {
     user_id: number,
   ): Promise<object> {
     try {
-      console.log(subscriptionsDto, '===');
-      
       const { course_id, subgroup_id } = subscriptionsDto;
       const exist = await this.subscriptionsRepository.findOne({
         where: { user_id, course_id },
       });
       if (exist) {
         return this.delete(user_id, subscriptionsDto.course_id);
-        // throw new BadRequestException('Already created');
       }
       return this.subscriptionsRepository.create({ course_id, user_id, subgroup_id, is_active: SubscribeActive.requested, start_date: subscriptionsDto.start_date });
     } catch (error) {
-      console.log(error);
       throw new BadRequestException(error.message);
     }
   }
@@ -61,10 +57,6 @@ export class SubscriptionsService {
     user_id: number,
   ): Promise<object> {
     try {
-      // const user: any = await this.userService.register(
-      //   { ...creaetSubscriptionsDto, role: 'student' },
-      // );
-      // console.log(user);
       const { course_ids, role, subgroups } = creaetSubscriptionsDto;
       user_id = creaetSubscriptionsDto?.user_id;
       // Map of course_id -> subgroup_id, for courses split into weekday
@@ -80,9 +72,6 @@ export class SubscriptionsService {
           );
         }
       }
-      // if (exist) {
-      //   throw new BadRequestException('Already created');
-      // }
       let subcription: any;
       let i: any;
       for (i of course_ids) {
@@ -228,11 +217,6 @@ export class SubscriptionsService {
 
   async getAll(): Promise<object> {
     try {
-      // const user_data: any = await this.userService.getById(user_id);
-      // if (!user_data) {
-      //   new BadRequestException('User not found!');
-      // }
-
       const subscriptionss: any = await this.subscriptionsRepository.findAll({
         order: [['id', 'ASC']],
       });

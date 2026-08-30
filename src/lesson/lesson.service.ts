@@ -37,11 +37,6 @@ export class LessonService {
       if (lessonDto.type == 'lesson') {
         let file_type: string;
         let file_data: any;
-        // if (!content) {
-        //   throw new BadRequestException(
-        //     'Please enter a content',
-        //   );
-        // }
         if (youtube && youtube != undefined) {
           duration = await this.uploadedService.getVideoDuration(youtube);
           video = youtube;
@@ -133,9 +128,6 @@ export class LessonService {
         },
         order: [['id', 'ASC']],
       });
-      // if (!lessons.length) {
-      //   throw new NotFoundException('Lessons not found');
-      // }
       return lessons;
     } catch (error) {
       throw new BadRequestException(error.message);
@@ -219,41 +211,7 @@ export class LessonService {
         },
         replacements: { user_id },
       });
-      if (!lessons.length) {
-        // throw new NotFoundException('Lessons not found');
-      }
       const course = await this.courseService.getById(course_id, user_id, date);
-      // const course: any = await this.lessonRepository.findOne({
-      //   where: {
-      //     course_id,
-      //   },
-      //   include: [
-      //     {
-      //       model: Course,
-      //       attributes: {
-      //         include: [
-      //           [
-      //             Sequelize.literal(
-      //               `(SELECT COUNT(*) FROM "lesson" WHERE "lesson"."course_id" = :course_id AND "lesson"."type" = 'lesson')::int`,
-      //             ),
-      //             'lessons_count',
-      //           ],
-      //           [
-      //             Sequelize.literal(
-      //               `(SELECT COUNT(*) FROM "reyting" WHERE "reyting"."lesson_id" = "Lesson"."id" AND "reyting"."user_id" = :user_id AND "reyting"."ball" > 70)::int`,
-      //             ),
-      //             'finished_count',
-      //           ],
-      //         ],
-      //       },
-      //     },
-      //   ],
-      //   order: [['id', 'ASC']],
-      //   replacements: {
-      //     course_id,
-      //     user_id,
-      //   },
-      // });
       await this.watchedService.create({ course_id }, user_id);
 
       return { lessons, course: course };
@@ -416,11 +374,6 @@ export class LessonService {
       if (lesson.type == 'lesson') {
         let file_type: string;
         let file_data: any;
-        // if (!content) {
-        //   throw new BadRequestException(
-        //     'Please enter a content',
-        //   );
-        // };
         if (youtube) {
           duration = await this.uploadedService.getVideoDuration(youtube);
           video = youtube;
@@ -457,7 +410,6 @@ export class LessonService {
           {
             title: lessonDto.title,
             published: lessonDto.published,
-            // course_id: lesson.course_id,
             type: lessonDto.type,
           },
           {
