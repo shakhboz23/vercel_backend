@@ -543,7 +543,6 @@ export class RoleService {
   async updateParentId(searchChildDto: SearchChildDto): Promise<object> {
     try {
       const { class: classes, parent_id, user_id } = searchChildDto;
-      console.log(classes, 'classes');
       const user: any = await this.roleRepository.findOne({
         where: {
           [Op.and]: [

@@ -59,9 +59,6 @@ export class UserService {
       if (!id) {
         throw new NotFoundException('User not found!');
       }
-      const groupId = 14;
-      const userdata: any = await this.userRepository.findByPk(id);
-      const current_role: string = userdata?.current_role || 'student';
       const user = await this.userRepository.findOne({
         where: { id },
         include: [
@@ -69,7 +66,6 @@ export class UserService {
             model: Role,
           },
         ],
-        replacements: { id, current_role },
       });
 
       if (!user) {
@@ -107,8 +103,6 @@ export class UserService {
       if (!id) {
         throw new NotFoundException('User not found!');
       }
-      const userdata: any = await this.userRepository.findByPk(id);
-      const current_role: string = userdata?.current_role || 'student';
       const user = await this.userRepository.findOne({
         where: { id },
         include: [
@@ -126,7 +120,6 @@ export class UserService {
             model: Course,
           }
         ],
-        replacements: { id, current_role },
       });
       if (!user) {
         throw new NotFoundException('User not found!');

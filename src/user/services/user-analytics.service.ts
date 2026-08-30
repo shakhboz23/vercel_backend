@@ -337,8 +337,6 @@ export class UserAnalyticsService {
       if (!user_id) {
         throw new NotFoundException('User not found!');
       }
-      const userdata: any = await this.userRepository.findByPk(user_id);
-      const current_role: string = userdata?.current_role || 'student';
       const user = await this.userRepository.findOne({
         where: { id: user_id },
         include: [
@@ -383,7 +381,6 @@ export class UserAnalyticsService {
             ],
           },
         ],
-        replacements: { id: user_id, current_role },
       });
 
       if (!user) {

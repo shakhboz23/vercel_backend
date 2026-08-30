@@ -65,7 +65,6 @@ export class TestsService {
       }
       for (let i = 0; i < test.length; i++) {
         variants = Object.values(test[i].variants);
-        console.log(test[i].is_action, '2303');
         if (test[i].is_action == ActionType.edited && test[i].id) {
           await this.update(test[i].id, test[i])
         } else if (test[i].is_action == ActionType.deleted && test[i].id) {
@@ -91,10 +90,8 @@ export class TestsService {
 
   async create_url(file: any) {
     try {
-      console.log('object');
       if (file) {
         file = await this.fileService.createFile(file, 'image');
-        console.log(file);
         if (file != 'error') {
           return { statusCode: HttpStatus.OK, data: file };
         } else {
@@ -171,17 +168,7 @@ export class TestsService {
   }
 
   async getById(lesson_id: number, user_id: number): Promise<object> {
-    console.log(user_id);
-    // const lesson: any = this.lessonService.getById(lesson_id);
-
     try {
-      // const test_settings: any =
-      //   await this.test_settingsService.getByLessonId(id);
-      // console.log(test_settings);
-      // console.log(
-      //   new Date(test_settings?.data?.end_date).getTime(),
-      //   'test2303',
-      // );
       if (
         false
         // new Date(test_settings?.data?.start_date).getTime() >
@@ -406,7 +393,6 @@ export class TestsService {
         questionResults.push({ isCorrect, ...this.describeAnswer(res[2], res[3]) });
       }
       const percentage = maxBall > 0 ? (ball / maxBall) * 100 : 0;
-      console.log(percentage);
       // if (percentage >= 70) {
       const lesson: any = await this.lessonService.getById(lesson_id);
       const data: ReytingDto = {

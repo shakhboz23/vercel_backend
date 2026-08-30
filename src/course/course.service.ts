@@ -26,7 +26,6 @@ import { Lesson, lessonType } from 'src/lesson/models/lesson.models';
 import { SubCategory } from 'src/subcategory/models/subcategory.models';
 import { Category } from 'src/category/models/category.models';
 import { GroupService } from 'src/group/group.service';
-import { group } from 'console';
 import { Attendance } from 'src/attendance/models/attendance.models';
 import { FinishedType, Reyting } from 'src/reyting/models/reyting.models';
 import {
@@ -155,7 +154,6 @@ export class CourseService {
         file_data = await this.uploadedService.create(cover, file_type);
         cover = file_data;
       }
-      console.log(courseData);
 
       const course: any = await this.courseRepository.create({
         ...courseData,
@@ -285,7 +283,6 @@ export class CourseService {
           id: course_id,
         },
         include: [{ model: Lesson, as: 'lessons', where: { type: lessonType.lesson } }]
-        // order: [['id', 'ASC']],
       });
       if (!courses) {
         throw new NotFoundException('Courses not found');
@@ -306,16 +303,11 @@ export class CourseService {
         }
       }
 
-      console.log(subcategory_id, 2303);
-
       if (subcategory_id?.length) {
         subcategory.where.subcategory_id = {
           [Op.in]: subcategory_id
         }
       }
-
-      console.log(subcategory);
-
 
       const group: any = await this.groupService.getById(group_id, user_id);
 
@@ -386,9 +378,6 @@ export class CourseService {
         },
       });
       await this.watchedService.create({ group_id }, user_id);
-      // if (!courses.length) {
-      //   throw new NotFoundException('Courses not found');
-      // }
       return { courses, group };
     } catch (error: any) {
       throw new BadRequestException(error.message);
@@ -399,30 +388,9 @@ export class CourseService {
     try {
       course_id = +course_id || null;
       lesson_id = +lesson_id || null;
-      let id: any;
-      course_id ? id = { id: course_id } : {};
-      // let id = {};
       const targetDate = new Date(date);
       const startOfDay = new Date(targetDate.setHours(0, 0, 0, 0)); // Kun boshidan
       const endOfDay = new Date(targetDate.setHours(23, 59, 59, 999)); // Kun oxirigacha
-      console.log(startOfDay, endOfDay);
-      // let users: any = await this.courseRepository.findAll({
-      //   where: { group_id },
-      //   include: [{
-      //     model: Subscriptions, include: [{ model: User }, {
-      //       model: SubscriptionActivity, where: {
-      //         course_id,
-      //         createdAt: {
-      //           [Op.between]: [startOfDay, endOfDay], // Sana oralig'i
-      //         },
-      //       },
-      //       required: false
-      //     },
-      //     { model: Course, where: { ...id } }
-      //     ]
-      //   }],
-      //   order: [[{ model: Subscriptions, as: 'subscriptions' }, { model: User, as: 'user' }, 'name', 'ASC']],
-      // });      
       const attendanceWhere: any = { date: { [Op.between]: [startOfDay, endOfDay] } };
       if (course_id) {
         attendanceWhere.course_id = course_id;
@@ -469,41 +437,6 @@ export class CourseService {
           },
         ],
       });
-      // if (!users) {
-      //   throw new NotFoundException('Users not found');
-      // }
-      // if (page == 'activity') {
-      //   users = users.reduce((acc, item) => acc.concat(item.subscriptions), []);
-      // } else {
-
-      //   const groupedUsers = users.reduce((acc: any, courseItem: any) => {
-      //     courseItem.subscriptions.forEach((subscription: any) => {
-      //       const userId = subscription.user_id;
-
-      //       if (!acc[userId]) {
-      //         acc[userId] = {
-      //           user: subscription.user,
-      //           courses: [],
-      //         };
-      //       }
-
-      //       acc[userId].courses.push({
-      //         course: subscription.course,
-      //         subscription: {
-      //           id: subscription.id,
-      //           role: subscription.role,
-      //           is_active: subscription.is_active,
-      //           createdAt: subscription.createdAt,
-      //           updatedAt: subscription.updatedAt,
-      //         },
-      //       });
-      //     });
-      //     return acc;
-      //   }, {});
-
-      //   // Objectni massivga aylantirish
-      //   users = Object.values(groupedUsers);
-      // }
 
       return user;
     } catch (error: any) {
@@ -515,7 +448,6 @@ export class CourseService {
     try {
       let startOfMonth: any = null;
       let endOfMonth: any = null;
-      console.log(date, '----------')
       if (date && date != 'null') {
         date = new Date(date);
         startOfMonth = new Date(date?.getFullYear(), date.getMonth(), 1);
@@ -671,7 +603,6 @@ export class CourseService {
 
   async update(id: number, courseDto: CourseDto, cover: any, user_id: number): Promise<object> {
     try {
-      console.log(courseDto.price)
       const course = await this.courseRepository.findByPk(id);
       if (!course) {
         throw new NotFoundException('Course not found');
@@ -688,7 +619,6 @@ export class CourseService {
           await this.filesService.deleteFile(course.cover);
         }
         cover = await this.uploadedService.create(cover, file_type);
-        console.log(cover)
       }
       const update = await this.courseRepository.update({ ...courseData, cover: cover || course.cover }, {
         where: { id },
