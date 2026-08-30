@@ -28,9 +28,9 @@ import {
   WebSocketGateway,
 } from '@nestjs/websockets';
 import { Socket } from 'dgram';
-import { ImageValidationPipe } from '../pipes/image-validation.pipe';
+import { ImageValidationPipe } from '../common/pipes/image-validation.pipe';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { extractUserIdFromToken } from '../utils/token';
+import { extractUserIdFromToken } from '../common/utils/token';
 import { JwtService } from '@nestjs/jwt';
 import { GroupSearchDto } from './dto/search.dto';
 

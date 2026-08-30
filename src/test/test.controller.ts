@@ -14,10 +14,10 @@ import { TestsService } from './test.service';
 import { ApiBody, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { QuestionDto, TestsDto } from './dto/test.dto';
 import { CheckDto } from './dto/check.dto';
-import { extractUserIdFromToken } from 'src/utils/token';
+import { extractUserIdFromToken } from 'src/common/utils/token';
 import { JwtService } from '@nestjs/jwt';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ImageValidationPipe } from 'src/pipes/image-validation.pipe';
+import { ImageValidationPipe } from 'src/common/pipes/image-validation.pipe';
 
 @ApiTags('Tests')
 @Controller('tests')

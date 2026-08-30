@@ -10,7 +10,7 @@ import {
 import { ReytingService } from './reyting.service';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ReytingDto } from './dto/reyting.dto';
-import { extractUserIdFromToken } from 'src/utils/token';
+import { extractUserIdFromToken } from 'src/common/utils/token';
 import { JwtService } from '@nestjs/jwt';
 
 @ApiTags('Reyting')

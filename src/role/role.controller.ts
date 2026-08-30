@@ -16,7 +16,7 @@ import {
 import { RoleService } from './role.service';
 import { ApiBody, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ImageValidationPipe } from '../pipes/image-validation.pipe';
+import { ImageValidationPipe } from '../common/pipes/image-validation.pipe';
 import { RoleDto } from './dto/role.dto';
 import { UpdateProfileDto } from './dto/update_profile.dto';
 import { UpdateDto } from './dto/update.dto';

@@ -15,7 +15,7 @@ import { Test_settingsService } from './test_settings.service';
 import { ApiBody, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Test_settingsDto } from './dto/test_settings.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ImageValidationPipe } from '../pipes/image-validation.pipe';
+import { ImageValidationPipe } from '../common/pipes/image-validation.pipe';
 
 @ApiTags('Test_settings')
 @Controller('test_settings')

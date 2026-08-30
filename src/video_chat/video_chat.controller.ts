@@ -22,11 +22,11 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { ApiBody, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { AuthGuard } from '../guard/auth.guard';
+import { AuthGuard } from '../common/guard/auth.guard';
 import { VideoChatDto } from './dto/video_chat.dto';
 import { VideoChatService } from './video_chat.service';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ImageValidationPipe } from '../pipes/image-validation.pipe';
+import { ImageValidationPipe } from '../common/pipes/image-validation.pipe';
 import { UserService } from '../user/user.service';
 import { RoleService } from '../role/role.service';
 

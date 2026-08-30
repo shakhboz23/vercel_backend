@@ -14,9 +14,9 @@ import { CommentService } from './comment.service';
 import { ApiBody, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CommentDto } from './dto/comment.dto';
 import { JwtService } from '@nestjs/jwt';
-import { ImageValidationPipe } from '../pipes/image-validation.pipe';
+import { ImageValidationPipe } from '../common/pipes/image-validation.pipe';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { extractUserIdFromToken } from 'src/utils/token';
+import { extractUserIdFromToken } from 'src/common/utils/token';
 
 @ApiTags('Comments')
 @Controller('comments')

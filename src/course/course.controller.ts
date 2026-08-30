@@ -22,10 +22,10 @@ import {
 } from '@nestjs/swagger';
 import { CourseDto } from './dto/course.dto';
 import { JwtService } from '@nestjs/jwt';
-import { ImageValidationPipe } from '../pipes/image-validation.pipe';
+import { ImageValidationPipe } from '../common/pipes/image-validation.pipe';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { extractUserIdFromToken } from '../utils/token';
-import { AuthGuard } from 'src/guard/auth.guard';
+import { extractUserIdFromToken } from '../common/utils/token';
+import { AuthGuard } from 'src/common/guard/auth.guard';
 
 @ApiTags('Course')
 @Controller('course')

@@ -8,7 +8,7 @@ import { RoleName, User } from '../models/user.models';
 import { InjectModel } from '@nestjs/sequelize';
 import { JwtService } from '@nestjs/jwt';
 import { RegisterUserDto } from '../dto/register.dto';
-import { generateToken } from '../../utils/token';
+import { generateToken } from '../../common/utils/token';
 import { LoginUserDto } from '../dto/login.dto';
 import { Op } from 'sequelize';
 import { RoleService } from '../../role/role.service';
@@ -24,7 +24,7 @@ import { ForgotPasswordDto } from '../dto/forgot-password.dto';
 import { PhoneUserDto } from '../dto/email.dto';
 import { ChangePasswordDto } from '../dto/change-password.dto';
 import { ChangeUserEmailDto } from '../dto/change-email.dto';
-import { validateTelegramInitData } from 'src/utils/webAppInitData';
+import { validateTelegramInitData } from 'src/common/utils/webAppInitData';
 import { Bot } from 'src/bot/models/bot.model';
 
 // Registration, login, password/email flows, Google/OAuth verification and

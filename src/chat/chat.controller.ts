@@ -22,14 +22,14 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { ApiBody, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { AuthGuard } from '../guard/auth.guard';
+import { AuthGuard } from '../common/guard/auth.guard';
 import { ChatDto } from './dto/chat.dto';
 import { ChatService } from './chat.service';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ImageValidationPipe } from '../pipes/image-validation.pipe';
+import { ImageValidationPipe } from '../common/pipes/image-validation.pipe';
 import { UserService } from '../user/user.service';
 import { RoleService } from '../role/role.service';
-import { extractUserIdFromToken } from 'src/utils/token';
+import { extractUserIdFromToken } from 'src/common/utils/token';
 import { JwtService } from '@nestjs/jwt';
 import { ChatGateway } from '../gateway/gateway';
 

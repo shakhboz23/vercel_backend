@@ -10,7 +10,7 @@ import {
 import { WatchedService } from './watched.service';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { WatchedDto } from './dto/watched.dto';
-import { extractUserIdFromToken } from 'src/utils/token';
+import { extractUserIdFromToken } from 'src/common/utils/token';
 import { JwtService } from '@nestjs/jwt';
 
 @ApiTags('Watched')

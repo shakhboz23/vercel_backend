@@ -15,9 +15,9 @@ import { LessonService } from './lesson.service';
 import { ApiBody, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { LessonDto } from './dto/lesson.dto';
 import { JwtService } from '@nestjs/jwt';
-import { ImageValidationPipe } from '../pipes/image-validation.pipe';
+import { ImageValidationPipe } from '../common/pipes/image-validation.pipe';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { extractUserIdFromToken } from 'src/utils/token';
+import { extractUserIdFromToken } from 'src/common/utils/token';
 
 @ApiTags('Lesson')
 @Controller('lesson')

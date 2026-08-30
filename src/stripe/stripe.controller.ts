@@ -4,7 +4,7 @@ import { StripeService } from './stripe.service';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { StripeDto } from './dto/stripe.dto';
 import { Request } from 'express';
-import { extractUserIdFromToken } from 'src/utils/token';
+import { extractUserIdFromToken } from 'src/common/utils/token';
 import { JwtService } from '@nestjs/jwt';
 
 @ApiTags('Stripe')
