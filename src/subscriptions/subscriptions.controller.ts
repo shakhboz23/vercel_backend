@@ -19,6 +19,7 @@ import { ImageValidationPipe } from '../pipes/image-validation.pipe';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { extractUserIdFromToken } from 'src/utils/token';
 import { CreateSubscriptionsDto } from './dto/create_subscriptions.dto';
+import { CopySubscriptionsDto } from './dto/copy_subscriptions.dto';
 import { Response } from 'express';
 
 @ApiTags('Subscriptions')
@@ -52,6 +53,15 @@ export class SubscriptionsController {
       createSubscriptionDto,
       user_id,
     );
+  }
+
+  @ApiOperation({
+    summary:
+      "Copy every student (or a chosen subset) from one course into another",
+  })
+  @Post('/copyFromCourse')
+  async copyFromCourse(@Body() copySubscriptionsDto: CopySubscriptionsDto) {
+    return this.subscriptionsService.copyFromCourse(copySubscriptionsDto);
   }
 
   @ApiOperation({ summary: 'Get subscriptions by ID' })
