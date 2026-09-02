@@ -524,7 +524,13 @@ export class CourseService {
     }
   }
 
-  async getById(id: number, user_id: number, date?: any): Promise<object> {
+  async getById(
+    id: number,
+    user_id: number,
+    date?: any,
+    search?: string,
+    status?: string,
+  ): Promise<object> {
     try {
       let startOfMonth: any = null;
       let endOfMonth: any = null;
@@ -532,17 +538,30 @@ export class CourseService {
         date = new Date(date);
         startOfMonth = new Date(date?.getFullYear(), date.getMonth(), 1);
         endOfMonth = new Date(date?.getFullYear(), date?.getMonth() + 1, 1);
+      } else {
+        const now = new Date();
+        startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
       }
 
       const paymentWhere: any = { course_id: id };
       if (startOfMonth && endOfMonth) {
         paymentWhere.due_date = {
-          [Op.gte]: startOfMonth,
+          [Op.gt]: startOfMonth,
           [Op.lt]: endOfMonth,
         };
       }
 
-      const course = await this.courseRepository.findOne({
+      const userWhere: any = {};
+      if (search) {
+        userWhere[Op.or] = [
+          { name: { [Op.iLike]: `%${search}%` } },
+          { surname: { [Op.iLike]: `%${search}%` } },
+          { phone: { [Op.iLike]: `%${search}%` } },
+        ];
+      }
+
+      const course: any = await this.courseRepository.findOne({
         where: { id },
         include: [
           { model: CourseSchedule, as: 'attendance_days' },
@@ -566,6 +585,8 @@ export class CourseService {
             include: [
               {
                 model: User,
+                where: search ? userWhere : undefined,
+                required: !!search,
                 include: [
                   {
                     model: Payment,
@@ -664,6 +685,24 @@ export class CourseService {
           user_id,
         },
       });
+
+      // Debt is a sum across every unpaid-month Payment row (see
+      // generateDuePayments), so it can't be expressed as a single-row SQL
+      // where clause on Payment - filter the already-loaded subscriptions
+      // in JS instead, using the same rows the "Qolgan"/"Oylik to'lov"
+      // columns are built from.
+      if (course && status && status !== 'Barchasi') {
+        const subscriptions = (course.subscriptions || []).filter((sub: any) => {
+          const payments = sub.user?.payments || [];
+          const debt = payments.reduce(
+            (sum: number, payment: any) => sum + Number(payment?.debt || 0),
+            0,
+          );
+          return status === 'Qarzdorlar' ? debt > 0 : debt <= 0;
+        });
+        course.setDataValue('subscriptions', subscriptions);
+      }
+
       await this.watchedService.create({ course_id: id }, user_id);
       return course;
     } catch (error: any) {

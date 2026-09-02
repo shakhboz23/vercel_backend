@@ -39,15 +39,10 @@ async function bootstrap() {
     );
 
     const PORT = process.env.PORT || 4200;
-    const corsOrigins = process.env.CORS_ORIGINS
-      ? process.env.CORS_ORIGINS.split(',').map((origin) => origin.trim())
-      : DEFAULT_CORS_ORIGINS;
-    app.enableCors({
-      origin: corsOrigins,
-      methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-      allowedHeaders: 'Content-Type, Authorization',
-      credentials: true,
-    });
+    // const corsOrigins = process.env.CORS_ORIGINS
+    //   ? process.env.CORS_ORIGINS.split(',').map((origin) => origin.trim())
+    //   : DEFAULT_CORS_ORIGINS;
+    app.enableCors();
     app.setGlobalPrefix('api');
 
     app.useGlobalPipes(new ValidationPipe({ whitelist: true }));

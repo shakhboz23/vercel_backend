@@ -93,9 +93,11 @@ export class LessonController {
     @Param('id') id: number,
     @Headers() headers: string,
     @Query('date') date: string,
+    @Query('search') search: string,
+    @Query('status') status: string,
   ) {
     const user_id = extractUserIdFromToken(headers, this.jwtService, true);
-    return this.lessonService.getByCourse(+id, user_id, date);
+    return this.lessonService.getByCourse(+id, user_id, date, search, status);
   }
 
   @ApiOperation({ summary: 'Get lessons with pagination' })

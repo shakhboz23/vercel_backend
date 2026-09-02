@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  HttpException,
   HttpStatus,
   Injectable,
   NotFoundException,
@@ -204,9 +205,12 @@ export class UserAuthService {
 
   async login(loginUserDto: LoginUserDto, type?: string) {
     try {
+      console.log('loginUserDto', loginUserDto);
       const user = await this.userRepository.findOne({
         where: { phone: loginUserDto.phone },
       });
+
+      console.log('user', user);
 
       if (!user) {
         throw new NotFoundException('User not found');
@@ -250,6 +254,14 @@ export class UserAuthService {
         token: access_token,
       };
     } catch (error) {
+      // Preserve the original status (e.g. 404 for "User not found") instead
+      // of flattening every failure reason into a 400, which made the client
+      // unable to tell "no such account" apart from "wrong password" or a
+      // genuine server error.
+      console.log('error', error);
+      if (error instanceof HttpException) {
+        throw error;
+      }
       throw new BadRequestException(error.message);
     }
   }

@@ -144,6 +144,10 @@ import { CourseSubgroupModule } from './course_subgroup/course_subgroup.module';
         Payment,
         CourseSubgroup,
       ],
+      // autoLoadModels: true,
+      // synchronize: true,
+      // sync: { alter: true },
+      // logging: true,
     }),
     ServeStaticModule.forRoot({
       rootPath: resolve(__dirname, '..', 'static'),

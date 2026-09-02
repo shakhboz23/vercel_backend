@@ -159,6 +159,8 @@ export class LessonService {
     course_id: number,
     user_id: number,
     date?: string,
+    search?: string,
+    status?: string,
   ): Promise<Object> {
     try {
       user_id = user_id || null;
@@ -229,7 +231,13 @@ export class LessonService {
         },
         replacements: { user_id },
       });
-      const course = await this.courseService.getById(course_id, user_id, date);
+      const course = await this.courseService.getById(
+        course_id,
+        user_id,
+        date,
+        search,
+        status,
+      );
       await this.watchedService.create({ course_id }, user_id);
 
       return { lessons, course: course };
