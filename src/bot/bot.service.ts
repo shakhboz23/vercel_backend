@@ -171,6 +171,20 @@ export class BotService implements OnModuleInit {
     );
   }
 
+  async notifyPaymentReceived(
+    user_id: number,
+    courseTitle: string,
+    amountPaid: number,
+    remainingDebt: number,
+  ): Promise<void> {
+    return this.notifications.notifyPaymentReceived(
+      user_id,
+      courseTitle,
+      amountPaid,
+      remainingDebt,
+    );
+  }
+
   async notifySubscriptionAdded(
     user_id: number,
     courseTitle: string,

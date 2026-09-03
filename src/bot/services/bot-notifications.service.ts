@@ -56,6 +56,37 @@ export class BotNotificationsService {
     }
   }
 
+  async notifyPaymentReceived(
+    user_id: number,
+    courseTitle: string,
+    amountPaid: number,
+    remainingDebt: number,
+  ): Promise<void> {
+    const text =
+      `✅ <b>To'lov qabul qilindi!</b>\n\n` +
+      `"<b>${courseTitle}</b>" kursi bo'yicha to'lov qabul qilindi.\n\n` +
+      `💰 To'landi: <b>${amountPaid.toLocaleString('ru-RU')} so'm</b>\n` +
+      (remainingDebt > 0
+        ? `📌 Qolgan qarz: <b>${remainingDebt.toLocaleString('ru-RU')} so'm</b>`
+        : `🎉 Oylik to'lov to'liq amalga oshirildi.`);
+
+    const studentBot = await this.botRepo.findOne({ where: { user_id } });
+    if (studentBot?.status) {
+      await this.bot.telegram
+        .sendMessage(studentBot.bot_id, text, { parse_mode: 'HTML' })
+        .catch((error) => console.log(error));
+    }
+
+    const parents = await this.botChildRepo.findAll({
+      where: { student_id: user_id },
+    });
+    for (const parent of parents) {
+      await this.bot.telegram
+        .sendMessage(parent.parent_bot_id, text, { parse_mode: 'HTML' })
+        .catch((error) => console.log(error));
+    }
+  }
+
   async notifySubscriptionAdded(
     user_id: number,
     courseTitle: string,

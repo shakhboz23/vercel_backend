@@ -36,15 +36,37 @@ export class PaymentService {
         throw new BadRequestException("To'lov miqdori musbat bo'lishi kerak");
       }
 
-      const payment = await this.paymentRepository.findOne({
-        where: {
-          user_id: paymentDto.user_id,
-          course_id: paymentDto.course_id,
-          status: { [Op.ne]: PaymentStatus.SUCCESS },
-        },
-        order: [['due_date', 'ASC']],
-        include: [{ model: Course }],
-      });
+      // The admin pays off whichever Payment row is on screen (a specific
+      // month), which isn't necessarily the oldest outstanding one - an
+      // overdue student can have several unpaid rows at once, and the row
+      // shown for the currently-viewed month is filtered by due_date on the
+      // way back out (course.service.ts getById). Matching on payment_id
+      // keeps the paid row the same one the admin looked at, so it doesn't
+      // silently update a different (invisible) month and leave the visible
+      // one still showing as unpaid.
+      const payment = paymentDto.payment_id
+        ? await this.paymentRepository.findOne({
+            where: {
+              id: paymentDto.payment_id,
+              user_id: paymentDto.user_id,
+              course_id: paymentDto.course_id,
+              status: { [Op.ne]: PaymentStatus.SUCCESS },
+            },
+            include: [{ model: Course }],
+          })
+        : await this.paymentRepository.findOne({
+            where: {
+              user_id: paymentDto.user_id,
+              course_id: paymentDto.course_id,
+              status: { [Op.ne]: PaymentStatus.SUCCESS },
+            },
+            order: [['due_date', 'ASC']],
+            include: [{ model: Course }],
+          });
+
+      if (!payment && paymentDto.payment_id) {
+        throw new NotFoundException('Payment not found');
+      }
 
       if (payment) {
         const monthlyPayment = Number(
@@ -73,6 +95,13 @@ export class PaymentService {
           },
         );
         data = update[1][0];
+
+        await this.notifyPaid(
+          paymentDto.user_id,
+          payment.course?.title || '',
+          Number(paymentDto.amount),
+          Math.max(newDebt, 0),
+        );
       } else {
         const course = await this.courseRepository.findByPk(
           paymentDto.course_id,
@@ -98,6 +127,13 @@ export class PaymentService {
           status: debt <= 0 ? PaymentStatus.SUCCESS : PaymentStatus.PENDING,
           payment_method: PaymentMethod.CASH,
         });
+
+        await this.notifyPaid(
+          paymentDto.user_id,
+          course.title || '',
+          Number(paymentDto.amount),
+          Math.max(debt, 0),
+        );
       }
 
       return {
@@ -107,6 +143,26 @@ export class PaymentService {
       };
     } catch (error: any) {
       throw new BadRequestException(error.message);
+    }
+  }
+
+  // Best-effort: a failed Telegram push shouldn't turn a successfully
+  // recorded payment into a 400 for the admin who just took the cash.
+  private async notifyPaid(
+    user_id: number,
+    courseTitle: string,
+    amountPaid: number,
+    remainingDebt: number,
+  ): Promise<void> {
+    try {
+      await this.botService.notifyPaymentReceived(
+        user_id,
+        courseTitle,
+        amountPaid,
+        remainingDebt,
+      );
+    } catch (error) {
+      console.log(error);
     }
   }
 
@@ -167,6 +223,7 @@ export class PaymentService {
     for (const payment of payments as any[]) {
       try {
         const remaining = Number(payment.debt ?? payment.monthly_payment ?? 0);
+        if (remaining <= 0) continue;
         await this.botService.notifyPaymentDue(
           payment.user_id,
           payment.course?.title || '',

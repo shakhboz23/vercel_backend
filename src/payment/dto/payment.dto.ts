@@ -33,6 +33,17 @@ export class PaymentDto {
   amount: number;
 
   @ApiProperty({
+    example: 5,
+    description:
+      'Id of the specific Payment row (month) being paid off, as shown to the admin. ' +
+      'When omitted, the oldest outstanding row is paid instead.',
+    required: false,
+  })
+  @IsOptional()
+  @IsNumber()
+  payment_id?: number;
+
+  @ApiProperty({
     example: 'cash',
     description: 'Payment method',
   })
