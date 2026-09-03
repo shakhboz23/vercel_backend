@@ -546,8 +546,12 @@ export class CourseService {
 
       const paymentWhere: any = { course_id: id };
       if (startOfMonth && endOfMonth) {
+        // generateDuePayments always sets due_date to midnight on the 1st of
+        // a month, i.e. exactly startOfMonth - Op.gt excluded that exact
+        // timestamp, so a student's payment for the current month never
+        // matched and the row silently vanished from this endpoint.
         paymentWhere.due_date = {
-          [Op.gt]: startOfMonth,
+          [Op.gte]: startOfMonth,
           [Op.lt]: endOfMonth,
         };
       }
