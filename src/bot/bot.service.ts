@@ -185,6 +185,34 @@ export class BotService implements OnModuleInit {
     );
   }
 
+  async notifyContentAdded(
+    user_id: number,
+    courseTitle: string,
+    lessonTitle: string,
+    kind: 'vazifa' | 'test',
+  ): Promise<void> {
+    return this.notifications.notifyContentAdded(
+      user_id,
+      courseTitle,
+      lessonTitle,
+      kind,
+    );
+  }
+
+  async notifyUnsubmitted(
+    user_id: number,
+    courseTitle: string,
+    lessonTitle: string,
+    kind: 'vazifa' | 'test',
+  ): Promise<void> {
+    return this.notifications.notifyUnsubmitted(
+      user_id,
+      courseTitle,
+      lessonTitle,
+      kind,
+    );
+  }
+
   async notifySubscriptionAdded(
     user_id: number,
     courseTitle: string,

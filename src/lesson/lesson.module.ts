@@ -9,15 +9,21 @@ import { ReytingModule } from 'src/reyting/reyting.module';
 import { WatchedModule } from 'src/watched/watched.module';
 import { FilesModule } from 'src/files/files.module';
 import { CommentModule } from 'src/comment/comment.module';
+import { Reyting } from 'src/reyting/models/reyting.models';
+import { Tests } from 'src/test/models/test.models';
+import { Subscriptions } from 'src/subscriptions/models/subscriptions.models';
+import { Course } from 'src/course/models/course.models';
+import { BotModule } from 'src/bot/bot.module';
 
 @Module({
   imports: [
-    SequelizeModule.forFeature([Lesson]),
+    SequelizeModule.forFeature([Lesson, Reyting, Tests, Subscriptions, Course]),
     CourseModule,
     UploadedModule,
     WatchedModule,
     FilesModule,
     CommentModule,
+    forwardRef(() => BotModule),
   ],
   controllers: [LessonController],
   providers: [LessonService],

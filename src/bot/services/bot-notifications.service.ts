@@ -87,6 +87,68 @@ export class BotNotificationsService {
     }
   }
 
+  private readonly contentKindLabels: Record<
+    'vazifa' | 'test',
+    { icon: string; text: string }
+  > = {
+    vazifa: { icon: '📚', text: 'vazifa' },
+    test: { icon: '📝', text: 'test' },
+  };
+
+  // Fired once, right when a teacher adds a new task/test to a course - goes
+  // to the student only, matching notifySubscriptionAdded's "new thing
+  // appeared for you" pattern (not a reminder, so no parent copy).
+  async notifyContentAdded(
+    user_id: number,
+    courseTitle: string,
+    lessonTitle: string,
+    kind: 'vazifa' | 'test',
+  ): Promise<void> {
+    const info = this.contentKindLabels[kind];
+    const text =
+      `${info.icon} <b>Yangi ${info.text} qo'shildi!</b>\n\n` +
+      `"<b>${courseTitle}</b>" kursida yangi ${info.text}: <b>${lessonTitle}</b>`;
+
+    const studentBot = await this.botRepo.findOne({ where: { user_id } });
+    if (studentBot?.status) {
+      await this.bot.telegram
+        .sendMessage(studentBot.bot_id, text, { parse_mode: 'HTML' })
+        .catch((error) => console.log(error));
+    }
+  }
+
+  // Nags a student (and their parents) who hasn't submitted a task/test yet -
+  // called twice a day (~12:30 and ~20:00) by the schedule cron for every
+  // subscribed student still missing a Reyting row for that lesson.
+  async notifyUnsubmitted(
+    user_id: number,
+    courseTitle: string,
+    lessonTitle: string,
+    kind: 'vazifa' | 'test',
+  ): Promise<void> {
+    const info = this.contentKindLabels[kind];
+    const text =
+      `⏰ <b>Eslatma!</b>\n\n` +
+      `"<b>${courseTitle}</b>" kursidagi "<b>${lessonTitle}</b>" ${info.text}sini hali topshirmadingiz.\n\n` +
+      `Iltimos, ${info.text}ni imkon qadar tezroq topshiring.`;
+
+    const studentBot = await this.botRepo.findOne({ where: { user_id } });
+    if (studentBot?.status) {
+      await this.bot.telegram
+        .sendMessage(studentBot.bot_id, text, { parse_mode: 'HTML' })
+        .catch((error) => console.log(error));
+    }
+
+    const parents = await this.botChildRepo.findAll({
+      where: { student_id: user_id },
+    });
+    for (const parent of parents) {
+      await this.bot.telegram
+        .sendMessage(parent.parent_bot_id, text, { parse_mode: 'HTML' })
+        .catch((error) => console.log(error));
+    }
+  }
+
   async notifySubscriptionAdded(
     user_id: number,
     courseTitle: string,

@@ -28,6 +28,7 @@ export class TestsService {
   constructor(
     @InjectModel(Tests) private testsRepository: typeof Tests,
     private readonly reytingService: ReytingService,
+    @Inject(forwardRef(() => LessonService))
     private readonly lessonService: LessonService,
     private readonly test_settingsService: Test_settingsService,
     private readonly fileService: FilesService,
@@ -63,6 +64,7 @@ export class TestsService {
           mix,
         });
       }
+      let newlyCreatedCount = 0;
       for (let i = 0; i < test.length; i++) {
         variants = Object.values(test[i].variants);
         if (test[i].is_action == ActionType.edited && test[i].id) {
@@ -77,8 +79,24 @@ export class TestsService {
             type: test[i].type,
             true_answer: test[i].true_answer,
           });
+          newlyCreatedCount++;
         }
       }
+
+      // Only announce the first time real questions land on this lesson -
+      // subsequent edits (adding one more question, fixing a typo) reuse
+      // this same create() call and shouldn't re-spam every subscriber.
+      if (newlyCreatedCount > 0) {
+        const existingCount = await this.testsRepository.count({
+          where: { lesson_id },
+        });
+        if (existingCount <= newlyCreatedCount) {
+          this.lessonService
+            .announceNewContent(lesson_id, 'test')
+            .catch((error) => console.log(error));
+        }
+      }
+
       return {
         statusCode: HttpStatus.OK,
         message: 'Created successfully',

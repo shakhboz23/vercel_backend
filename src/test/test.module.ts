@@ -10,15 +10,16 @@ import { JwtModule } from '@nestjs/jwt';
 import { LessonModule } from 'src/lesson/lesson.module';
 import { FilesModule } from 'src/files/files.module';
 import { BotModule } from 'src/bot/bot.module';
+import { Subscriptions } from 'src/subscriptions/models/subscriptions.models';
 
 @Module({
   imports: [
-    SequelizeModule.forFeature([Tests]),
+    SequelizeModule.forFeature([Tests, Subscriptions]),
     forwardRef(() => ReytingModule),
     UserStepModule,
     Test_settingsModule,
     JwtModule,
-    LessonModule,
+    forwardRef(() => LessonModule),
     FilesModule,
     forwardRef(() => BotModule),
   ],

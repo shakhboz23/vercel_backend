@@ -25,7 +25,7 @@ import { BotChildrenService } from './services/bot-children.service';
     RoleModule,
     forwardRef(() => SubscriptionsModule),
     CourseModule,
-    LessonModule,
+    forwardRef(() => LessonModule),
     forwardRef(() => TestsModule),
     forwardRef(() => ReytingModule),
   ],

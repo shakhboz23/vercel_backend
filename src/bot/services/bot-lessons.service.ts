@@ -34,6 +34,7 @@ export class BotLessonsService {
     @InjectBot(BOT_NAME) private readonly bot: Telegraf<Context>,
     private readonly userService: UserService,
     private readonly courseService: CourseService,
+    @Inject(forwardRef(() => LessonService))
     private readonly lessonService: LessonService,
     @Inject(forwardRef(() => TestsService))
     private readonly testsService: TestsService,

@@ -1,6 +1,8 @@
 import {
   BadRequestException,
+  forwardRef,
   HttpStatus,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -18,17 +20,131 @@ import { CommentService } from 'src/comment/comment.service';
 import { Op } from 'sequelize';
 import { SubCategory } from 'src/subcategory/models/subcategory.models';
 import { Category } from 'src/category/models/category.models';
+import { Tests } from 'src/test/models/test.models';
+import { Subscriptions } from 'src/subscriptions/models/subscriptions.models';
+import { BotService } from 'src/bot/bot.service';
 
 @Injectable()
 export class LessonService {
   constructor(
     @InjectModel(Lesson) private lessonRepository: typeof Lesson,
+    @InjectModel(Reyting) private reytingRepository: typeof Reyting,
+    @InjectModel(Tests) private testsRepository: typeof Tests,
+    @InjectModel(Subscriptions)
+    private subscriptionsRepository: typeof Subscriptions,
+    @InjectModel(Course) private courseRepository: typeof Course,
     private readonly courseService: CourseService,
     private uploadedService: UploadedService,
     private readonly watchedService: WatchedService,
     private readonly filesService: FilesService,
     private readonly commentService: CommentService,
+    @Inject(forwardRef(() => BotService))
+    private readonly botService: BotService,
   ) {}
+
+  // A nested "vazifa" lesson is created from a /lesson/:lesson_id page (no
+  // course_id in the route), so the frontend falls back to sending the
+  // *parent lesson's* id as course_id - it's only reliable at the root of
+  // the tree, where a module/test was created directly from the course page
+  // with the real course_id. Walk lesson_id up to that root to recover it.
+  private async resolveCourseId(lesson: Lesson): Promise<number | null> {
+    let current: any = lesson;
+    const seen = new Set<number>();
+    while (current?.lesson_id && !seen.has(current.id)) {
+      seen.add(current.id);
+      current = await this.lessonRepository.findByPk(current.lesson_id);
+    }
+    return current?.course_id || null;
+  }
+
+  // Called by TestsService once a lesson's question set is created, to send
+  // the same "yangi test qo'shildi" push the 'vazifa' path sends from
+  // create() below - kept here since this is where resolveCourseId and the
+  // subscribed-students fan-out already live.
+  async announceNewContent(
+    lesson_id: number,
+    kind: 'vazifa' | 'test',
+  ): Promise<void> {
+    const lesson = await this.lessonRepository.findByPk(lesson_id);
+    if (!lesson) return;
+    const course_id = await this.resolveCourseId(lesson);
+    if (!course_id) return;
+    await this.notifyAllSubscribed(course_id, kind, lesson.title);
+  }
+
+  // Every subscribed student gets a fire-and-forget bot push - a failed
+  // Telegram send should never fail the lesson/test creation that's already
+  // committed to the DB.
+  private async notifyAllSubscribed(
+    course_id: number,
+    kind: 'vazifa' | 'test',
+    lessonTitle: string,
+  ): Promise<void> {
+    try {
+      const course = await this.courseRepository.findByPk(course_id);
+      if (!course) return;
+      const subscriptions = await this.subscriptionsRepository.findAll({
+        where: { course_id },
+        attributes: ['user_id'],
+      });
+      for (const sub of subscriptions) {
+        this.botService
+          .notifyContentAdded(sub.user_id, course.title, lessonTitle, kind)
+          .catch((error) => console.log(error));
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  // Runs twice a day (~12:30 and ~20:00, see schedules/schedule.service.ts):
+  // for every published task/test lesson, reminds every subscribed student
+  // who still has no Reyting row for it - i.e. never submitted anything -
+  // and their linked parent(s). Once a student submits (a Reyting row
+  // appears, whatever its is_finished/ball state), the reminder stops.
+  async sendUnsubmittedReminders(): Promise<void> {
+    const lessons = await this.lessonRepository.findAll({
+      where: { type: 'lesson', published: true },
+    });
+
+    for (const lesson of lessons) {
+      try {
+        const course_id = await this.resolveCourseId(lesson);
+        if (!course_id) continue;
+
+        const subscriptions = await this.subscriptionsRepository.findAll({
+          where: { course_id },
+          attributes: ['user_id'],
+        });
+        const studentIds = subscriptions.map((s) => s.user_id);
+        if (!studentIds.length) continue;
+
+        const submitted = await this.reytingRepository.findAll({
+          where: { lesson_id: lesson.id, user_id: { [Op.in]: studentIds } },
+          attributes: ['user_id'],
+        });
+        const submittedIds = new Set(submitted.map((r) => r.user_id));
+        const unsubmittedIds = studentIds.filter((id) => !submittedIds.has(id));
+        if (!unsubmittedIds.length) continue;
+
+        const testsCount = await this.testsRepository.count({
+          where: { lesson_id: lesson.id },
+        });
+        const kind: 'vazifa' | 'test' = testsCount > 0 ? 'test' : 'vazifa';
+
+        const course = await this.courseRepository.findByPk(course_id);
+        if (!course) continue;
+
+        for (const user_id of unsubmittedIds) {
+          this.botService
+            .notifyUnsubmitted(user_id, course.title, lesson.title, kind)
+            .catch((error) => console.log(error));
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    }
+  }
 
   async create(lessonDto: LessonDto, video: any): Promise<object> {
     try {
@@ -60,7 +176,17 @@ export class LessonService {
             returning: true,
           },
         );
-        return video_lesson[1][0];
+        const created = video_lesson[1][0];
+
+        if (created.published) {
+          this.resolveCourseId(created).then((course_id) => {
+            if (course_id) {
+              this.notifyAllSubscribed(course_id, 'vazifa', created.title);
+            }
+          });
+        }
+
+        return created;
       } else {
         const lesson: any = await this.lessonRepository.create({
           title: lessonDto.title,
