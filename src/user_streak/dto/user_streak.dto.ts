@@ -10,6 +10,14 @@ import {
 
 export class UserStreakDto {
   @ApiProperty({
+    example: '2023-08-01T00:00:00.000Z',
+    description: 'Date the attendance belongs to',
+  })
+  @IsOptional()
+  @IsDateString()
+  date?: Date;
+
+  @ApiProperty({
     example: 5,
     description: 'Full name of user',
   })

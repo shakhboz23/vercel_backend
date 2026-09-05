@@ -30,14 +30,18 @@ export class UserStreakService {
         },
       });
 
-      const today = dayjs().startOf('day');
+      // Streaks/season/lastActivityDate must all be anchored to the date the
+      // attendance record is *for*, not the server's wall-clock "now" — a
+      // teacher can mark or correct attendance for a past (or bulk-entered)
+      // date, and using real-time "today" there silently breaks the streak
+      // math (expectedLessonsBetween, alreadyUpdatedToday, season rollover).
+      const today = dayjs(userStreakDto.date).startOf('day');
 
       const season = this.getSeasonId(today.toDate());
-      let currentStreak = 0;
-      if (user && user?.season !== season) {
-        user.currentStreak = 0;
-        user.season = season;
-      }
+      // If the season rolled over since the last recorded activity, the
+      // streak carried from the old season no longer applies.
+      
+      const priorStreak = user && user.season === season ? user.currentStreak : 0;
 
       const attendanceDays = userStreakDto?.attendance_days
         .map((day): number | null => {
@@ -71,6 +75,10 @@ export class UserStreakService {
       const alreadyUpdatedToday =
         !!user && dayjs(user.lastActivityDate).isSame(today, 'day');
 
+      // Same-day re-save (e.g. a teacher correcting a mark): leave the
+      // streak as it already stands, don't recompute it a second time.
+      let nextStreak = priorStreak;
+
       if (!alreadyUpdatedToday) {
         const expectedLessons = user
           ? this.expectedLessonsBetween(
@@ -85,9 +93,13 @@ export class UserStreakService {
         }
 
         if (expectedLessons === 1 && user) {
-          user.currentStreak += userStreakDto.attendance ? 1 : 0;
+          // Consecutive scheduled lesson: extend the streak on attendance,
+          // break it on absence.
+          nextStreak = userStreakDto.attendance ? priorStreak + 1 : 0;
         } else {
-          currentStreak = userStreakDto.attendance ? 1 : 0;
+          // One or more scheduled lessons were missed in between: the
+          // streak restarts from scratch.
+          nextStreak = userStreakDto.attendance ? 1 : 0;
         }
       }
 
@@ -95,7 +107,7 @@ export class UserStreakService {
         const update = await this.userStreakRepository.update(
           {
             ...userStreakDto,
-            currentStreak: user?.currentStreak || currentStreak,
+            currentStreak: nextStreak,
             lastActivityDate: today.toDate(),
             season: season,
           },
@@ -108,21 +120,21 @@ export class UserStreakService {
           },
         );
         data = update[1][0];
-        const reyting: ReytingDto = {
-          ball: user?.currentStreak || currentStreak,
-          finished_type: FinishedType.attendance,
-          course_id: userStreakDto.course_id,
-        };
-        await this.reytingService.create(reyting, userStreakDto.user_id);
       } else {
-        data = await this.userStreakRepository.create(userStreakDto);
-        const reyting: ReytingDto = {
-          ball: user?.currentStreak || currentStreak,
-          finished_type: FinishedType.attendance,
-          course_id: userStreakDto.course_id,
-        };
-        await this.reytingService.create(reyting, userStreakDto.user_id);
+        data = await this.userStreakRepository.create({
+          ...userStreakDto,
+          currentStreak: nextStreak,
+          lastActivityDate: today.toDate(),
+          season,
+        });
       }
+
+      const reyting: ReytingDto = {
+        ball: nextStreak,
+        finished_type: FinishedType.attendance,
+        course_id: userStreakDto.course_id,
+      };
+      await this.reytingService.create(reyting, userStreakDto.user_id, userStreakDto.date);
 
       return {
         statusCode: HttpStatus.OK,

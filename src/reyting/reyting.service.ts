@@ -97,12 +97,12 @@ export class ReytingService {
       .catch((error) => console.log(error));
   }
 
-  async create(reytingDto: ReytingDto, user_id: number): Promise<object> {
+  async create(reytingDto: ReytingDto, user_id: number, date?: Date): Promise<object> {
     try {
       let is_reyting: any;
 
       if (reytingDto.finished_type === FinishedType.attendance) {
-        const todayStart = new Date();
+        const todayStart = date ? new Date(date) : new Date();
         todayStart.setHours(0, 0, 0, 0);
         const todayEnd = new Date();
         todayEnd.setHours(23, 59, 59, 999);
