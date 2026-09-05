@@ -104,7 +104,7 @@ export class ReytingService {
       if (reytingDto.finished_type === FinishedType.attendance) {
         const todayStart = date ? new Date(date) : new Date();
         todayStart.setHours(0, 0, 0, 0);
-        const todayEnd = new Date();
+        const todayEnd = date ? new Date(date) : new Date();
         todayEnd.setHours(23, 59, 59, 999);
 
         is_reyting = await this.reytingRepository.findOne({
@@ -129,6 +129,7 @@ export class ReytingService {
           ...reytingDto,
           user_id,
           is_finished: true,
+          ...(date ? { createdAt: date } : {}),
         });
         this.notifyRatingChange(
           user_id,
@@ -149,6 +150,7 @@ export class ReytingService {
           {
             ...reytingDto,
             user_id,
+            ...(date ? { createdAt: date } : {}),
           },
           {
             where: { id: is_reyting.id },

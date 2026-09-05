@@ -78,7 +78,8 @@ export class UserStreakService {
       // Same-day re-save (e.g. a teacher correcting a mark): leave the
       // streak as it already stands, don't recompute it a second time.
       let nextStreak = priorStreak;
-
+        console.log(alreadyUpdatedToday, 2303);
+        
       if (!alreadyUpdatedToday) {
         const expectedLessons = user
           ? this.expectedLessonsBetween(
