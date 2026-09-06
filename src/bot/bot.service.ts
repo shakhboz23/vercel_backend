@@ -310,6 +310,10 @@ export class BotService implements OnModuleInit {
     return this.dashboard.my_courses(ctx);
   }
 
+  async myCoursesForGroup(ctx: Context, group_id: number) {
+    return this.dashboard.myCoursesForGroup(ctx, group_id);
+  }
+
   // --- Lessons, tests and task submission/grading ---
 
   async lessons(ctx: Context, courseId: number) {

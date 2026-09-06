@@ -121,6 +121,23 @@ export class BotUpdate {
     return this.botService.lessons(ctx, courseId);
   }
 
+  @Action(/^mycourses_group_(\d+)$/)
+  async selectMyCoursesGroup(@Ctx() ctx: Context) {
+    const callbackQuery = ctx.callbackQuery;
+
+    if (!('data' in callbackQuery)) {
+      return;
+    }
+
+    await ctx.answerCbQuery();
+
+    const groupId = Number(
+      callbackQuery.data.replace('mycourses_group_', ''),
+    );
+
+    return this.botService.myCoursesForGroup(ctx, groupId);
+  }
+
   @Action(/^stats_group_(\d+)$/)
   async selectStatsGroup(@Ctx() ctx: Context) {
     const callbackQuery = ctx.callbackQuery;

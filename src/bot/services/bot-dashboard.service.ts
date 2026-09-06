@@ -435,32 +435,58 @@ export class BotDashboardService {
   async my_courses(ctx: Context) {
     const bot_id = ctx.from.id;
 
-    const user = await this.botRepo.findOne({ where: { bot_id } });
+    const botUser = await this.botRepo.findOne({ where: { bot_id } });
 
-    if (!user?.user_id) {
+    if (!botUser?.user_id) {
       await ctx.reply('Foydalanuvchi topilmadi');
       return;
     }
-    let courses: any;
-    try {
-      courses = await this.subscriptionsService.getByUserId(user?.user_id);
-    } catch (error) {}
 
-    if (!courses?.length) {
-      await ctx.reply('Sizda hozircha kurslar mavjud emas.');
+    const groups = await this.getUserGroups(botUser.user_id);
+
+    if (!groups.size) {
+      await ctx.reply('Sizda hozircha guruhlar mavjud emas.');
       return;
     }
 
-    const buttons = courses.map((subscription) => {
-      const course = subscription.dataValues.course;
+    const buttons = [...groups.entries()].map(([groupId, title]) => [
+      { text: title, callback_data: `mycourses_group_${groupId}` },
+    ]);
 
-      return [
-        {
-          text: course.title,
-          callback_data: `course_${course.id}`,
-        },
-      ];
+    await ctx.reply("📚 Kurslarni ko'rish uchun guruhni tanlang:", {
+      reply_markup: { inline_keyboard: buttons },
     });
+  }
+
+  async myCoursesForGroup(ctx: Context, group_id: number) {
+    const bot_id = ctx.from.id;
+
+    const botUser = await this.botRepo.findOne({ where: { bot_id } });
+
+    if (!botUser?.user_id) {
+      await ctx.reply('Foydalanuvchi topilmadi');
+      return;
+    }
+
+    let subscriptions: any;
+    try {
+      subscriptions = await this.subscriptionsService.getByUserId(
+        botUser.user_id,
+      );
+    } catch (error) {}
+
+    const courses = ((subscriptions as any[]) || [])
+      .map((subscription: any) => subscription.dataValues.course)
+      .filter((course: any) => course?.group_id == group_id);
+
+    if (!courses.length) {
+      await ctx.reply('Bu guruhda kurslaringiz mavjud emas.');
+      return;
+    }
+
+    const buttons = courses.map((course: any) => [
+      { text: course.title, callback_data: `course_${course.id}` },
+    ]);
 
     await ctx.reply('📚 Kurslaringiz:', {
       reply_markup: {
