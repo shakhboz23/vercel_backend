@@ -270,6 +270,10 @@ export class BotService implements OnModuleInit {
     return this.dashboard.reyting_courses(ctx);
   }
 
+  async reytingForGroup(ctx: Context, group_id: number) {
+    return this.dashboard.reytingForGroup(ctx, group_id);
+  }
+
   async courseReyting(ctx: Context, course_id: number) {
     return this.dashboard.courseReyting(ctx, course_id);
   }

@@ -185,6 +185,21 @@ export class BotUpdate {
     return this.botService.attendanceForCourse(ctx, courseId);
   }
 
+  @Action(/^reyting_group_(\d+)$/)
+  async selectReytingGroup(@Ctx() ctx: Context) {
+    const callbackQuery = ctx.callbackQuery;
+
+    if (!('data' in callbackQuery)) {
+      return;
+    }
+
+    await ctx.answerCbQuery();
+
+    const groupId = Number(callbackQuery.data.replace('reyting_group_', ''));
+
+    return this.botService.reytingForGroup(ctx, groupId);
+  }
+
   @Action(/^reyting_course_(\d+)$/)
   async handleCourseReyting(@Ctx() ctx: Context) {
     const callbackQuery = ctx.callbackQuery;
