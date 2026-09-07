@@ -120,6 +120,7 @@ export class ReytingService {
           where: {
             user_id,
             lesson_id: reytingDto.lesson_id ?? null,
+            finished_type: reytingDto.finished_type ?? null,
           },
         });
       }
@@ -128,6 +129,7 @@ export class ReytingService {
         const reyting = await this.reytingRepository.create({
           ...reytingDto,
           user_id,
+          finished_type: reytingDto.finished_type ?? FinishedType.manual,
           is_finished: true,
           ...(date ? { createdAt: date } : {}),
         });
@@ -181,9 +183,9 @@ export class ReytingService {
     }
   }
 
-  async exists(lesson_id: number, user_id: number): Promise<boolean> {
+  async exists(lesson_id: number, user_id: number, finished_type: FinishedType): Promise<boolean> {
     const reyting = await this.reytingRepository.findOne({
-      where: { lesson_id, user_id },
+      where: { lesson_id, user_id, finished_type },
     });
     return !!reyting;
   }

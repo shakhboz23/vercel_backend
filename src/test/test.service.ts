@@ -15,6 +15,7 @@ import { Sequelize } from 'sequelize-typescript';
 import { CheckDto } from './dto/check.dto';
 import { ReytingService } from '../reyting/reyting.service';
 import { ReytingDto } from '../reyting/dto/reyting.dto';
+import { FinishedType } from '../reyting/models/reyting.models';
 import { Lesson } from 'src/lesson/models/lesson.models';
 import { Course } from 'src/course/models/course.models';
 import { Category } from 'src/category/models/category.models';
@@ -159,7 +160,7 @@ export class TestsService {
   }
 
   async hasCompletedTest(lesson_id: number, user_id: number): Promise<boolean> {
-    return this.reytingService.exists(lesson_id, user_id);
+    return this.reytingService.exists(lesson_id, user_id, FinishedType.test);
   }
 
   async getLessonTestsCount(lesson_id: number): Promise<number> {
@@ -453,6 +454,7 @@ export class TestsService {
         ball,
         lesson_id,
         course_id: lesson?.course_id,
+        finished_type: FinishedType.test,
       };
       const reyting_data: any = await this.reytingService.create(data, user_id);
       // await this.userStepService.create({ lesson_id, role_id });
@@ -500,6 +502,7 @@ export class TestsService {
         ball,
         lesson_id,
         course_id: lesson?.course_id,
+        finished_type: FinishedType.test,
       };
       const reyting_data: any = await this.reytingService.create(data, user_id);
       // await this.userStepService.create({ lesson_id, role_id });
