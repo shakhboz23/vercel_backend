@@ -409,6 +409,14 @@ export class TestsService {
     const { answers } = checkDto;
     let message: string;
     try {
+      const alreadyTaken = await this.reytingService.exists(
+        lesson_id,
+        user_id,
+      );
+      if (alreadyTaken) {
+        throw new BadRequestException('Siz allaqachon ishlagansiz!');
+      }
+
       const results = {};
       const questionResults: {
         isCorrect: boolean;
