@@ -413,6 +413,7 @@ export class TestsService {
       const alreadyTaken = await this.reytingService.exists(
         lesson_id,
         user_id,
+        FinishedType.test
       );
       if (alreadyTaken) {
         throw new BadRequestException('Siz allaqachon ishlagansiz!');
