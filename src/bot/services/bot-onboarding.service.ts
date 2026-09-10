@@ -31,6 +31,7 @@ export class BotOnboardingService {
 
   mainMenuButtons(role: string): string[][] {
     if (role === 'parent') {
+      return [['Farzandlarim'], ['Profil']];
     }
 
     return [['Statistika', 'Kurslar'], ['Reyting', 'Davomat'], ['Profil']];
@@ -39,7 +40,8 @@ export class BotOnboardingService {
   async backToMenu(ctx: Context) {
     const bot_id = ctx.from.id;
     const botUser = await this.botRepo.findOne({ where: { bot_id } });
-
+    console.log(botUser.role);
+    
     await ctx.reply('🏠 Bosh menyu', {
       parse_mode: 'HTML',
       ...Markup.keyboard(this.mainMenuButtons(botUser?.role)).resize(),
