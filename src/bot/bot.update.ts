@@ -73,6 +73,11 @@ export class BotUpdate {
     return this.botService.profile(ctx);
   }
 
+  @Hears('Orqaga')
+  async backToMenu(@Ctx() ctx: Context) {
+    return this.botService.backToMenu(ctx);
+  }
+
   @Hears("Telefon raqamni o'zgartirish")
   async handlePhone(@Ctx() ctx: Context) {
     return this.botService.handlePhone(ctx);

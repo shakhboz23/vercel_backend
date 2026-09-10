@@ -360,9 +360,8 @@ export class BotDashboardService {
         parse_mode: 'HTML',
         ...Markup.keyboard([
           ["Parolni o'zgaritish", "Telefon raqamni o'zgartirish"],
-        ])
-          .oneTime()
-          .resize(),
+          ['Orqaga'],
+        ]).resize(),
       },
     );
   }

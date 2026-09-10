@@ -151,6 +151,10 @@ export class BotService implements OnModuleInit {
     return this.onboarding.onStop(ctx);
   }
 
+  async backToMenu(ctx: Context) {
+    return this.onboarding.backToMenu(ctx);
+  }
+
   async sendOTP(phone: string, OTP: string): Promise<boolean> {
     return this.onboarding.sendOTP(phone, OTP);
   }
