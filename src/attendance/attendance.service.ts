@@ -22,7 +22,7 @@ export class AttendanceService {
     @InjectModel(Course) private courseRepository: typeof Course,
     private userStreakService: UserStreakService,
     private botService: BotService,
-  ) {}
+  ) { }
 
   // A course can be split into subgroups that meet on different weekdays
   // (e.g. because one physical classroom can't fit everyone). Resolves the
@@ -84,11 +84,13 @@ export class AttendanceService {
         data = await this.attendanceRepository.create(attendanceDto);
       }
 
-      await this.userStreakService.create({
-        ...attendanceDto,
-        attendance_days: attendanceDays,
-      });
-
+      if (attendance) {
+        await this.userStreakService.create({
+          ...attendanceDto,
+          attendance_days: attendanceDays,
+        });
+      }
+      
       this.botService
         .notifyAttendance(
           attendanceDto.user_id,
