@@ -20,6 +20,10 @@ interface BotAttr {
   step?: string;
   step_data?: string;
   role?: string;
+  parent_name?: string;
+  parent_surname?: string;
+  student_name?: string;
+  student_surname?: string;
 }
 
 @Table({ tableName: 'bot' })
@@ -74,4 +78,32 @@ export class Bot extends Model<Bot, BotAttr> {
   })
   @Column({ type: DataType.STRING, allowNull: true })
   role: string;
+
+  @ApiProperty({
+    example: 'Alisher',
+    description: "'parent' roli uchun saqlangan ism",
+  })
+  @Column({ type: DataType.STRING, allowNull: true })
+  parent_name: string;
+
+  @ApiProperty({
+    example: 'Aliyev',
+    description: "'parent' roli uchun saqlangan familiya",
+  })
+  @Column({ type: DataType.STRING, allowNull: true })
+  parent_surname: string;
+
+  @ApiProperty({
+    example: 'Bekzod',
+    description: "'student' roli uchun saqlangan ism",
+  })
+  @Column({ type: DataType.STRING, allowNull: true })
+  student_name: string;
+
+  @ApiProperty({
+    example: 'Bekzodov',
+    description: "'student' roli uchun saqlangan familiya",
+  })
+  @Column({ type: DataType.STRING, allowNull: true })
+  student_surname: string;
 }

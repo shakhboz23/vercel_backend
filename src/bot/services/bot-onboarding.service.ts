@@ -8,6 +8,7 @@ import { Message } from 'telegraf/typings/core/types/typegram';
 import { UserService } from 'src/user/user.service';
 import { RoleName } from 'src/activity/models/activity.models';
 import { RoleService } from 'src/role/role.service';
+import { UpdateDto } from 'src/user/dto/update.dto';
 
 export const CHILD_ID_STEP = 'child_id';
 export const NAME_STEP = 'name';
@@ -76,6 +77,16 @@ export class BotOnboardingService {
     });
   }
 
+  // 'parent' and 'student' keep separate name/surname on the Bot row so
+  // switching role doesn't overwrite one identity's name with the other's.
+  private roleNameField(role: string): 'parent_name' | 'student_name' {
+    return role === 'parent' ? 'parent_name' : 'student_name';
+  }
+
+  private roleSurnameField(role: string): 'parent_surname' | 'student_surname' {
+    return role === 'parent' ? 'parent_surname' : 'student_surname';
+  }
+
   async setRole(ctx: Context, role: 'parent' | 'student') {
     const bot_id = ctx.from.id;
     await this.botRepo.update({ role }, { where: { bot_id } });
@@ -85,6 +96,9 @@ export class BotOnboardingService {
       await this.ensureUserRole(botUser.user_id, role);
     }
 
+    // continueAfterRole asks for name/surname if this role doesn't have
+    // one saved yet, or syncs the account to this role's saved name if it
+    // does - either way it's the single place that decides what's next.
     return this.continueAfterRole(ctx);
   }
 
@@ -123,13 +137,35 @@ export class BotOnboardingService {
           },
         );
       } else {
-        if (!user?.name) {
+        const role = botUser.dataValues.role;
+        const roleName = botUser.dataValues[this.roleNameField(role)];
+        const roleSurname = botUser.dataValues[this.roleSurnameField(role)];
+
+        if (!roleName) {
           return this.askName(ctx);
-        } else if (!user?.surname) {
+        } else if (!roleSurname) {
           return this.askSurname(ctx);
-        } else if (!user && botUser.dataValues.status) {
+        } else if (!user) {
           return this.handlePassword(ctx);
         }
+
+        // The platform account's name/surname reflects the student, not
+        // whichever parent is currently browsing the bot - only sync it
+        // into User when the active role is 'student'.
+        if (
+          role === 'student' &&
+          (user.name !== roleName || user.surname !== roleSurname)
+        ) {
+          await this.botRepo.update(
+            { name: roleName, surname: roleSurname },
+            { where: { bot_id } },
+          );
+          await this.userService.update(botUser.user_id, {
+            name: roleName,
+            surname: roleSurname,
+          } as UpdateDto);
+        }
+
         await this.bot.telegram.sendChatAction(bot_id, 'typing');
 
         await ctx.reply('Academic Success Hub ga xush kelibsiz', {
@@ -172,8 +208,15 @@ export class BotOnboardingService {
 
   async askName(ctx: Context) {
     const bot_id = ctx.from.id;
+    const botUser = await this.botRepo.findOne({ where: { bot_id } });
     await this.botRepo.update({ step: NAME_STEP }, { where: { bot_id } });
-    await ctx.reply('Iltimos ismingizni kiriting: 👇', {
+
+    const promptText =
+      botUser?.role === 'parent'
+        ? "Iltimos ota yoki onaning ismini kiriting: 👇"
+        : "Iltimos o'quvchining ismini kiriting: 👇";
+
+    await ctx.reply(promptText, {
       parse_mode: 'HTML',
       ...Markup.removeKeyboard(),
     });
@@ -293,9 +336,10 @@ export class BotOnboardingService {
     const bot_id = ctx.from.id;
     const message = ctx.message as Message.TextMessage;
     const name = message.text.trim();
+    const botUser = await this.botRepo.findOne({ where: { bot_id } });
 
     await this.botRepo.update(
-      { name, step: SURNAME_STEP },
+      { name, [this.roleNameField(botUser?.role)]: name, step: SURNAME_STEP },
       {
         where: { bot_id },
       },
@@ -310,14 +354,15 @@ export class BotOnboardingService {
     const bot_id = ctx.from.id;
     const message = ctx.message as Message.TextMessage;
     const surname = message.text.trim();
+    const botUser = await this.botRepo.findOne({ where: { bot_id } });
 
     await this.botRepo.update(
-      { surname },
+      { surname, [this.roleSurnameField(botUser?.role)]: surname },
       {
         where: { bot_id },
       },
     );
-    return this.handlePassword(ctx);
+    return this.continueAfterRole(ctx);
   }
 
   async onStop(ctx: Context) {}
