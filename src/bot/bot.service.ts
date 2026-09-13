@@ -127,6 +127,10 @@ export class BotService implements OnModuleInit {
     return this.onboarding.askSurname(ctx);
   }
 
+  async askNameChange(ctx: Context) {
+    return this.onboarding.askNameChange(ctx);
+  }
+
   async handlePassword(ctx: Context) {
     return this.onboarding.handlePassword(ctx);
   }

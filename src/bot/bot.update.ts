@@ -88,6 +88,11 @@ export class BotUpdate {
     return this.botService.handlePassword(ctx);
   }
 
+  @Hears("Ism familiyani o'zgartirish")
+  async handleNameChange(@Ctx() ctx: Context) {
+    return this.botService.askNameChange(ctx);
+  }
+
   @On('contact')
   async onContact(@Ctx() ctx: Context) {
     return this.botService.onContact(ctx);

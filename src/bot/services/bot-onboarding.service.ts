@@ -16,6 +16,10 @@ export const SURNAME_STEP = 'surname';
 export const PASSWORD_STEP = 'password';
 export const TASK_STEP = 'task';
 
+// step_data flag marking a name/surname edit started from the Profile menu,
+// as opposed to the initial registration wizard - see setSurname().
+const NAME_EDIT_STEP_DATA = 'name_edit';
+
 // Handles the registration / role-selection wizard a user goes through the
 // first time they open the bot (pick role -> share phone -> name -> surname
 // -> password), plus profile-field edits reachable later ("Parolni
@@ -222,6 +226,18 @@ export class BotOnboardingService {
     });
   }
 
+  // Entry point for "Ism familiyani o'zgartirish" in the Profile menu -
+  // reuses askName/setName/setSurname, but flags step_data so setSurname
+  // returns to a confirmation instead of continuing the registration wizard.
+  async askNameChange(ctx: Context) {
+    const bot_id = ctx.from.id;
+    await this.botRepo.update(
+      { step_data: NAME_EDIT_STEP_DATA },
+      { where: { bot_id } },
+    );
+    return this.askName(ctx);
+  }
+
   async askSurname(ctx: Context) {
     const bot_id = ctx.from.id;
     await this.botRepo.update({ step: SURNAME_STEP }, { where: { bot_id } });
@@ -355,13 +371,40 @@ export class BotOnboardingService {
     const message = ctx.message as Message.TextMessage;
     const surname = message.text.trim();
     const botUser = await this.botRepo.findOne({ where: { bot_id } });
+    const isNameEdit = botUser?.step_data === NAME_EDIT_STEP_DATA;
 
     await this.botRepo.update(
-      { surname, [this.roleSurnameField(botUser?.role)]: surname },
+      {
+        surname,
+        [this.roleSurnameField(botUser?.role)]: surname,
+        step_data: null,
+        ...(isNameEdit ? { step: null } : {}),
+      },
       {
         where: { bot_id },
       },
     );
+
+    if (isNameEdit) {
+      // Same rule as continueAfterRole: only the 'student' identity's name
+      // is reflected on the platform account.
+      if (botUser.role === 'student' && botUser.user_id) {
+        await this.userService.update(botUser.user_id, {
+          name: botUser.name,
+          surname,
+        } as UpdateDto);
+      }
+      await ctx.reply("Ism-familiyangiz muvaffaqiyatli o'zgartirildi ✅", {
+        parse_mode: 'HTML',
+        ...Markup.keyboard([
+          ["Parolni o'zgaritish", "Telefon raqamni o'zgartirish"],
+          ["Ism familiyani o'zgartirish"],
+          ['Orqaga'],
+        ]).resize(),
+      });
+      return;
+    }
+
     return this.continueAfterRole(ctx);
   }
 

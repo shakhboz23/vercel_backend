@@ -349,17 +349,29 @@ export class BotDashboardService {
       user.current_role ||
       "ko'rsatilmagan";
 
+    // Show the name saved for the currently active role (parent/student
+    // keep separate names on the Bot row), falling back to the platform
+    // account's name for older rows that predate this split.
+    const displayName =
+      (botUser.role === 'parent' ? botUser.parent_name : botUser.student_name) ||
+      user.name;
+    const displaySurname =
+      (botUser.role === 'parent'
+        ? botUser.parent_surname
+        : botUser.student_surname) || user.surname;
+
     await ctx.reply(
       `👤 <b>Profil ma'lumotlari</b>\n\n` +
         (user.student_id ? `🆔 ID: ${user.student_id}\n` : ``) +
-        `👤 Ism: <b>${user.name || "ko'rsatilmagan"}</b>\n` +
-        `👤 Familiya: <b>${user.surname || "ko'rsatilmagan"}</b>\n` +
+        `👤 Ism: <b>${displayName || "ko'rsatilmagan"}</b>\n` +
+        `👤 Familiya: <b>${displaySurname || "ko'rsatilmagan"}</b>\n` +
         `📞 Telefon: <b>${user.phone || "ko'rsatilmagan"}</b>\n` +
         `🎓 Rol: <b>${roleLabel}</b>`,
       {
         parse_mode: 'HTML',
         ...Markup.keyboard([
           ["Parolni o'zgaritish", "Telefon raqamni o'zgartirish"],
+          ["Ism familiyani o'zgartirish"],
           ['Orqaga'],
         ]).resize(),
       },
