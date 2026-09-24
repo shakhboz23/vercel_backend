@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Bot } from '../models/bot.model';
 import { BotChild } from '../models/bot_child.model';
-import { BOT_NAME } from '../../app.constants';
+import { BOT_NAME, TEST_RESULTS_GROUP_ID } from '../../app.constants';
 import { InjectBot } from 'nestjs-telegraf';
 import { Context, Telegraf } from 'telegraf';
 import { UserService } from 'src/user/user.service';
@@ -272,14 +272,12 @@ export class BotNotificationsService {
     }[],
   ): Promise<void> {
     const studentBot = await this.botRepo.findOne({ where: { user_id } });
-    if (!studentBot?.status) return;
 
-    let text =
-      `📝 <b>Test natijasi</b>\n\n` +
+    const header =
       (lessonTitle ? `📚 Dars: <b>${this.escapeHtml(lessonTitle)}</b>\n` : '') +
       `✅ Natija: <b>${ball}/${total}</b>\n\n`;
 
-    text += questionResults
+    const answers = questionResults
       .map((item, index) => {
         const selected = this.escapeHtml(item.selectedLabel) || '—';
         if (item.isCorrect) {
@@ -289,8 +287,39 @@ export class BotNotificationsService {
       })
       .join('\n');
 
+    if (studentBot?.status) {
+      const text = `📝 <b>Test natijasi</b>\n\n` + header + answers;
+      await this.bot.telegram
+        .sendMessage(studentBot.bot_id, text, { parse_mode: 'HTML' })
+        .catch((error) => console.log(error));
+    }
+
+    // Admin group gets every test result, with the student's full details,
+    // regardless of whether the student has the bot connected.
+    let student: any;
+    try {
+      student = await this.userService.getById(user_id);
+    } catch (error) {}
+
+    const fullName =
+      [student?.name, student?.surname].filter(Boolean).join(' ') || '—';
+    const telegram = studentBot?.username ? `@${studentBot.username}` : '—';
+    const percentage = total > 0 ? Math.round((ball / total) * 100) : 0;
+
+    const groupText =
+      `📝 <b>Yangi test natijasi</b>\n\n` +
+      `👤 O'quvchi: <b>${this.escapeHtml(fullName)}</b>\n` +
+      `🆔 User ID: <code>${user_id}</code>\n` +
+      (student?.student_id
+        ? `🎓 Student ID: <code>${this.escapeHtml(student.student_id)}</code>\n`
+        : '') +
+      `📞 Telefon: <b>${this.escapeHtml(student?.phone || studentBot?.phone) || '—'}</b>\n` +
+      `✈️ Telegram: ${this.escapeHtml(telegram)}\n\n` +
+      header.replace(/\n\n$/, ` (${percentage}%)\n\n`) +
+      answers;
+
     await this.bot.telegram
-      .sendMessage(studentBot.bot_id, text, { parse_mode: 'HTML' })
+      .sendMessage(TEST_RESULTS_GROUP_ID, groupText, { parse_mode: 'HTML' })
       .catch((error) => console.log(error));
   }
 }
