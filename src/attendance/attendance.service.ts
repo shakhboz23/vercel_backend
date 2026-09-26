@@ -84,13 +84,12 @@ export class AttendanceService {
         data = await this.attendanceRepository.create(attendanceDto);
       }
 
-      if (attendance) {
-        await this.userStreakService.create({
-          ...attendanceDto,
-          attendance_days: attendanceDays,
-        });
-      }
-      
+      await this.userStreakService.create({
+        ...attendanceDto,
+        attendance_days: attendanceDays,
+      });
+
+
       this.botService
         .notifyAttendance(
           attendanceDto.user_id,
