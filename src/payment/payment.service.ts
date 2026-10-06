@@ -175,18 +175,30 @@ export class PaymentService {
     for (const subscription of subscriptions as any[]) {
       if (!subscription.start_date || !subscription.course) continue;
 
-      let dueDate = dayjs(subscription.start_date)
-        .add(1, 'month')
-        .startOf('day');
+      // The first period is due on the join date itself (a student owes for
+      // the month they start), then every month after. Starting at
+      // start_date + 1 month left new students with no row at all until a
+      // month later, and skipped the joining month for everyone.
+      const startDate = dayjs(subscription.start_date).startOf('day');
+      let dueDate = startDate;
+      let period = 0;
 
       while (!dueDate.isAfter(today)) {
-        await this.paymentRepository.findOrCreate({
+        // A payment already recorded anywhere inside this billing period
+        // (e.g. cash taken manually via create(), which stamps due_date with
+        // the day it was entered) counts as that period's row - otherwise a
+        // second, unpaid duplicate would be generated next to it.
+        const periodEnd = startDate.add(period + 1, 'month').startOf('day');
+        const existing = await this.paymentRepository.findOne({
           where: {
             user_id: subscription.user_id,
             course_id: subscription.course_id,
-            due_date: dueDate.toDate(),
+            due_date: { [Op.gte]: dueDate.toDate(), [Op.lt]: periodEnd.toDate() },
           },
-          defaults: {
+        });
+
+        if (!existing) {
+          await this.paymentRepository.create({
             user_id: subscription.user_id,
             course_id: subscription.course_id,
             due_date: dueDate.toDate(),
@@ -195,10 +207,11 @@ export class PaymentService {
             debt: subscription.course.price,
             status: PaymentStatus.PENDING,
             payment_method: PaymentMethod.CASH,
-          } as any,
-        });
+          } as any);
+        }
 
-        dueDate = dueDate.add(1, 'month');
+        period++;
+        dueDate = startDate.add(period, 'month').startOf('day');
       }
     }
   }
