@@ -246,6 +246,20 @@ export class BotLessonsService {
       return;
     }
 
+    if (user.role !== 'student') {
+      await ctx.reply(
+        "Testni faqat o'quvchi roli orqali topshirish mumkin. Iltimos, rolingizni o'quvchiga almashtiring.",
+      );
+      return;
+    }
+
+    const lesson: any = await this.lessonService.getById(lessonId);
+
+    if (!lesson?.published) {
+      await ctx.reply('Bu test hali e’lon qilinmagan.');
+      return;
+    }
+
     const tests: any = await this.testsService.getById(lessonId, user.user_id);
 
     if (!tests) {
