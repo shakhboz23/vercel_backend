@@ -292,7 +292,7 @@ export class BotLessonsService {
       Markup.inlineKeyboard([
         Markup.button.webApp(
           'Academic Success Hub',
-          `https://www.ashacademy.uz/test/${lessonId}?pdf=true`,
+          `https://www.old.ashacademy.uz/test/${lessonId}?pdf=true`,
         ),
       ]),
     );

@@ -41,7 +41,7 @@ export class BotService implements OnModuleInit {
       ]);
 
       if (process.env.NODE_ENV === 'production') {
-        const webhookUrl = 'https://api.ashacademy.uz/api/webhook/bot';
+        const webhookUrl = 'https://api.old.ashacademy.uz/api/webhook/bot';
         await this.bot.telegram.setWebhook(webhookUrl);
         console.log(`Webhook registered at: ${webhookUrl}`);
       }

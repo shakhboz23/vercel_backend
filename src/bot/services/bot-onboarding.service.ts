@@ -184,7 +184,7 @@ export class BotOnboardingService {
           Markup.inlineKeyboard([
             Markup.button.webApp(
               'Academic Success Hub',
-              'https://www.ashacademy.uz/',
+              'https://www.old.ashacademy.uz/',
             ),
           ]),
         );
@@ -330,7 +330,7 @@ export class BotOnboardingService {
           returning: true,
         },
       );
-      const url = `https://www.ashacademy.uz/login?token=${bot_user.token}`;
+      const url = `https://www.old.ashacademy.uz/login?token=${bot_user.token}`;
       await ctx.reply("Ro'yxatdan muvaffaqiyatli o'tdingiz!", {
         parse_mode: 'HTML',
         ...Markup.keyboard(this.mainMenuButtons(user.role)).oneTime().resize(),

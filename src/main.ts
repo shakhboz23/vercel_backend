@@ -22,8 +22,8 @@ const DEFAULT_CORS_ORIGINS = [
   'http://localhost:3000',
   'https://vercel-backend-bay.vercel.app',
   'https://ilmnur.online',
-  'https://ashacademy.uz',
-  'https://www.ashacademy.uz',
+  'https://old.ashacademy.uz',
+  'https://www.old.ashacademy.uz',
 ];
 
 async function bootstrap() {
